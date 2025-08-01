@@ -1,0 +1,33 @@
+# Block all crawlers while in development
+User-agent: *
+Disallow: /
+
+# Block specific bots
+User-agent: Googlebot
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /
+
+User-agent: Slurp
+Disallow: /
+
+User-agent: DuckDuckBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+# Block archiving bots
+User-agent: ia_archiver
+Disallow: /
+
+User-agent: Wayback Machine
+Disallow: /
+
+# Allow humans
+# Remove these lines when ready to launch
+Sitemap: 
