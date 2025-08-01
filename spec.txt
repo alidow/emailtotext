@@ -1,0 +1,65 @@
+The goal of this project is to QUICKLY build and launch a business that allows users to send an email that will be converted to a text. AT&T and the major US carriers used to have a feature where you could send an email to eg <your phone number>@txt.att.net and it would forward that email to your phone as a text message. They recently killed this feature so i'm guessing there are a lot of people looking for an alternative. I want to launch a scrappy mvp in a day to test the market demand for this. I've bought a domain - `emailtotextnotify.com` - that i'd like to use for this project. eventually we'll add other domains for other carriers (eg verizonemailtotext.com) as well.
+
+For MVP here's what I'd like to build:
+
+* A landing page at `emailtotextnotify.com` that makes it clear that:
+    * this is a product to quickly allow someone to send an email and receive it as a text message, just like the old AT&T feature that they recently sunset. it's super duper simple, just enter phone number to get started
+    * prominent CTA to enter phone number to get started which will take users through onboarding flow (see below)
+    * we will have pricing, however we kind of want this hidden perhaps as link below fold or at bottom of page so we don't scare away users. pricing will be as follows:
+        * basic plan: 
+            * $5/month for up to 100 texts/month
+            * link to view email content, saved for 7 days
+            * 20% discount if you pay annual ($48 one time payment, which we can represent as per-month amount inline with how modern pricing pages/plans are presented)
+        * premium plan:
+            * $20/month for up to 10,000 texts/month
+            * link to view email content, saved for a year
+            * AI powered summaries of email content
+            * 20% discount if paid upfront for year
+
+* An onboarding flow that will work as follows:
+    * user enters phone number and clicks button that they consent to receive text messages (make sure this complies with TCPA regulation)
+    * app sends a welcome text with a one-time code and an option to reply STOP to opt out of receiving texts. while one-time code is sent, user is shown a box to enter the digits for the one-time code. make this flow super simple and nice like onboaridng flow for modern app like Resy
+        * (see if we can use something like Clerk for auth, however the one-time text code importantly needs to come from the same twilio phone number that we'll send text messages to the user from)
+    * after user enters one-time code if it's correct they'll be automatically redirected (if it fails they can try again up to 2 more times). they'll be redirected to a sign up page/form which will allow them to sign up with their existing gmail (we'll use clerk for auth) or by entering an email and pw. once they've signed up with email/gmail, we'll direct to a page to select their plan (the basic or premium plan, altho they can always ugrade to premium later).
+    * once a user selects a plan we should collect billing info using Stripe and start billing them
+    * if a user doesnt select a plan and leaves, if they ever come back and re-auth we shold take them directly to the page to sign up for a plan
+    * after a user signs up for a plan we shold redirect them to a simple user account dashboard (see below)
+
+* A simple user account dashboard that:
+    * prominently shows the email address that a user can send emails to to receive a text. the email address should be <their phone number>@txt.emailtotextnotify.com
+    * shows a user their usage, as well as a log of all emails that were received and link to see the email content incl. attachments (note that the link content should only be preserved based on standard vs premium plan descriptions, after that the link will expire and we're no longer obligated to keep the email content)
+    * allows users to cancel or upgrade their plan
+        * if plan is canceled, the cancellation needs to take effect at the end of the current billing period (if user has pre-paid for the full year then would be start of new year, otw start of next monthly period; THIS IS SUPER IMPORTANT TO GET RIGHT)
+
+* A serverless function (lambda, supabase edge, whatever) that is setup to receive incoming emails, translate them to a text message, save the original email content with a shortened link, then send a text message to the user's phone
+    * needs to lookup a user's account (shold be super quick) as well as whether the user is still under their quote. should update quota once text message has been successfully sent.
+    * if an email is received for a user account that does not exist or is no longer active, we should send them back an email saying we couldn't find their account along with a well-polished pitch + CTA to sign up
+    * if a user is over their quota and receives an email we should:
+        * reply to the email that the user has exceeded the max number of text messages allowed with a CTA to upgrade their plan with a link to their account dashboard
+        * send the user a text message that they've exceeded their number of text messages with a cta link to upgrade their account. IMPORTANT: we only want to send this text message a max of once per day, and only when an incoming email is received. THIS IS CRITICAL!
+    * function should translate the original email content with the following pseudo-template, up to 140 chars:
+
+        ```
+        FRM: <from email>
+        SUBJ: <subject>
+        MSG: <message content up to char limit>
+
+        <link to see full content>
+        ```
+    * note that the link to see full content should:
+        * take user to a web page that will nicely but simply layout the content of the original email including attachments
+        * require user auth (we'll be using clerk)
+        * be a shortened link that will appear nicely in a text message
+
+The tech for the MVP shold be pretty simple. I'm envisioning something like:
+    * nextjs app on vercel
+    * mailgun for receiving texts
+    * supabase edge function for processing emails
+    * supabase postgres for storing state, such as user accounts and email content
+    * twilio for sending texts
+    * clerk for auth
+    * stripe for billing
+
+We want to get this BUILT AND LAUNCHED IN A SINGLE DAY!!!
+
+
