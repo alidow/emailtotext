@@ -2,6 +2,8 @@
 
 A simple SMS gateway service that converts emails to text messages. Perfect replacement for AT&T's discontinued email-to-text feature.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/alidow/emailtotext)
+
 ## Features
 
 - 📱 **Email-to-SMS Gateway**: Send emails to your unique address and receive them as text messages
