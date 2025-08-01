@@ -2,7 +2,7 @@
 create extension if not exists "uuid-ossp";
 
 -- Users table
-create table public.users (
+create table if not exists public.users (
   id uuid primary key default uuid_generate_v4(),
   clerk_id text unique not null,
   phone text unique not null,
@@ -18,7 +18,7 @@ create table public.users (
 );
 
 -- Phone verifications table
-create table public.phone_verifications (
+create table if not exists public.phone_verifications (
   id uuid primary key default uuid_generate_v4(),
   phone text not null,
   code text not null,
@@ -28,7 +28,7 @@ create table public.phone_verifications (
 );
 
 -- Emails received table
-create table public.emails (
+create table if not exists public.emails (
   id uuid primary key default uuid_generate_v4(),
   user_id uuid references public.users(id) on delete cascade,
   from_email text not null,
@@ -41,14 +41,14 @@ create table public.emails (
 );
 
 -- SMS quota alerts table
-create table public.sms_quota_alerts (
+create table if not exists public.sms_quota_alerts (
   user_id uuid not null references public.users(id) on delete cascade,
   sent_at date not null,
   primary key (user_id, sent_at)
 );
 
 -- TCPA consent logs table
-create table public.consent_logs (
+create table if not exists public.consent_logs (
   id uuid primary key default uuid_generate_v4(),
   phone text not null,
   ip_address text,
@@ -57,12 +57,22 @@ create table public.consent_logs (
   consented_at timestamp with time zone default now()
 );
 
+-- Usage logs table for tracking events
+create table if not exists public.usage_logs (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  event_type text not null,
+  details jsonb,
+  created_at timestamp with time zone default now()
+);
+
 -- Indexes for performance
-create index idx_users_clerk_id on public.users(clerk_id);
-create index idx_users_phone on public.users(phone);
-create index idx_emails_user_id on public.emails(user_id);
-create index idx_emails_short_url on public.emails(short_url);
-create index idx_phone_verifications_phone on public.phone_verifications(phone);
+create index if not exists idx_users_clerk_id on public.users(clerk_id);
+create index if not exists idx_users_phone on public.users(phone);
+create index if not exists idx_emails_user_id on public.emails(user_id);
+create index if not exists idx_emails_short_url on public.emails(short_url);
+create index if not exists idx_phone_verifications_phone on public.phone_verifications(phone);
+create index if not exists idx_usage_logs_user_id on public.usage_logs(user_id);
 
 -- RLS Policies
 alter table public.users enable row level security;
@@ -70,6 +80,12 @@ alter table public.emails enable row level security;
 alter table public.phone_verifications enable row level security;
 alter table public.sms_quota_alerts enable row level security;
 alter table public.consent_logs enable row level security;
+alter table public.usage_logs enable row level security;
+
+-- Drop existing policies if they exist
+drop policy if exists "Users can read own data" on public.users;
+drop policy if exists "Users can update own data" on public.users;
+drop policy if exists "Users can read own emails" on public.emails;
 
 -- Users can only read their own data
 create policy "Users can read own data" on public.users
