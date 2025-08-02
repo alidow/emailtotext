@@ -73,33 +73,141 @@ serve(async (req) => {
     const quotaLimits = {
       free: 10,
       basic: 100,
-      pro: 500
+      standard: 500,
+      premium: 1000,
+      pro: 500 // Legacy support
     }
-    const limit = quotaLimits[user.plan_type as keyof typeof quotaLimits] || 10
-
-    if (user.usage_count >= limit) {
-      // Check if we already sent quota alert today
-      const today = new Date().toISOString().split('T')[0]
-      const { data: alertSent } = await supabase
-        .from('sms_quota_alerts')
-        .select('sent_at')
-        .eq('user_id', user.id)
-        .eq('sent_at', today)
-        .single()
-
-      if (!alertSent) {
-        // Send quota exceeded SMS
-        await sendQuotaExceededSMS(phone, user.plan_type)
+    const baseLimit = quotaLimits[user.plan_type as keyof typeof quotaLimits] || 10
+    const totalLimit = baseLimit + (user.additional_texts_purchased || 0)
+    
+    if (user.usage_count >= totalLimit) {
+      // Handle based on plan type
+      if (user.plan_type === 'free') {
+        // Auto-upgrade free users to basic
+        console.log('Free user exceeded limit, auto-upgrading to Basic')
         
-        // Record alert
-        await supabase
-          .from('sms_quota_alerts')
-          .insert({ user_id: user.id, sent_at: today })
+        try {
+          // Create Stripe subscription for Basic plan
+          const stripe = await import('https://esm.sh/stripe@13.10.0')
+          const stripeClient = new stripe.default(Deno.env.get('STRIPE_SECRET_KEY')!, {
+            apiVersion: '2023-10-16'
+          })
+          
+          // Create subscription
+          const subscription = await stripeClient.subscriptions.create({
+            customer: user.stripe_customer_id,
+            items: [{
+              price: Deno.env.get('STRIPE_BASIC_MONTHLY_PRICE_ID')!
+            }],
+            metadata: {
+              user_id: user.id,
+              auto_upgrade: 'true'
+            }
+          })
+          
+          // Update user to Basic plan
+          await supabase
+            .from('users')
+            .update({
+              plan_type: 'basic',
+              stripe_subscription_id: subscription.id,
+              billing_cycle: 'monthly'
+            })
+            .eq('id', user.id)
+          
+          // Send upgrade notification email
+          await sendAutoUpgradeEmail(user, 'free', 'basic')
+          
+          // Log the auto-upgrade
+          await supabase
+            .from('billing_events')
+            .insert({
+              user_id: user.id,
+              event_type: 'auto_upgrade',
+              details: {
+                from_plan: 'free',
+                to_plan: 'basic',
+                trigger: 'quota_exceeded'
+              }
+            })
+          
+          // Continue processing the message
+          console.log('Auto-upgrade successful, continuing with message delivery')
+          
+        } catch (error) {
+          console.error('Auto-upgrade failed:', error)
+          // If auto-upgrade fails, bounce the email
+          await sendQuotaBounceEmail(sender, recipient, user.plan_type)
+          return new Response('Auto-upgrade failed', { status: 500 })
+        }
+        
+      } else if (['basic', 'standard', 'premium'].includes(user.plan_type)) {
+        // Auto-buy additional texts for paid plans
+        console.log(`${user.plan_type} user exceeded limit, auto-buying 100 texts`)
+        
+        try {
+          const stripe = await import('https://esm.sh/stripe@13.10.0')
+          const stripeClient = new stripe.default(Deno.env.get('STRIPE_SECRET_KEY')!, {
+            apiVersion: '2023-10-16'
+          })
+          
+          // Calculate price per text with 10% markup
+          const basePricePerText = user.plan_type === 'basic' ? 0.05 : 0.02
+          const pricePerText = basePricePerText * 1.1
+          const totalAmount = Math.round(pricePerText * 100 * 100) // 100 texts in cents
+          
+          // Create one-time charge
+          const charge = await stripeClient.charges.create({
+            amount: totalAmount,
+            currency: 'usd',
+            customer: user.stripe_customer_id,
+            description: 'Auto-purchase 100 additional text messages',
+            metadata: {
+              user_id: user.id,
+              type: 'auto_buy_texts',
+              texts_purchased: '100'
+            }
+          })
+          
+          // Update user's additional texts
+          await supabase
+            .from('users')
+            .update({
+              additional_texts_purchased: (user.additional_texts_purchased || 0) + 100
+            })
+            .eq('id', user.id)
+          
+          // Send auto-buy notification
+          await sendAutoBuyEmail(user, 100, totalAmount / 100)
+          
+          // Log the auto-buy
+          await supabase
+            .from('billing_events')
+            .insert({
+              user_id: user.id,
+              event_type: 'auto_buy_texts',
+              amount: totalAmount / 100,
+              details: {
+                texts_purchased: 100,
+                price_per_text: pricePerText,
+                charge_id: charge.id
+              }
+            })
+          
+          // Continue processing the message
+          console.log('Auto-buy successful, continuing with message delivery')
+          
+        } catch (error) {
+          console.error('Auto-buy failed:', error)
+          // If auto-buy fails, bounce the email
+          await sendQuotaBounceEmail(sender, recipient, user.plan_type)
+          return new Response('Auto-buy failed', { status: 500 })
+        }
+      } else {
+        // For other plan types, send bounce email
+        await sendQuotaBounceEmail(sender, recipient, user.plan_type)
+        return new Response('Quota exceeded', { status: 429 })
       }
-
-      // Send bounce email
-      await sendQuotaBounceEmail(sender, recipient, user.plan_type)
-      return new Response('Quota exceeded', { status: 429 })
     }
 
     // Generate short URL
@@ -229,4 +337,35 @@ async function sendQuotaExceededSMS(phone: string, planType: string) {
     to: phone,
     from: Deno.env.get('TWILIO_PHONE_NUMBER')!
   })
+}
+
+async function sendAutoUpgradeEmail(user: any, fromPlan: string, toPlan: string) {
+  // In production, this would send via Mailgun/SendGrid
+  console.log(`Sending auto-upgrade email to user ${user.id}: ${fromPlan} -> ${toPlan}`)
+  
+  // Call the upgrade email endpoint
+  await fetch(`${Deno.env.get('NEXT_PUBLIC_APP_URL')}/api/send-upgrade-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: user.id,
+      fromPlan,
+      toPlan
+    })
+  })
+}
+
+async function sendAutoBuyEmail(user: any, textsPurchased: number, amount: number) {
+  console.log(`Sending auto-buy email to user ${user.id}: ${textsPurchased} texts for $${amount}`)
+  
+  // In production, send email notification
+  const emailBody = `
+    Your account has automatically purchased ${textsPurchased} additional text messages for $${amount.toFixed(2)}.
+    
+    This charge was triggered because you exceeded your monthly quota.
+    
+    You can manage your billing settings at: ${Deno.env.get('NEXT_PUBLIC_APP_URL')}/settings
+  `
+  
+  console.log('Auto-buy email content:', emailBody)
 }

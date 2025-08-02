@@ -1,0 +1,361 @@
+import { NextRequest, NextResponse } from "next/server"
+import { headers } from "next/headers"
+import Stripe from "stripe"
+import { supabaseAdmin } from "@/lib/supabase"
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-07-30.basil"
+})
+
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
+
+export async function POST(req: NextRequest) {
+  const body = await req.text()
+  const sig = headers().get("stripe-signature")!
+
+  let event: Stripe.Event
+
+  try {
+    event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
+  } catch (err: any) {
+    console.error(`Webhook signature verification failed: ${err.message}`)
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
+  }
+
+  try {
+    switch (event.type) {
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object as Stripe.Invoice
+        await handleSuccessfulPayment(invoice)
+        break
+      }
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice
+        await handleFailedPayment(invoice)
+        break
+      }
+
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription
+        await handleSubscriptionUpdate(subscription)
+        break
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription
+        await handleSubscriptionCancellation(subscription)
+        break
+      }
+
+      case "charge.succeeded": {
+        const charge = event.data.object as Stripe.Charge
+        if (charge.metadata?.type === "auto_buy_texts") {
+          await handleAutoBuyCharge(charge)
+        }
+        break
+      }
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`)
+    }
+
+    return NextResponse.json({ received: true })
+  } catch (error) {
+    console.error("Webhook handler error:", error)
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 })
+  }
+}
+
+async function handleSuccessfulPayment(invoice: Stripe.Invoice) {
+  const customerId = invoice.customer as string
+  // @ts-ignore - Stripe types issue with subscription field
+  const subscriptionId = invoice.subscription as string | null
+  
+  // Get user by Stripe customer ID
+  const { data: user, error } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("stripe_customer_id", customerId)
+    .single()
+
+  if (error || !user) {
+    console.error("User not found for customer:", customerId)
+    return
+  }
+
+  // Reset usage count for new billing period
+  const nextResetDate = new Date()
+  nextResetDate.setMonth(nextResetDate.getMonth() + 1)
+
+  await supabaseAdmin
+    .from("users")
+    .update({
+      usage_count: 0,
+      usage_reset_at: nextResetDate.toISOString(),
+      additional_texts_purchased: 0
+    })
+    .eq("id", user.id)
+
+  // Log successful payment
+  await supabaseAdmin
+    .from("billing_events")
+    .insert({
+      user_id: user.id,
+      event_type: "payment_succeeded",
+      amount: invoice.amount_paid / 100,
+      details: {
+        invoice_id: invoice.id,
+        subscription_id: subscriptionId
+      }
+    })
+}
+
+async function handleFailedPayment(invoice: Stripe.Invoice) {
+  const customerId = invoice.customer as string
+  const attemptCount = invoice.attempt_count
+  
+  // Get user
+  const { data: user } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("stripe_customer_id", customerId)
+    .single()
+
+  if (!user) return
+
+  // Log payment failure
+  await supabaseAdmin
+    .from("payment_failures")
+    .insert({
+      user_id: user.id,
+      invoice_id: invoice.id,
+      attempt_number: attemptCount,
+      failure_reason: invoice.last_finalization_error?.message || "Unknown error"
+    })
+
+  // Send email notification based on attempt count
+  if (attemptCount === 1) {
+    await sendPaymentFailureEmail(user, "first_attempt")
+  } else if (attemptCount === 2) {
+    await sendPaymentFailureEmail(user, "second_attempt")
+  } else if (attemptCount >= 3) {
+    // Suspend service after 3 attempts
+    await supabaseAdmin
+      .from("users")
+      .update({ 
+        plan_type: "suspended",
+        suspension_reason: "payment_failed"
+      })
+      .eq("id", user.id)
+    
+    await sendPaymentFailureEmail(user, "service_suspended")
+  }
+
+  // Log the event
+  await supabaseAdmin
+    .from("billing_events")
+    .insert({
+      user_id: user.id,
+      event_type: "payment_failed",
+      details: {
+        invoice_id: invoice.id,
+        attempt_count: attemptCount,
+        error: invoice.last_finalization_error?.message
+      }
+    })
+}
+
+async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
+  const customerId = subscription.customer as string
+  
+  // Get user
+  const { data: user } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("stripe_customer_id", customerId)
+    .single()
+
+  if (!user) return
+
+  // Determine plan type from price ID
+  const priceId = subscription.items.data[0].price.id
+  const planType = getPlanTypeFromPriceId(priceId)
+  const billingCycle = subscription.items.data[0].price.recurring?.interval === "year" ? "annual" : "monthly"
+
+  // Update user subscription info
+  await supabaseAdmin
+    .from("users")
+    .update({
+      stripe_subscription_id: subscription.id,
+      plan_type: planType,
+      billing_cycle: billingCycle
+    })
+    .eq("id", user.id)
+
+  // Log the event
+  await supabaseAdmin
+    .from("billing_events")
+    .insert({
+      user_id: user.id,
+      event_type: "subscription_updated",
+      details: {
+        subscription_id: subscription.id,
+        plan_type: planType,
+        billing_cycle: billingCycle,
+        status: subscription.status
+      }
+    })
+}
+
+async function handleSubscriptionCancellation(subscription: Stripe.Subscription) {
+  const customerId = subscription.customer as string
+  
+  // Get user
+  const { data: user } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("stripe_customer_id", customerId)
+    .single()
+
+  if (!user) return
+
+  // Downgrade to free plan
+  await supabaseAdmin
+    .from("users")
+    .update({
+      plan_type: "free",
+      stripe_subscription_id: null,
+      billing_cycle: null
+    })
+    .eq("id", user.id)
+
+  // Send cancellation email
+  await sendCancellationEmail(user)
+
+  // Log the event
+  await supabaseAdmin
+    .from("billing_events")
+    .insert({
+      user_id: user.id,
+      event_type: "subscription_cancelled",
+      details: {
+        subscription_id: subscription.id,
+        cancelled_at: new Date().toISOString()
+      }
+    })
+}
+
+async function handleAutoBuyCharge(charge: Stripe.Charge) {
+  const userId = charge.metadata.user_id
+  const textsPurchased = parseInt(charge.metadata.texts_purchased || "0")
+  
+  if (!userId || !textsPurchased) return
+
+  // Update user's additional texts
+  const { data: user } = await supabaseAdmin
+    .from("users")
+    .select("additional_texts_purchased")
+    .eq("id", userId)
+    .single()
+
+  if (!user) return
+
+  await supabaseAdmin
+    .from("users")
+    .update({
+      additional_texts_purchased: (user.additional_texts_purchased || 0) + textsPurchased
+    })
+    .eq("id", userId)
+
+  // Send auto-buy notification
+  await sendAutoBuyNotification(userId, textsPurchased, charge.amount / 100)
+
+  // Log the event
+  await supabaseAdmin
+    .from("billing_events")
+    .insert({
+      user_id: userId,
+      event_type: "auto_buy_texts",
+      amount: charge.amount / 100,
+      details: {
+        charge_id: charge.id,
+        texts_purchased: textsPurchased
+      }
+    })
+}
+
+function getPlanTypeFromPriceId(priceId: string): string {
+  // Map Stripe price IDs to plan types
+  const priceMap: Record<string, string> = {
+    [process.env.NEXT_PUBLIC_STRIPE_BASIC_MONTHLY_PRICE_ID!]: "basic",
+    [process.env.NEXT_PUBLIC_STRIPE_BASIC_ANNUAL_PRICE_ID!]: "basic",
+    [process.env.NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID!]: "standard",
+    [process.env.NEXT_PUBLIC_STRIPE_STANDARD_ANNUAL_PRICE_ID!]: "standard",
+    [process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID!]: "premium",
+    [process.env.NEXT_PUBLIC_STRIPE_PREMIUM_ANNUAL_PRICE_ID!]: "premium"
+  }
+  
+  return priceMap[priceId] || "free"
+}
+
+async function sendPaymentFailureEmail(user: any, type: string) {
+  // Implementation would send email via SendGrid/Mailgun
+  console.log(`Sending ${type} payment failure email to user ${user.id}`)
+  
+  // In production, this would call your email service
+  await fetch("/api/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: user.email,
+      template: `payment_failure_${type}`,
+      data: {
+        name: user.name,
+        last_four: "****" // Would get from Stripe
+      }
+    })
+  })
+}
+
+async function sendCancellationEmail(user: any) {
+  console.log(`Sending cancellation email to user ${user.id}`)
+  
+  await fetch("/api/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: user.email,
+      template: "subscription_cancelled",
+      data: {
+        name: user.name
+      }
+    })
+  })
+}
+
+async function sendAutoBuyNotification(userId: string, textsPurchased: number, amount: number) {
+  const { data: user } = await supabaseAdmin
+    .from("users")
+    .select("email, phone")
+    .eq("id", userId)
+    .single()
+
+  if (!user) return
+
+  console.log(`Sending auto-buy notification to user ${userId}`)
+  
+  await fetch("/api/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: user.email,
+      template: "auto_buy_notification",
+      data: {
+        texts_purchased: textsPurchased,
+        amount: amount.toFixed(2)
+      }
+    })
+  })
+}

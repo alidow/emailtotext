@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
     
-    const { priceId } = await req.json()
+    const { priceId, planType, collectCardOnly, billingCycle } = await req.json()
     
     // Get user from database
     const { data: dbUser } = await supabaseAdmin
@@ -48,13 +48,44 @@ export async function POST(req: NextRequest) {
         .eq("id", dbUser.id)
     }
     
-    // Create checkout session
+    // Handle free plan (collect card only)
+    if (collectCardOnly) {
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        mode: "setup",
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?setup=complete`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
+        metadata: {
+          user_id: dbUser.id,
+          plan_type: "free"
+        }
+      })
+      
+      return NextResponse.json({ sessionId: session.id })
+    }
+    
+    // Get the correct price ID based on plan and billing cycle
+    let finalPriceId = priceId
+    
+    if (billingCycle === "annual") {
+      // Map monthly price IDs to annual ones
+      const annualPriceMap: Record<string, string> = {
+        [process.env.NEXT_PUBLIC_STRIPE_BASIC_MONTHLY_PRICE_ID!]: process.env.NEXT_PUBLIC_STRIPE_BASIC_ANNUAL_PRICE_ID!,
+        [process.env.NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID!]: process.env.NEXT_PUBLIC_STRIPE_STANDARD_ANNUAL_PRICE_ID!,
+        [process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID!]: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_ANNUAL_PRICE_ID!
+      }
+      
+      finalPriceId = annualPriceMap[priceId] || priceId
+    }
+    
+    // Create subscription checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
       line_items: [
         {
-          price: priceId,
+          price: finalPriceId,
           quantity: 1
         }
       ],
@@ -62,7 +93,16 @@ export async function POST(req: NextRequest) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
       metadata: {
-        user_id: dbUser.id
+        user_id: dbUser.id,
+        plan_type: planType,
+        billing_cycle: billingCycle || "monthly"
+      },
+      subscription_data: {
+        metadata: {
+          user_id: dbUser.id,
+          plan_type: planType,
+          billing_cycle: billingCycle || "monthly"
+        }
       }
     })
     

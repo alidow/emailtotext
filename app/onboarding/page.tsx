@@ -14,11 +14,13 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 const plans = [
   {
     name: "Free",
-    price: "$0",
+    monthlyPrice: "$0",
+    annualPrice: "$0",
     description: "Perfect for trying out the service",
     features: [
       "10 texts per month",
       "7-day message history",
+      "Auto-upgrade to Basic when exceeded",
       "Email support"
     ],
     stripePriceId: null,
@@ -26,27 +28,51 @@ const plans = [
   },
   {
     name: "Basic",
-    price: "$4.99",
+    monthlyPrice: "$4.99",
+    annualPrice: "$4",
+    annualTotal: "$47.88",
     description: "Great for personal use",
     features: [
       "100 texts per month",
       "30-day message history",
+      "Auto-buy: $0.055/text after quota",
       "Priority support",
       "SMS delivery reports"
     ],
-    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID || "price_basic_monthly"
+    monthlyPriceId: process.env.NEXT_PUBLIC_STRIPE_BASIC_MONTHLY_PRICE_ID || "price_basic_monthly",
+    annualPriceId: process.env.NEXT_PUBLIC_STRIPE_BASIC_ANNUAL_PRICE_ID || "price_basic_annual"
   },
   {
-    name: "Pro",
-    price: "$9.99",
-    description: "For power users",
+    name: "Standard",
+    monthlyPrice: "$9.99",
+    annualPrice: "$8",
+    annualTotal: "$95.88",
+    description: "For active users",
     features: [
       "500 texts per month",
       "90-day message history",
-      "Email support",
-      "Unlimited message history"
+      "Auto-buy: $0.022/text after quota",
+      "Advanced analytics",
+      "Priority support"
     ],
-    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "price_pro_monthly"
+    monthlyPriceId: process.env.NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID || "price_standard_monthly",
+    annualPriceId: process.env.NEXT_PUBLIC_STRIPE_STANDARD_ANNUAL_PRICE_ID || "price_standard_annual"
+  },
+  {
+    name: "Premium",
+    monthlyPrice: "$19.99",
+    annualPrice: "$16",
+    annualTotal: "$191.88",
+    description: "For power users",
+    features: [
+      "1,000 texts per month",
+      "Unlimited message history",
+      "Auto-buy: $0.022/text after quota",
+      "API access",
+      "Dedicated support"
+    ],
+    monthlyPriceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID || "price_premium_monthly",
+    annualPriceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_ANNUAL_PRICE_ID || "price_premium_annual"
   }
 ]
 
@@ -57,6 +83,7 @@ export default function OnboardingPage() {
   const user = { id: "mock-user" } // Mock user
   const [loading, setLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -78,15 +105,24 @@ export default function OnboardingPage() {
       
       if (!response.ok) throw new Error("Failed to create user")
       
-      if (plan.stripePriceId || plan.requiresCard) {
-        // Create Stripe checkout session (even for free plan to collect card)
+      // Determine which price ID to use based on billing cycle
+      let priceId = null
+      if (plan.name !== "Free") {
+        priceId = billingCycle === 'annual' 
+          ? (plan as any).annualPriceId 
+          : (plan as any).monthlyPriceId
+      }
+      
+      if (priceId || plan.requiresCard) {
+        // Create Stripe checkout session
         const checkoutResponse = await fetch("/api/create-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
-            priceId: plan.stripePriceId,
+            priceId: priceId,
             planType: plan.name.toLowerCase(),
-            collectCardOnly: plan.requiresCard && !plan.stripePriceId
+            collectCardOnly: plan.requiresCard && !priceId,
+            billingCycle: billingCycle
           })
         })
         
@@ -123,9 +159,36 @@ export default function OnboardingPage() {
           <p className="text-sm text-muted-foreground mt-2">
             Credit card required for all plans to enable automatic upgrades when you exceed your free limit.
           </p>
+          
+          {/* Billing cycle toggle */}
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <span className="text-sm font-medium text-gray-700">Billing:</span>
+            <div className="bg-gray-100 p-1 rounded-lg inline-flex">
+              <button 
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  billingCycle === 'monthly' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setBillingCycle('monthly')}
+              >
+                Monthly
+              </button>
+              <button 
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  billingCycle === 'annual' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setBillingCycle('annual')}
+              >
+                Annual <span className="text-green-600 font-semibold">(Save 20%)</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <Card 
               key={plan.name} 
@@ -138,7 +201,26 @@ export default function OnboardingPage() {
               )}
               <CardHeader>
                 <CardTitle>{plan.name}</CardTitle>
-                <div className="text-3xl font-bold">{plan.price}<span className="text-sm font-normal">/month</span></div>
+                <div className="space-y-1">
+                  {billingCycle === 'monthly' ? (
+                    <div className="text-3xl font-bold">
+                      {plan.monthlyPrice}
+                      <span className="text-sm font-normal">/month</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold">
+                        {plan.annualPrice}
+                        <span className="text-sm font-normal">/mo</span>
+                      </div>
+                      {plan.annualTotal && (
+                        <p className="text-sm text-green-600 font-medium">
+                          {plan.annualTotal} billed annually
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -163,11 +245,14 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        <div className="text-center mt-12 text-sm text-muted-foreground">
-          <p>All plans include TCPA compliance and secure message delivery.</p>
-          <p>Cancel anytime. No hidden fees.</p>
-          <p className="mt-2 font-medium">If you exceed your free plan limit, you'll be automatically upgraded to Basic ($4.99/month).</p>
-          <p>We'll email you before charging your card.</p>
+        <div className="text-center mt-12 text-sm text-muted-foreground max-w-3xl mx-auto">
+          <p className="font-medium mb-2">How our pricing works:</p>
+          <ul className="space-y-1 text-left">
+            <li>• <strong>Free Plan:</strong> Automatically upgrades to Basic when you exceed 10 texts</li>
+            <li>• <strong>Paid Plans:</strong> Auto-purchase 100 additional texts when you exceed your quota</li>
+            <li>• <strong>Annual Billing:</strong> Save 20% when you pay annually</li>
+          </ul>
+          <p className="mt-4">All plans include TCPA compliance and secure message delivery. Cancel anytime.</p>
         </div>
       </div>
     </div>

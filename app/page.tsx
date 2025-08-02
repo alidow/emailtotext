@@ -425,9 +425,20 @@ export default function Home() {
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Start free, upgrade when you need more. No hidden fees, cancel anytime.
             </p>
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <span className="text-sm font-medium text-gray-700">Billing:</span>
+              <div className="bg-gray-100 p-1 rounded-lg inline-flex">
+                <button className="px-4 py-2 text-sm font-medium bg-white text-gray-900 rounded-md shadow-sm">
+                  Monthly
+                </button>
+                <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+                  Annual <span className="text-green-600 font-semibold">(Save 20%)</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto">
             <Card className="border-2 hover:shadow-xl transition-all duration-200">
               <CardHeader className="pb-8">
                 <CardTitle className="text-2xl font-display">Free</CardTitle>
@@ -435,6 +446,7 @@ export default function Home() {
                   <span className="text-4xl font-bold">$0</span>
                   <span className="text-gray-600">/month</span>
                 </div>
+                <p className="text-sm text-gray-500 mt-2">Perfect for trying out</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-3">
@@ -448,7 +460,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
-                    <span>Standard message forwarding</span>
+                    <span>Auto-upgrade to Basic when exceeded</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
@@ -470,7 +482,9 @@ export default function Home() {
                 <div className="mt-4">
                   <span className="text-4xl font-bold">$4.99</span>
                   <span className="text-gray-600">/month</span>
+                  <p className="text-sm text-green-600 font-medium">or $4/mo billed annually</p>
                 </div>
+                <p className="text-sm text-gray-500 mt-2">Great for personal use</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-3">
@@ -481,6 +495,10 @@ export default function Home() {
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
                     <span className="font-medium">30-day message history</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <span className="font-medium">Auto-buy: $0.055/text after quota</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
@@ -499,11 +517,13 @@ export default function Home() {
 
             <Card className="border-2 hover:shadow-xl transition-all duration-200">
               <CardHeader className="pb-8">
-                <CardTitle className="text-2xl font-display">Pro</CardTitle>
+                <CardTitle className="text-2xl font-display">Standard</CardTitle>
                 <div className="mt-4">
                   <span className="text-4xl font-bold">$9.99</span>
                   <span className="text-gray-600">/month</span>
+                  <p className="text-sm text-green-600 font-medium">or $8/mo billed annually</p>
                 </div>
+                <p className="text-sm text-gray-500 mt-2">For active users</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-3">
@@ -517,11 +537,54 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
+                    <span>Auto-buy: $0.022/text after quota</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <span>Advanced analytics</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <span>Priority support</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full h-12">
+                  Get Started
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:shadow-xl transition-all duration-200">
+              <CardHeader className="pb-8">
+                <CardTitle className="text-2xl font-display">Premium</CardTitle>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">$19.99</span>
+                  <span className="text-gray-600">/month</span>
+                  <p className="text-sm text-green-600 font-medium">or $16/mo billed annually</p>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">For power users</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <span>1,000 texts per month</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-500" />
                     <span>Unlimited message history</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
-                    <span>Email support</span>
+                    <span>Auto-buy: $0.022/text after quota</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <span>API access</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <span>Dedicated support</span>
                   </li>
                 </ul>
                 <Button variant="outline" className="w-full h-12">
@@ -531,9 +594,27 @@ export default function Home() {
             </Card>
           </div>
 
-          <div className="text-center mt-12">
+          <div className="max-w-4xl mx-auto mt-12 p-6 bg-blue-50 rounded-lg">
+            <h3 className="font-semibold text-lg mb-2">How our pricing works:</h3>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 mt-0.5">•</span>
+                <span><strong>Free Plan:</strong> When you exceed 10 texts, we'll automatically upgrade you to Basic and notify you by email.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 mt-0.5">•</span>
+                <span><strong>Paid Plans:</strong> After using your monthly quota, additional texts are automatically purchased in blocks of 100 at your plan's rate + 10%.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 mt-0.5">•</span>
+                <span><strong>Annual Billing:</strong> Save 20% when you pay annually. You can switch between monthly and annual billing anytime.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="text-center mt-8">
             <p className="text-gray-600">
-              Need more than 500 texts per month? 
+              Need more than 1,000 texts per month? 
               <a href="/contact" className="text-blue-600 hover:underline ml-1">Contact us for custom pricing</a>
             </p>
           </div>
