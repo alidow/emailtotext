@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
-export default function VerifyPage() {
+function VerifyContent() {
   const searchParams = useSearchParams()
   const phone = searchParams.get("phone") || ""
   
@@ -19,22 +19,7 @@ export default function VerifyPage() {
   const [resendTimer, setResendTimer] = useState(60)
   const [canResend, setCanResend] = useState(false)
 
-  useEffect(() => {
-    if (phone) {
-      sendVerificationCode()
-    }
-  }, [phone])
-
-  useEffect(() => {
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000)
-      return () => clearTimeout(timer)
-    } else {
-      setCanResend(true)
-    }
-  }, [resendTimer])
-
-  const sendVerificationCode = async () => {
+  const sendVerificationCode = useCallback(async () => {
     try {
       const response = await fetch("/api/send-verification", {
         method: "POST",
@@ -49,7 +34,22 @@ export default function VerifyPage() {
     } catch (err: any) {
       setError(err.message)
     }
-  }
+  }, [phone])
+
+  useEffect(() => {
+    if (phone) {
+      sendVerificationCode()
+    }
+  }, [phone, sendVerificationCode])
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000)
+      return () => clearTimeout(timer)
+    } else {
+      setCanResend(true)
+    }
+  }, [resendTimer])
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -137,5 +137,21 @@ export default function VerifyPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle>Loading...</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
   )
 }
