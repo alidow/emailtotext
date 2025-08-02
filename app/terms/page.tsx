@@ -5,12 +5,18 @@ export default function TermsOfService() {
         <h1 className="text-4xl font-display font-bold mb-8">Terms of Service</h1>
         <p className="text-gray-600 mb-8">Last updated: January 1, 2025</p>
         
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+          <p className="text-blue-800 font-medium">
+            Email to Text Notifier is a service operated by Celestial Platform, LLC.
+          </p>
+        </div>
+        
         <div className="prose prose-lg max-w-none">
           <h2 className="text-2xl font-display font-semibold mt-8 mb-4">1. Acceptance of Terms</h2>
-          <p>By using Email to Text Notifier, you agree to these Terms of Service. If you do not agree, please do not use our service.</p>
+          <p>By using Email to Text Notifier, operated by Celestial Platform, LLC, you agree to these Terms of Service. If you do not agree, please do not use our service.</p>
 
           <h2 className="text-2xl font-display font-semibold mt-8 mb-4">2. Service Description</h2>
-          <p>Email to Text Notifier provides email-to-SMS forwarding services. We assign you a unique email address that forwards incoming emails to your verified phone number as text messages.</p>
+          <p>Email to Text Notifier, operated by Celestial Platform, LLC, provides email-to-SMS forwarding services. We assign you a unique email address that forwards incoming emails to your verified phone number as text messages.</p>
 
           <h2 className="text-2xl font-display font-semibold mt-8 mb-4">3. Account Registration</h2>
           <ul>
@@ -79,7 +85,7 @@ export default function TermsOfService() {
           <p>We may update these terms at any time. Continued use of the service constitutes acceptance of updated terms.</p>
 
           <h2 className="text-2xl font-display font-semibold mt-8 mb-4">10. Contact Information</h2>
-          <p>For questions about these terms, contact us at support@emailtotextnotify.com</p>
+          <p>For questions about these terms, contact Celestial Platform, LLC at support@emailtotextnotify.com</p>
         </div>
       </div>
     </div>

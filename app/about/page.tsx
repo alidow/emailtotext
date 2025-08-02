@@ -4,6 +4,12 @@ export default function AboutUs() {
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <h1 className="text-4xl font-display font-bold mb-8">About Email to Text Notifier</h1>
         
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+          <p className="text-blue-800 font-medium">
+            Email to Text Notifier is operated by Celestial Platform, LLC.
+          </p>
+        </div>
+        
         <div className="prose prose-lg max-w-none">
           <p className="text-xl text-gray-700 mb-8">
             Email to Text Notifier was created to solve a simple problem: how to stay connected to important emails when you're away from your computer.
@@ -39,7 +45,7 @@ export default function AboutUs() {
 
           <h2 className="text-2xl font-display font-semibold mt-8 mb-4">Contact Us</h2>
           <p>
-            Have questions or feedback? We'd love to hear from you at support@emailtotextnotify.com
+            Have questions or feedback? We'd love to hear from you at support@emailtotextnotify.com. Email to Text Notifier is operated by Celestial Platform, LLC.
           </p>
         </div>
       </div>

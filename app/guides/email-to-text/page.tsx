@@ -93,7 +93,7 @@ export default function EmailToTextGuide() {
 
           <h3 className="text-xl font-semibold mt-6 mb-3">Need Help?</h3>
           <p>
-            Contact our support team at support@emailtotextnotify.com or text HELP to any message you receive.
+            Contact our support team at support@emailtotextnotify.com or text HELP to any message you receive. Email to Text Notifier is operated by Celestial Platform, LLC.
           </p>
         </div>
       </div>

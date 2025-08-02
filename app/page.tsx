@@ -769,7 +769,7 @@ export default function Home() {
           </div>
           
           <div className="border-t border-gray-800 pt-8 text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} Email to Text Notifier. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Celestial Platform, LLC. All rights reserved.</p>
             <p className="mt-2">TCPA Compliant • Secure & Private</p>
           </div>
         </div>
