@@ -5,12 +5,14 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, CreditCard, MessageSquare, User } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
+import { PlanChangeModal } from "@/components/plan-change-modal"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -26,6 +28,8 @@ interface UserData {
   accepts_24hr_texts: boolean
   stripe_customer_id: string
   stripe_subscription_id: string
+  billing_cycle?: string
+  usage_count: number
 }
 
 export default function SettingsPage() {
@@ -37,6 +41,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [accepts24hr, setAccepts24hr] = useState(false)
+  const [showPlanChange, setShowPlanChange] = useState(false)
 
   useEffect(() => {
     // In mock mode, always fetch data
@@ -212,13 +217,40 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div>
                   <Label>Current Plan</Label>
-                  <p className="text-lg font-semibold capitalize">{userData.plan_type}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg font-semibold capitalize">{userData.plan_type}</p>
+                    {userData.billing_cycle && (
+                      <Badge variant="secondary" className="text-xs">
+                        {userData.billing_cycle}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 
                 {userData.stripe_subscription_id ? (
-                  <Button onClick={handleManageBilling}>
-                    Manage Subscription
-                  </Button>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Button onClick={handleManageBilling}>
+                        Manage Payment Method
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowPlanChange(!showPlanChange)}>
+                        Change Plan
+                      </Button>
+                    </div>
+                    
+                    {showPlanChange && (
+                      <PlanChangeModal 
+                        currentPlan={userData.plan_type}
+                        currentBillingCycle={userData.billing_cycle || 'monthly'}
+                        currentUsage={userData.usage_count}
+                        onClose={() => setShowPlanChange(false)}
+                        onSuccess={() => {
+                          setShowPlanChange(false)
+                          fetchUserData()
+                        }}
+                      />
+                    )}
+                  </div>
                 ) : (
                   <div>
                     <p className="text-sm text-muted-foreground mb-4">

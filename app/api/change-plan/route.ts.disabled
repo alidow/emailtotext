@@ -1,0 +1,221 @@
+import { NextRequest, NextResponse } from "next/server"
+import { currentUser } from "@clerk/nextjs/server"
+import { supabaseAdmin } from "@/lib/supabase"
+import Stripe from "stripe"
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-07-30.basil"
+})
+
+export async function POST(req: NextRequest) {
+  try {
+    const user = await currentUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    
+    const { targetPlan, billingCycle } = await req.json()
+    
+    // Get user from database
+    const { data: dbUser } = await supabaseAdmin
+      .from("users")
+      .select("*")
+      .eq("clerk_id", user.id)
+      .single()
+    
+    if (!dbUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+    
+    // Validate plan change
+    const planLimits: Record<string, number> = {
+      free: 10,
+      basic: 100,
+      standard: 500,
+      premium: 1000
+    }
+    
+    const targetLimit = planLimits[targetPlan]
+    const currentUsage = dbUser.usage_count
+    
+    // Check if downgrading and usage exceeds target plan
+    if (currentUsage > targetLimit) {
+      return NextResponse.json({ 
+        error: "usage_exceeds_limit",
+        message: `Your current usage (${currentUsage}) exceeds the ${targetPlan} plan limit (${targetLimit}). Please reduce usage before downgrading.`,
+        currentUsage,
+        targetLimit
+      }, { status: 400 })
+    }
+    
+    // Get current subscription
+    if (!dbUser.stripe_subscription_id) {
+      return NextResponse.json({ 
+        error: "no_subscription",
+        message: "No active subscription found"
+      }, { status: 400 })
+    }
+    
+    const subscription = await stripe.subscriptions.retrieve(dbUser.stripe_subscription_id)
+    
+    // Determine new price ID
+    const priceMap: Record<string, Record<string, string>> = {
+      basic: {
+        monthly: process.env.NEXT_PUBLIC_STRIPE_BASIC_MONTHLY_PRICE_ID!,
+        annual: process.env.NEXT_PUBLIC_STRIPE_BASIC_ANNUAL_PRICE_ID!
+      },
+      standard: {
+        monthly: process.env.NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID!,
+        annual: process.env.NEXT_PUBLIC_STRIPE_STANDARD_ANNUAL_PRICE_ID!
+      },
+      premium: {
+        monthly: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID!,
+        annual: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_ANNUAL_PRICE_ID!
+      }
+    }
+    
+    const newPriceId = priceMap[targetPlan]?.[billingCycle]
+    if (!newPriceId) {
+      return NextResponse.json({ 
+        error: "invalid_plan",
+        message: "Invalid plan or billing cycle"
+      }, { status: 400 })
+    }
+    
+    // Update subscription with proration
+    const updatedSubscription = await stripe.subscriptions.update(
+      subscription.id,
+      {
+        items: [{
+          id: subscription.items.data[0].id,
+          price: newPriceId
+        }],
+        proration_behavior: 'create_prorations'
+      }
+    )
+    
+    // Update user record
+    await supabaseAdmin
+      .from("users")
+      .update({
+        plan_type: targetPlan,
+        billing_cycle: billingCycle
+      })
+      .eq("id", dbUser.id)
+    
+    // Log the change
+    await supabaseAdmin
+      .from("billing_events")
+      .insert({
+        user_id: dbUser.id,
+        event_type: "plan_changed",
+        details: {
+          from_plan: dbUser.plan_type,
+          to_plan: targetPlan,
+          from_billing_cycle: dbUser.billing_cycle,
+          to_billing_cycle: billingCycle,
+          subscription_id: subscription.id
+        }
+      })
+    
+    return NextResponse.json({ 
+      success: true,
+      subscription: updatedSubscription,
+      message: `Successfully changed to ${targetPlan} plan (${billingCycle} billing)`
+    })
+    
+  } catch (error) {
+    console.error("Plan change error:", error)
+    return NextResponse.json({ 
+      error: "Failed to change plan" 
+    }, { status: 500 })
+  }
+}
+
+// GET endpoint to preview proration
+export async function GET(req: NextRequest) {
+  try {
+    const user = await currentUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    
+    const { searchParams } = new URL(req.url)
+    const targetPlan = searchParams.get("targetPlan")
+    const billingCycle = searchParams.get("billingCycle")
+    
+    if (!targetPlan || !billingCycle) {
+      return NextResponse.json({ 
+        error: "Missing parameters" 
+      }, { status: 400 })
+    }
+    
+    // Get user
+    const { data: dbUser } = await supabaseAdmin
+      .from("users")
+      .select("*")
+      .eq("clerk_id", user.id)
+      .single()
+    
+    if (!dbUser?.stripe_subscription_id) {
+      return NextResponse.json({ 
+        error: "No active subscription" 
+      }, { status: 400 })
+    }
+    
+    // Get price ID
+    const priceMap: Record<string, Record<string, string>> = {
+      basic: {
+        monthly: process.env.NEXT_PUBLIC_STRIPE_BASIC_MONTHLY_PRICE_ID!,
+        annual: process.env.NEXT_PUBLIC_STRIPE_BASIC_ANNUAL_PRICE_ID!
+      },
+      standard: {
+        monthly: process.env.NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID!,
+        annual: process.env.NEXT_PUBLIC_STRIPE_STANDARD_ANNUAL_PRICE_ID!
+      },
+      premium: {
+        monthly: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID!,
+        annual: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_ANNUAL_PRICE_ID!
+      }
+    }
+    
+    const newPriceId = priceMap[targetPlan]?.[billingCycle]
+    const subscription = await stripe.subscriptions.retrieve(dbUser.stripe_subscription_id)
+    
+    // Preview upcoming invoice with new price
+    const upcomingInvoice = await stripe.invoices.upcoming({
+      subscription: subscription.id,
+      subscription_items: [{
+        id: subscription.items.data[0].id,
+        price: newPriceId
+      }],
+      subscription_proration_behavior: 'create_prorations'
+    })
+    
+    // Calculate proration details
+    const proratedItems = upcomingInvoice.lines.data.filter(line => line.proration)
+    const creditAmount = proratedItems
+      .filter(item => item.amount < 0)
+      .reduce((sum, item) => sum + Math.abs(item.amount), 0)
+    const chargeAmount = proratedItems
+      .filter(item => item.amount > 0)
+      .reduce((sum, item) => sum + item.amount, 0)
+    
+    return NextResponse.json({
+      currentPlan: dbUser.plan_type,
+      currentBillingCycle: dbUser.billing_cycle,
+      targetPlan,
+      targetBillingCycle: billingCycle,
+      immediateCharge: Math.max(0, (chargeAmount - creditAmount) / 100),
+      credit: creditAmount / 100,
+      nextInvoiceAmount: upcomingInvoice.amount_due / 100,
+      nextInvoiceDate: new Date(upcomingInvoice.period_end * 1000)
+    })
+    
+  } catch (error) {
+    console.error("Proration preview error:", error)
+    return NextResponse.json({ 
+      error: "Failed to calculate proration" 
+    }, { status: 500 })
+  }
+}

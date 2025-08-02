@@ -136,4 +136,22 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+  
+  <url>
+    <loc>https://emailtotextnotify.com/use-cases/aws-sns-cost</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://emailtotextnotify.com/use-cases/wordpress-woocommerce</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://emailtotextnotify.com/use-cases/stripe-payments</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
