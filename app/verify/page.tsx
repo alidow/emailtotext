@@ -104,7 +104,7 @@ function VerifyContent() {
             
             <div className="space-y-2">
               <Label htmlFor="code">Verification Code</Label>
-              <Input
+              <input
                 id="code"
                 type="text"
                 placeholder="123456"
@@ -112,7 +112,12 @@ function VerifyContent() {
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 maxLength={6}
                 required
-                className="text-center text-2xl tracking-widest"
+                className="w-full px-8 h-24 text-3xl md:text-3xl text-center font-bold tracking-wider border-4 border-gray-200 bg-white rounded-2xl shadow-lg placeholder:text-gray-400 placeholder:text-3xl placeholder:font-normal focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:shadow-xl focus:-translate-y-1 transition-all duration-300 hover:shadow-xl hover:border-gray-300 focus:outline-none"
+                style={{
+                  letterSpacing: '0.25em',
+                  fontFamily: 'system-ui, -apple-system, "SF Pro Display", sans-serif',
+                  fontSize: '1.875rem'
+                }}
               />
             </div>
 
