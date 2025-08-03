@@ -23,13 +23,13 @@ export default function UptimeMonitoringPage() {
               Website Uptime Monitoring
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              Get Free SMS Alerts When Your Website Goes Down
-              <span className="block text-blue-600 mt-2">No UptimeRobot Pro Plan Required</span>
+              UptimeRobot Only Sends Email?
+              <span className="block text-blue-600 mt-2">Convert to SMS Without Pro Plan</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              UptimeRobot's free plan is great—except it only sends emails. When your site 
-              crashes at 3 AM, you need SMS alerts, not buried emails. We make it happen 
-              without expensive Pro SMS credits.
+              UptimeRobot's free plan restricts you to email alerts. We convert those emails 
+              to instant SMS. Get notified of downtime in seconds, not when you check email 
+              hours later. No expensive SMS credits needed.
             </p>
           </div>
 
@@ -678,11 +678,11 @@ export default function UptimeMonitoringPage() {
             <Link href="/use-cases/server-monitoring" className="text-blue-600 hover:underline">
               Server & Infrastructure Monitoring →
             </Link>
-            <Link href="/use-cases/api-monitoring" className="text-blue-600 hover:underline">
-              API Endpoint Monitoring →
+            <Link href="/use-cases/cloudflare-alerts" className="text-blue-600 hover:underline">
+              Cloudflare Security Alerts →
             </Link>
-            <Link href="/use-cases/ssl-expiration" className="text-blue-600 hover:underline">
-              SSL Certificate Expiration Alerts →
+            <Link href="/use-cases/github-actions" className="text-blue-600 hover:underline">
+              CI/CD Build Alerts →
             </Link>
           </div>
         </div>

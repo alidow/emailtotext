@@ -479,7 +479,7 @@ export default function Home() {
             </Card>
 
             <Card className="border-2 border-blue-500 relative shadow-xl scale-105">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold text-center whitespace-nowrap">
                 MOST POPULAR
               </div>
               <CardHeader className="pb-8">
@@ -981,7 +981,11 @@ export default function Home() {
               leaving many users searching for alternatives. Email to Text Notifier provides a superior 
               replacement with more features, better reliability, and support for all carriers.
             </p>
-            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              onClick={() => router.push('/verify')}
+            >
               Switch from AT&T Today
             </Button>
           </div>
@@ -1002,6 +1006,7 @@ export default function Home() {
             size="lg" 
             variant="secondary"
             className="h-14 px-8 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+            onClick={() => router.push('/verify')}
           >
             Start Free Trial
             <ArrowRight className="ml-2 h-5 w-5" />

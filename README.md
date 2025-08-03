@@ -101,9 +101,12 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment guide.
 
 ## Plans
 
-- **Free**: 10 texts/month, 7-day email history
-- **Basic** ($4.99/mo): 100 texts/month, 30-day history
-- **Pro** ($9.99/mo): 500 texts/month, 90-day history
+- **Free**: 10 texts/month, 7-day email history, auto-upgrades to Basic when exceeded
+- **Basic** ($4.99/mo): 100 texts/month, 30-day history, $0.055/text after quota
+- **Standard** ($9.99/mo): 500 texts/month, 90-day history, $0.022/text after quota
+- **Premium** ($19.99/mo): 1,000 texts/month, unlimited history, $0.022/text after quota
+
+All paid plans include 20% discount with annual billing.
 
 ## TCPA Compliance
 

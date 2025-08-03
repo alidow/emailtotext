@@ -23,12 +23,12 @@ export default function CloudflareAlertsPage() {
               Cloudflare Security Integration
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              Get SMS Alerts for Cloudflare Security Events
-              <span className="block text-orange-600 mt-2">No PagerDuty Required</span>
+              Cloudflare Only Sends Email Alerts?
+              <span className="block text-orange-600 mt-2">Convert Them to SMS in 2 Minutes</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Cloudflare's free tier only sends email notifications. When your site is under DDoS attack 
-              or experiencing errors, you need instant SMS alerts—not buried emails.
+              Cloudflare restricts SMS to Enterprise plans. We convert your Cloudflare email 
+              notifications into instant SMS. DDoS attacks, origin errors, SSL warnings—get them all as texts.
             </p>
           </div>
 

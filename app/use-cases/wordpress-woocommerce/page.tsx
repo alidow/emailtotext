@@ -821,14 +821,14 @@ Content: $\{{ order.total }} from \{{ order.billing_first_name }}`}</pre>
         <div className="container mx-auto max-w-4xl px-4">
           <h3 className="text-lg font-semibold mb-4">Related E-Commerce Guides</h3>
           <div className="grid md:grid-cols-3 gap-4">
-            <Link href="/use-cases/shopify-alerts" className="text-blue-600 hover:underline">
-              Shopify Order Notifications →
-            </Link>
             <Link href="/use-cases/stripe-payments" className="text-blue-600 hover:underline">
               Stripe Payment Alerts →
             </Link>
-            <Link href="/use-cases/inventory-management" className="text-blue-600 hover:underline">
-              Inventory Management SMS →
+            <Link href="/use-cases/salesforce-crm" className="text-blue-600 hover:underline">
+              CRM & Sales Alerts →
+            </Link>
+            <Link href="/use-cases/uptime-monitoring" className="text-blue-600 hover:underline">
+              Website Monitoring →
             </Link>
           </div>
         </div>

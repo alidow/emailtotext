@@ -41,13 +41,17 @@ export default function EmailToTextGuide() {
 
           <h3 className="text-xl font-semibold mt-6 mb-3">Step 2: Choose Your Plan</h3>
           <p>
-            Select from our three plans:
+            Select from our four plans:
           </p>
           <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Free:</strong> 10 messages/month, 7-day history</li>
-            <li><strong>Basic ($4.99):</strong> 100 messages/month, 30-day history</li>
-            <li><strong>Pro ($9.99):</strong> 500 messages/month, 90-day history</li>
+            <li><strong>Free:</strong> 10 texts/month, 7-day history, auto-upgrades to Basic when exceeded</li>
+            <li><strong>Basic ($4.99/mo):</strong> 100 texts/month, 30-day history, $0.055/text after quota</li>
+            <li><strong>Standard ($9.99/mo):</strong> 500 texts/month, 90-day history, $0.022/text after quota</li>
+            <li><strong>Premium ($19.99/mo):</strong> 1,000 texts/month, unlimited history, $0.022/text after quota</li>
           </ul>
+          <p className="mt-2 text-sm text-gray-600">
+            Save 20% with annual billing on all paid plans.
+          </p>
 
           <h3 className="text-xl font-semibold mt-6 mb-3">Step 3: Get Your Email Address</h3>
           <p>

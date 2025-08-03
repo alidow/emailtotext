@@ -66,7 +66,8 @@ export default function SecurityBestPractices() {
           <ul className="list-disc pl-6 space-y-2">
             <li>Free plan: Messages deleted after 7 days</li>
             <li>Basic plan: Messages deleted after 30 days</li>
-            <li>Pro plan: Messages deleted after 90 days</li>
+            <li>Standard plan: Messages deleted after 90 days</li>
+            <li>Premium plan: Unlimited message history</li>
           </ul>
 
           <h3 className="text-xl font-semibold mt-6 mb-3">Access Controls</h3>

@@ -79,9 +79,16 @@ supabase secrets set NEXT_PUBLIC_APP_URL=https://emailtotextnotify.com
 ## Step 4: Stripe Setup
 
 1. Create products and prices:
-   - Basic Plan: $4.99/month
-   - Pro Plan: $9.99/month
-2. Get price IDs and update `onboarding/page.tsx`
+   - Basic Plan: $4.99/month (annual: $47.88/year)
+   - Standard Plan: $9.99/month (annual: $95.88/year)
+   - Premium Plan: $19.99/month (annual: $191.88/year)
+2. Get price IDs and add to environment variables:
+   - `NEXT_PUBLIC_STRIPE_BASIC_MONTHLY_PRICE_ID`
+   - `NEXT_PUBLIC_STRIPE_BASIC_ANNUAL_PRICE_ID`
+   - `NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID`
+   - `NEXT_PUBLIC_STRIPE_STANDARD_ANNUAL_PRICE_ID`
+   - `NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID`
+   - `NEXT_PUBLIC_STRIPE_PREMIUM_ANNUAL_PRICE_ID`
 3. Configure webhook endpoint:
    - URL: `https://emailtotextnotify.com/api/webhooks/stripe`
    - Events: `checkout.session.completed`, `customer.subscription.*`

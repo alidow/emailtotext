@@ -36,19 +36,22 @@ export default function TermsOfService() {
 
           <h3 className="text-xl font-semibold mt-6 mb-3">Paid Plans</h3>
           <ul>
-            <li>Basic: $4.99/month for 100 messages</li>
-            <li>Pro: $9.99/month for 500 messages</li>
+            <li>Basic: $4.99/month for 100 messages ($0.055/text after quota)</li>
+            <li>Standard: $9.99/month for 500 messages ($0.022/text after quota)</li>
+            <li>Premium: $19.99/month for 1,000 messages ($0.022/text after quota)</li>
+            <li>Annual billing available with 20% discount</li>
             <li>Unused messages do not roll over</li>
-            <li>Billing occurs monthly on the same date</li>
+            <li>Billing occurs monthly or annually based on your selection</li>
           </ul>
 
-          <h3 className="text-xl font-semibold mt-6 mb-3">Automatic Upgrade Policy</h3>
-          <p>If you exceed your free plan limit, you will be automatically upgraded to the Basic plan. We will:</p>
+          <h3 className="text-xl font-semibold mt-6 mb-3">Automatic Upgrade & Auto-Buy Policy</h3>
+          <p><strong>Free Plan:</strong> If you exceed your 10 text limit, you will be automatically upgraded to the Basic plan. We will:</p>
           <ul>
             <li>Send an email notification before charging your card</li>
             <li>Charge the provided credit card $4.99/month</li>
             <li>Allow you to downgrade or cancel at any time</li>
           </ul>
+          <p className="mt-3"><strong>Paid Plans:</strong> If you exceed your monthly quota, we will automatically purchase 100 additional texts at your plan rate plus 10%. You will be notified via email when this occurs.</p>
 
           <h2 className="text-2xl font-display font-semibold mt-8 mb-4">5. Acceptable Use Policy</h2>
           <p>You agree NOT to use our service to:</p>

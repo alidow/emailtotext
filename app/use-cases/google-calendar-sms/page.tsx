@@ -538,14 +538,14 @@ subject:("Reminder" OR "Alert")
         <div className="container mx-auto max-w-4xl px-4">
           <h3 className="text-lg font-semibold mb-4">Related Guides</h3>
           <div className="grid md:grid-cols-3 gap-4">
-            <Link href="/use-cases/outlook-calendar" className="text-blue-600 hover:underline">
-              Outlook Calendar SMS Alerts →
+            <Link href="/use-cases/carrier-email-shutdown" className="text-blue-600 hover:underline">
+              Carrier Email Gateway Shutdown →
             </Link>
-            <Link href="/use-cases/medication-reminders" className="text-blue-600 hover:underline">
-              Medication Reminder System →
+            <Link href="/use-cases/home-assistant" className="text-blue-600 hover:underline">
+              Smart Home Alerts →
             </Link>
-            <Link href="/use-cases/appointment-reminders" className="text-blue-600 hover:underline">
-              Business Appointment Reminders →
+            <Link href="/use-cases/wordpress-woocommerce" className="text-blue-600 hover:underline">
+              E-commerce Order Alerts →
             </Link>
           </div>
         </div>

@@ -803,11 +803,11 @@ Receiver: 5551234567@txt.emailtotextnotify.com</pre>
             <Link href="/use-cases/server-monitoring" className="text-blue-600 hover:underline">
               IT Infrastructure Monitoring →
             </Link>
-            <Link href="/use-cases/personal-alerts" className="text-blue-600 hover:underline">
-              Personal Safety Alerts →
+            <Link href="/use-cases/google-calendar-sms" className="text-blue-600 hover:underline">
+              Calendar & Reminder Alerts →
             </Link>
-            <Link href="/use-cases/business-security" className="text-blue-600 hover:underline">
-              Business Security Systems →
+            <Link href="/use-cases/carrier-email-shutdown" className="text-blue-600 hover:underline">
+              Carrier Gateway Alternative →
             </Link>
           </div>
         </div>
