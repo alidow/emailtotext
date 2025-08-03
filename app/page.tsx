@@ -71,26 +71,10 @@ export default function Home() {
             <br />
             <span className="text-gray-900">to your phone as SMS</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
             The most reliable email to text forwarding service. Get instant SMS alerts from 
             important emails, monitoring systems, and notifications.
           </p>
-          
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-sm text-gray-500 mb-12">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              <span>Highly Secure</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>99.9% Uptime</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              <span>Instant Delivery</span>
-            </div>
-          </div>
         </div>
 
         {/* Main CTA Card */}
