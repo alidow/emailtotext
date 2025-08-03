@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -9,9 +10,11 @@ import { Label } from "@/components/ui/label"
 import { MessageSquare, Shield, Zap, ArrowRight, Check, Phone, Mail, Bell, Server, Clock, Star, ChevronRight, BookOpen, HelpCircle } from "lucide-react"
 
 export default function Home() {
+  const router = useRouter()
   const [phone, setPhone] = useState("")
   const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
 
   const formatPhoneNumber = (value: string) => {
     const phoneNumber = value.replace(/[^\d]/g, "")
@@ -428,10 +431,24 @@ export default function Home() {
             <div className="mt-6 flex items-center justify-center gap-4">
               <span className="text-sm font-medium text-gray-700">Billing:</span>
               <div className="bg-gray-100 p-1 rounded-lg inline-flex">
-                <button className="px-4 py-2 text-sm font-medium bg-white text-gray-900 rounded-md shadow-sm">
+                <button 
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    billingCycle === 'monthly' 
+                      ? 'bg-white text-gray-900 shadow-sm' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                  onClick={() => setBillingCycle('monthly')}
+                >
                   Monthly
                 </button>
-                <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+                <button 
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    billingCycle === 'annual' 
+                      ? 'bg-white text-gray-900 shadow-sm' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                  onClick={() => setBillingCycle('annual')}
+                >
                   Annual <span className="text-green-600 font-semibold">(Save 20%)</span>
                 </button>
               </div>
@@ -467,7 +484,11 @@ export default function Home() {
                     <span>Email support</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full h-12">
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12"
+                  onClick={() => router.push('/verify')}
+                >
                   Start Free
                 </Button>
               </CardContent>
@@ -480,9 +501,18 @@ export default function Home() {
               <CardHeader className="pb-8">
                 <CardTitle className="text-2xl font-display">Basic</CardTitle>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold">$4.99</span>
-                  <span className="text-gray-600">/month</span>
-                  <p className="text-sm text-green-600 font-medium">or $4/mo billed annually</p>
+                  {billingCycle === 'monthly' ? (
+                    <>
+                      <span className="text-4xl font-bold">$4.99</span>
+                      <span className="text-gray-600">/month</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-bold">$4</span>
+                      <span className="text-gray-600">/month</span>
+                      <p className="text-sm text-green-600 font-medium">$47.88 billed annually</p>
+                    </>
+                  )}
                 </div>
                 <p className="text-sm text-gray-500 mt-2">Great for personal use</p>
               </CardHeader>
@@ -509,7 +539,10 @@ export default function Home() {
                     <span className="font-medium">Priority support</span>
                   </li>
                 </ul>
-                <Button className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                <Button 
+                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                  onClick={() => router.push(`/verify?plan=basic&billing=${billingCycle}`)}
+                >
                   Get Started
                 </Button>
               </CardContent>
@@ -519,9 +552,18 @@ export default function Home() {
               <CardHeader className="pb-8">
                 <CardTitle className="text-2xl font-display">Standard</CardTitle>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold">$9.99</span>
-                  <span className="text-gray-600">/month</span>
-                  <p className="text-sm text-green-600 font-medium">or $8/mo billed annually</p>
+                  {billingCycle === 'monthly' ? (
+                    <>
+                      <span className="text-4xl font-bold">$9.99</span>
+                      <span className="text-gray-600">/month</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-bold">$8</span>
+                      <span className="text-gray-600">/month</span>
+                      <p className="text-sm text-green-600 font-medium">$95.88 billed annually</p>
+                    </>
+                  )}
                 </div>
                 <p className="text-sm text-gray-500 mt-2">For active users</p>
               </CardHeader>
@@ -548,7 +590,11 @@ export default function Home() {
                     <span>Priority support</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full h-12">
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12"
+                  onClick={() => router.push(`/verify?plan=standard&billing=${billingCycle}`)}
+                >
                   Get Started
                 </Button>
               </CardContent>
@@ -558,9 +604,18 @@ export default function Home() {
               <CardHeader className="pb-8">
                 <CardTitle className="text-2xl font-display">Premium</CardTitle>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold">$19.99</span>
-                  <span className="text-gray-600">/month</span>
-                  <p className="text-sm text-green-600 font-medium">or $16/mo billed annually</p>
+                  {billingCycle === 'monthly' ? (
+                    <>
+                      <span className="text-4xl font-bold">$19.99</span>
+                      <span className="text-gray-600">/month</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-bold">$16</span>
+                      <span className="text-gray-600">/month</span>
+                      <p className="text-sm text-green-600 font-medium">$191.88 billed annually</p>
+                    </>
+                  )}
                 </div>
                 <p className="text-sm text-gray-500 mt-2">For power users</p>
               </CardHeader>
@@ -587,7 +642,11 @@ export default function Home() {
                     <span>Dedicated support</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full h-12">
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12"
+                  onClick={() => router.push(`/verify?plan=premium&billing=${billingCycle}`)}
+                >
                   Get Started
                 </Button>
               </CardContent>
@@ -617,6 +676,170 @@ export default function Home() {
               Need more than 1,000 texts per month? 
               <a href="/contact" className="text-blue-600 hover:underline ml-1">Contact us for custom pricing</a>
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Use Cases Section */}
+      <section id="use-cases" className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-display font-bold mb-4">Popular Use Cases & Solutions</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Trusted by thousands to solve critical notification challenges
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12">
+            <Card className="hover:shadow-xl transition-all duration-200 cursor-pointer" onClick={() => window.location.href = '/use-cases/carrier-email-shutdown'}>
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center">
+                    <Phone className="h-5 w-5 text-red-600" />
+                  </div>
+                  <span className="text-sm text-red-600 font-medium">CRITICAL</span>
+                </div>
+                <CardTitle className="text-xl font-display mb-3">
+                  Carrier Email Gateway Shutdown
+                </CardTitle>
+                <CardDescription>
+                  AT&T, Verizon, and T-Mobile have all shut down their email-to-text gateways. Get a reliable replacement that works with all carriers.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-red-600 font-medium">
+                  <span>Find Your Solution</span>
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-xl transition-all duration-200 cursor-pointer" onClick={() => window.location.href = '/use-cases/server-monitoring'}>
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Server className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <span className="text-sm text-blue-600 font-medium">DEVOPS</span>
+                </div>
+                <CardTitle className="text-xl font-display mb-3">
+                  Server Monitoring Alerts
+                </CardTitle>
+                <CardDescription>
+                  Get instant SMS alerts from Nagios, Zabbix, and other monitoring tools when servers go down or critical issues arise.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-blue-600 font-medium">
+                  <span>Learn More</span>
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-xl transition-all duration-200 cursor-pointer" onClick={() => window.location.href = '/use-cases/wordpress-woocommerce'}>
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-green-600" />
+                  </div>
+                  <span className="text-sm text-green-600 font-medium">ECOMMERCE</span>
+                </div>
+                <CardTitle className="text-xl font-display mb-3">
+                  WooCommerce Order Alerts
+                </CardTitle>
+                <CardDescription>
+                  Instant SMS notifications for new orders, low stock alerts, and payment issues. Never miss a sale again.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-green-600 font-medium">
+                  <span>Setup Guide</span>
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-xl transition-all duration-200 cursor-pointer" onClick={() => window.location.href = '/use-cases/uptime-monitoring'}>
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <span className="text-sm text-orange-600 font-medium">MONITORING</span>
+                </div>
+                <CardTitle className="text-xl font-display mb-3">
+                  UptimeRobot Free Plan Fix
+                </CardTitle>
+                <CardDescription>
+                  UptimeRobot's free plan doesn't include SMS. Forward their email alerts to get instant text notifications without upgrading.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-orange-600 font-medium">
+                  <span>View Solution</span>
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-xl transition-all duration-200 cursor-pointer" onClick={() => window.location.href = '/use-cases/trading-alerts'}>
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <span className="text-sm text-purple-600 font-medium">TRADING</span>
+                </div>
+                <CardTitle className="text-xl font-display mb-3">
+                  TradingView & IBKR Alerts
+                </CardTitle>
+                <CardDescription>
+                  Get instant SMS alerts for price movements, trade executions, and market conditions. Never miss a trading opportunity.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-purple-600 font-medium">
+                  <span>Start Now</span>
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-xl transition-all duration-200 cursor-pointer" onClick={() => window.location.href = '/use-cases/aws-sns-cost'}>
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <span className="text-sm text-indigo-600 font-medium">COST SAVINGS</span>
+                </div>
+                <CardTitle className="text-xl font-display mb-3">
+                  AWS SNS Alternative
+                </CardTitle>
+                <CardDescription>
+                  Save up to 95% compared to AWS SNS pricing. Our flat-rate plans beat AWS's $0.00645 per SMS pricing model.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center text-indigo-600 font-medium">
+                  <span>Calculate Savings</span>
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center">
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="group"
+              onClick={() => window.location.href = '/use-cases'}
+            >
+              View All Use Cases
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
           </div>
         </div>
       </section>
@@ -847,6 +1070,7 @@ export default function Home() {
                 <li><a href="/terms" className="hover:text-white transition-colors">Terms of Service</a></li>
                 <li><a href="/cookies" className="hover:text-white transition-colors">Cookie Policy</a></li>
                 <li><a href="/refund" className="hover:text-white transition-colors">Refund Policy</a></li>
+                <li><a href="/sitemap.xml" className="hover:text-white transition-colors">Sitemap</a></li>
               </ul>
             </div>
           </div>

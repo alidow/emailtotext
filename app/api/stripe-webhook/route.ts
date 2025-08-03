@@ -24,6 +24,18 @@ export async function POST(req: NextRequest) {
 
   try {
     switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session
+        await handleCheckoutComplete(session)
+        break
+      }
+      
+      case "setup_intent.succeeded": {
+        const setupIntent = event.data.object as Stripe.SetupIntent
+        await handleSetupIntentSucceeded(setupIntent)
+        break
+      }
+      
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice
         await handleSuccessfulPayment(invoice)
@@ -66,6 +78,86 @@ export async function POST(req: NextRequest) {
     console.error("Webhook handler error:", error)
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 })
   }
+}
+
+async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
+  const customerId = session.customer as string
+  const metadata = session.metadata
+  
+  if (!metadata?.user_id) {
+    console.error("No user_id in checkout session metadata")
+    return
+  }
+  
+  // Update user with subscription info if it's a subscription checkout
+  if (session.mode === "subscription" && session.subscription) {
+    const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+    
+    await supabaseAdmin
+      .from("users")
+      .update({
+        stripe_subscription_id: subscription.id,
+        plan_type: metadata.plan_type || "basic",
+        billing_cycle: metadata.billing_cycle || "monthly"
+      })
+      .eq("id", metadata.user_id)
+      
+    // Log billing event
+    await supabaseAdmin
+      .from("billing_events")
+      .insert({
+        user_id: metadata.user_id,
+        event_type: "subscription_created",
+        amount: session.amount_total ? session.amount_total / 100 : 0,
+        details: {
+          subscription_id: subscription.id,
+          plan_type: metadata.plan_type,
+          billing_cycle: metadata.billing_cycle,
+          session_id: session.id
+        }
+      })
+  }
+  
+  // For setup mode (free plan), just log the card was added
+  if (session.mode === "setup") {
+    await supabaseAdmin
+      .from("billing_events")
+      .insert({
+        user_id: metadata.user_id,
+        event_type: "payment_method_added",
+        amount: 0,
+        details: {
+          session_id: session.id,
+          plan_type: "free"
+        }
+      })
+  }
+}
+
+async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
+  const customerId = setupIntent.customer as string
+  
+  // Get user by customer ID
+  const { data: user } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("stripe_customer_id", customerId)
+    .single()
+    
+  if (!user) {
+    console.error("User not found for setup intent:", customerId)
+    return
+  }
+  
+  // Update user to indicate they have a payment method
+  const paymentMethodId = setupIntent.payment_method as string
+  
+  await supabaseAdmin
+    .from("users")
+    .update({
+      stripe_payment_method_id: paymentMethodId
+    })
+    .eq("id", user.id)
 }
 
 async function handleSuccessfulPayment(invoice: Stripe.Invoice) {

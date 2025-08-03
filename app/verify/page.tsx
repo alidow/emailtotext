@@ -12,6 +12,8 @@ import { AlertCircle } from "lucide-react"
 function VerifyContent() {
   const searchParams = useSearchParams()
   const phone = searchParams.get("phone") || ""
+  const plan = searchParams.get("plan") || ""
+  const billing = searchParams.get("billing") || "monthly"
   
   const [code, setCode] = useState("")
   const [loading, setLoading] = useState(false)
@@ -68,8 +70,12 @@ function VerifyContent() {
         throw new Error(data.error || "Invalid verification code")
       }
       
-      // Redirect to sign up page
-      window.location.href = "/sign-up"
+      // Redirect to sign up page with plan info
+      let redirectUrl = "/sign-up"
+      if (plan) {
+        redirectUrl += `?plan=${plan}&billing=${billing}`
+      }
+      window.location.href = redirectUrl
     } catch (err: any) {
       setError(err.message)
     } finally {

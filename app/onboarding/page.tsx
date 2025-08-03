@@ -84,6 +84,28 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
+  
+  // Get plan from URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const planParam = urlParams.get('plan')
+    const billingParam = urlParams.get('billing')
+    
+    if (planParam) {
+      // Auto-select the plan if passed from pricing page
+      const matchingPlan = plans.find(p => p.name.toLowerCase() === planParam.toLowerCase())
+      if (matchingPlan) {
+        setSelectedPlan(matchingPlan.name)
+        if (billingParam === 'annual' || billingParam === 'monthly') {
+          setBillingCycle(billingParam as 'monthly' | 'annual')
+        }
+        // Auto-submit after a short delay to show selection
+        setTimeout(() => {
+          handlePlanSelect(matchingPlan)
+        }, 500)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (isLoaded && !user) {
