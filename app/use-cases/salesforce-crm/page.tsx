@@ -176,7 +176,7 @@ export default function SalesforceCRMPage() {
                   <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">1</span>
                   <div>
                     <h4 className="font-semibold">Configure CRM Email Alert</h4>
-                    <p className="text-sm text-gray-600">Create workflow rule: "Email me when Lead Score > 80"</p>
+                    <p className="text-sm text-gray-600">Create workflow rule: "Email me when Lead Score {'>'} 80"</p>
                   </div>
                 </li>
                 <li className="flex gap-4">
