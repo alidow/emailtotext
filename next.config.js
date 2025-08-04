@@ -1,19 +1,22 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  // Sentry error handling
-  sentry: {
-    hideSourceMaps: true,
-  },
-}
+const nextConfig = {}
 
-// Wrap with Sentry config in production
-if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
-  const { withSentryConfig } = require('@sentry/nextjs')
-  module.exports = withSentryConfig(nextConfig, {
-    silent: true,
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-  })
-} else {
-  module.exports = nextConfig
-}
+// Wrap with Sentry config
+const { withSentryConfig } = require('@sentry/nextjs')
+
+module.exports = withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+  
+  // Suppresses source map uploading logs during build
+  silent: true,
+  
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Hides source maps from generated client bundles
+  hideSourceMaps: true,
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+})

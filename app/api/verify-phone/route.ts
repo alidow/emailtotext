@@ -5,8 +5,19 @@ import { isMockMode } from "@/lib/mock-mode"
 import * as Sentry from "@sentry/nextjs"
 
 export async function POST(req: NextRequest) {
+  let phone: string | undefined
+  
   try {
-    const { phone, code } = await req.json()
+    const body = await req.json()
+    phone = body.phone
+    const code = body.code
+    
+    if (!phone) {
+      return NextResponse.json(
+        { error: "Phone number is required" },
+        { status: 400 }
+      )
+    }
     
     // Clean phone number to E.164 format
     const cleanPhone = phone.replace(/\D/g, "")

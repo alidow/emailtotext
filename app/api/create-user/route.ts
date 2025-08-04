@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { cookies } from "next/headers"
-import { sendTransactionalEmail } from "../emails/send/route"
+import { sendTransactionalEmail } from "@/lib/send-transactional-email"
 import * as Sentry from "@sentry/nextjs"
 
 export async function POST(req: NextRequest) {

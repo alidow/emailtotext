@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import Stripe from "stripe"
 import { supabaseAdmin } from "@/lib/supabase"
-import { sendTransactionalEmail } from "../emails/send/route"
+import { sendTransactionalEmail } from "@/lib/send-transactional-email"
 import * as Sentry from "@sentry/nextjs"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
