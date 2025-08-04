@@ -20,6 +20,17 @@ export default function Home() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [error, setError] = useState("")
 
+  // Helper function to handle smooth scrolling
+  const scrollToGetStarted = () => {
+    const element = document.getElementById('get-started')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      // Fallback to top of page if element not found
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   const formatPhoneNumber = (value: string) => {
     const phoneNumber = value.replace(/[^\d]/g, "")
     const phoneNumberLength = phoneNumber.length
@@ -533,7 +544,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => router.push('/verify')}
+                  onClick={() => window.location.href = '/verify'}
                 >
                   Start Free
                 </Button>
@@ -587,7 +598,7 @@ export default function Home() {
                 </ul>
                 <Button 
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                  onClick={() => router.push(`/verify?plan=basic&billing=${billingCycle}`)}
+                  onClick={() => window.location.href = `/verify?plan=basic&billing=${billingCycle}`}
                 >
                   Get Started
                 </Button>
@@ -639,7 +650,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => router.push(`/verify?plan=standard&billing=${billingCycle}`)}
+                  onClick={() => window.location.href = `/verify?plan=standard&billing=${billingCycle}`}
                 >
                   Get Started
                 </Button>
@@ -691,7 +702,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => router.push(`/verify?plan=premium&billing=${billingCycle}`)}
+                  onClick={() => window.location.href = `/verify?plan=premium&billing=${billingCycle}`}
                 >
                   Get Started
                 </Button>
@@ -1046,9 +1057,7 @@ export default function Home() {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              onClick={() => {
-                document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={scrollToGetStarted}
             >
               Switch from AT&T Today
             </Button>
@@ -1070,9 +1079,7 @@ export default function Home() {
             size="lg" 
             variant="secondary"
             className="h-14 px-8 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-            onClick={() => {
-              document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={scrollToGetStarted}
           >
             Start Free Trial
             <ArrowRight className="ml-2 h-5 w-5" />
