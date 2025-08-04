@@ -3,6 +3,9 @@ import { auth } from "@clerk/nextjs/server"
 import { Redis } from "@upstash/redis"
 import { supabaseAdmin } from "@/lib/supabase"
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,

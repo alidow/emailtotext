@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   keywords: "txt.att.net replacement, vtext alternative, email to sms gateway, carrier email to text shutdown",
 }
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function CarrierShutdownPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

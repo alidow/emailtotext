@@ -4,6 +4,10 @@ import { CreditCard, AlertTriangle, DollarSign, Shield, Zap, Clock, CheckCircle,
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export const metadata: Metadata = {
   title: "Stripe Email Notifications → Instant SMS | Email to Text",
   description: "Get SMS for every Stripe payment, dispute, and failed charge. Know about chargebacks instantly. No webhooks or coding required - just add one email address.",

@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   keywords: "github actions sms, ci failed text alert, build failure sms notification, github workflow sms, github actions mobile alerts, ci cd sms notifications",
 }
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function GitHubActionsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

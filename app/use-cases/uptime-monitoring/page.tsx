@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export const metadata: Metadata = {
   title: "Free Downtime SMS for UptimeRobot & Pingdom—End Email-Only Alerts | Email to Text Notifier",
   description: "UptimeRobot's free plan only offers email alerts. Get instant SMS when your website goes down without paying for Pro SMS credits. Works with Pingdom too.",

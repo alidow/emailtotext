@@ -6,6 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export const metadata: Metadata = {
   title: "Instant WooCommerce Order SMS Alerts—Never Miss a Sale Again | Email to Text Notifier",
   description: "Get SMS notifications for every WooCommerce order, low stock alert, and failed payment. No expensive plugins. Works with existing email notifications. Setup in 3 minutes.",

@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   keywords: "cloudflare sms alerts, cloudflare email only, ddos text notification, cloudflare build failed sms, cloudflare security alerts mobile, cloudflare notification webhook",
 }
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function CloudflareAlertsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">

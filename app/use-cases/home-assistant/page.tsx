@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   keywords: "home assistant sms alert, nvr email to sms, motion detection text, hikvision sms notification, dahua text alert, security camera sms, smart home text alerts",
 }
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function HomeAssistantPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">

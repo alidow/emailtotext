@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   keywords: "aws sns alternative, cheaper than aws sns, cloudwatch sms alerts, aws text message costs, sns pricing alternative",
 }
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function AwsSnsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

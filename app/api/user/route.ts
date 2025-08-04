@@ -3,6 +3,9 @@ import { currentUser } from "@clerk/nextjs/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { isMockMode, mockUserData } from "@/lib/mock-mode"
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     // In mock mode, return mock user data

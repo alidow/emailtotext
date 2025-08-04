@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   keywords: "google calendar sms reminders 2025, text alert for calendar, google calendar text notifications, calendar sms alerts, bring back google calendar sms",
 }
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function GoogleCalendarSMSPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">

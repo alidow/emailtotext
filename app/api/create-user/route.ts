@@ -5,6 +5,8 @@ import { cookies } from "next/headers"
 import { sendTransactionalEmail } from "@/lib/send-transactional-email"
 import * as Sentry from "@sentry/nextjs"
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   try {
     const user = await currentUser()

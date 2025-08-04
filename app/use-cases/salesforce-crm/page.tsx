@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   keywords: "salesforce sms alerts, hubspot email to sms, crm text notification, salesforce mobile alerts, lead notification sms, deal closed text alert",
 }
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export default function SalesforceCRMPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

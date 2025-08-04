@@ -4,6 +4,10 @@ import { TrendingUp, Zap, Shield, Clock, Bell, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export const metadata: Metadata = {
   title: "Instant Trading Alerts via SMS - TradingView, IBKR & More | Email to Text",
   description: "Never miss a critical trade signal. Get instant SMS alerts from TradingView, Interactive Brokers, ThinkOrSwim and any trading platform that sends emails.",

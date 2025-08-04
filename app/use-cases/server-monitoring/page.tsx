@@ -12,6 +12,10 @@ import { CheckCircle, AlertTriangle, TrendingUp } from "lucide-react"
 
 const useCase = getUseCase('server-monitoring')!
 
+// Force dynamic rendering to prevent static generation timeout
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // Revalidate every hour
+
 export const metadata: Metadata = {
   title: useCase.seo.title,
   description: useCase.seo.description,

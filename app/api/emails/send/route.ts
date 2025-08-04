@@ -4,6 +4,8 @@ import { sendEmail } from '@/lib/mailgun'
 import { emailTemplates } from '@/lib/email-templates'
 import * as Sentry from "@sentry/nextjs"
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // This endpoint should only be called by internal services
