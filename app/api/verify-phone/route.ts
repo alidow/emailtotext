@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { cookies } from "next/headers"
 import { isMockMode } from "@/lib/mock-mode"
+import * as Sentry from "@sentry/nextjs"
 
 export async function POST(req: NextRequest) {
   try {
@@ -97,6 +98,12 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json({ success: true })
   } catch (error: any) {
+    Sentry.captureException(error, {
+      extra: {
+        endpoint: "verify-phone",
+        phone: phone
+      }
+    })
     console.error("Verify phone error:", error)
     return NextResponse.json(
       { error: "Failed to verify phone number" },

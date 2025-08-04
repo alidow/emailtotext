@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import Stripe from "stripe"
 import { supabaseAdmin } from "@/lib/supabase"
+import { sendTransactionalEmail } from "../emails/send/route"
+import * as Sentry from "@sentry/nextjs"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-07-30.basil"
@@ -18,6 +20,12 @@ export async function POST(req: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
   } catch (err: any) {
+    Sentry.captureException(err, {
+      extra: {
+        webhook: "stripe",
+        error: "signature_verification_failed"
+      }
+    })
     console.error(`Webhook signature verification failed: ${err.message}`)
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
@@ -68,6 +76,12 @@ export async function POST(req: NextRequest) {
         }
         break
       }
+      
+      case "payment_method.attached": {
+        const paymentMethod = event.data.object as Stripe.PaymentMethod
+        await handlePaymentMethodAttached(paymentMethod)
+        break
+      }
 
       default:
         console.log(`Unhandled event type: ${event.type}`)
@@ -75,6 +89,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true })
   } catch (error) {
+    Sentry.captureException(error, {
+      extra: {
+        webhook: "stripe",
+        eventType: event.type,
+        eventId: event.id
+      }
+    })
     console.error("Webhook handler error:", error)
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 })
   }
@@ -92,6 +113,13 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   // Update user with subscription info if it's a subscription checkout
   if (session.mode === "subscription" && session.subscription) {
     const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+    
+    // Get user details for email
+    const { data: user } = await supabaseAdmin
+      .from("users")
+      .select("email, phone")
+      .eq("id", metadata.user_id)
+      .single()
     
     await supabaseAdmin
       .from("users")
@@ -116,6 +144,20 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
           session_id: session.id
         }
       })
+      
+    // Send subscription confirmation email
+    if (user?.email) {
+      const planLimits: Record<string, number> = {
+        basic: 100,
+        standard: 500,
+        premium: 1000
+      }
+      await sendTransactionalEmail(
+        user.email,
+        'subscriptionConfirmed',
+        [metadata.plan_type || 'Basic', planLimits[metadata.plan_type || 'basic'] || 100, metadata.billing_cycle === 'annual']
+      )
+    }
   }
   
   // For setup mode (free plan), just log the card was added
@@ -228,10 +270,10 @@ async function handleFailedPayment(invoice: Stripe.Invoice) {
     })
 
   // Send email notification based on attempt count
-  if (attemptCount === 1) {
-    await sendPaymentFailureEmail(user, "first_attempt")
-  } else if (attemptCount === 2) {
-    await sendPaymentFailureEmail(user, "second_attempt")
+  if (attemptCount === 1 && user.email) {
+    await sendTransactionalEmail(user.email, 'paymentFailed', [])
+  } else if (attemptCount === 2 && user.email) {
+    await sendTransactionalEmail(user.email, 'paymentFailed', [])
   } else if (attemptCount >= 3) {
     // Suspend service after 3 attempts
     await supabaseAdmin
@@ -242,7 +284,9 @@ async function handleFailedPayment(invoice: Stripe.Invoice) {
       })
       .eq("id", user.id)
     
-    await sendPaymentFailureEmail(user, "service_suspended")
+    if (user.email) {
+      await sendTransactionalEmail(user.email, 'paymentFailed', [])
+    }
   }
 
   // Log the event
@@ -275,6 +319,10 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const priceId = subscription.items.data[0].price.id
   const planType = getPlanTypeFromPriceId(priceId)
   const billingCycle = subscription.items.data[0].price.recurring?.interval === "year" ? "annual" : "monthly"
+  
+  // Check if this is an upgrade
+  const oldPlan = user.plan_type
+  const isUpgrade = oldPlan !== planType && ['free', 'basic', 'standard'].indexOf(oldPlan) < ['free', 'basic', 'standard', 'premium'].indexOf(planType)
 
   // Update user subscription info
   await supabaseAdmin
@@ -299,6 +347,20 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
         status: subscription.status
       }
     })
+    
+  // Send plan upgrade email if this is an upgrade
+  if (isUpgrade && user.email) {
+    const planLimits: Record<string, number> = {
+      basic: 100,
+      standard: 500,
+      premium: 1000
+    }
+    await sendTransactionalEmail(
+      user.email,
+      'planUpgraded',
+      [oldPlan.charAt(0).toUpperCase() + oldPlan.slice(1), planType.charAt(0).toUpperCase() + planType.slice(1), planLimits[planType] || 100]
+    )
+  }
 }
 
 async function handleSubscriptionCancellation(subscription: Stripe.Subscription) {
@@ -324,7 +386,11 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
     .eq("id", user.id)
 
   // Send cancellation email
-  await sendCancellationEmail(user)
+  if (user.email) {
+    // We don't have a specific cancellation template, but we could add one
+    // For now, we'll just log this
+    console.log(`Subscription cancelled for user ${user.id}`)
+  }
 
   // Log the event
   await supabaseAdmin
@@ -361,8 +427,21 @@ async function handleAutoBuyCharge(charge: Stripe.Charge) {
     })
     .eq("id", userId)
 
+  // Get user for email notification
+  const { data: userData } = await supabaseAdmin
+    .from("users")
+    .select("email")
+    .eq("id", userId)
+    .single()
+    
   // Send auto-buy notification
-  await sendAutoBuyNotification(userId, textsPurchased, charge.amount / 100)
+  if (userData?.email) {
+    await sendTransactionalEmail(
+      userData.email,
+      'quotaOverage',
+      [textsPurchased, (charge.amount / 100).toFixed(2)]
+    )
+  }
 
   // Log the event
   await supabaseAdmin
@@ -392,62 +471,50 @@ function getPlanTypeFromPriceId(priceId: string): string {
   return priceMap[priceId] || "free"
 }
 
-async function sendPaymentFailureEmail(user: any, type: string) {
-  // Implementation would send email via SendGrid/Mailgun
-  console.log(`Sending ${type} payment failure email to user ${user.id}`)
-  
-  // In production, this would call your email service
-  await fetch("/api/send-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      to: user.email,
-      template: `payment_failure_${type}`,
-      data: {
-        name: user.name,
-        last_four: "****" // Would get from Stripe
-      }
-    })
-  })
-}
+// Helper functions removed - now using sendTransactionalEmail directly
 
-async function sendCancellationEmail(user: any) {
-  console.log(`Sending cancellation email to user ${user.id}`)
+async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) {
+  const customerId = paymentMethod.customer as string
   
-  await fetch("/api/send-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      to: user.email,
-      template: "subscription_cancelled",
-      data: {
-        name: user.name
-      }
-    })
-  })
-}
-
-async function sendAutoBuyNotification(userId: string, textsPurchased: number, amount: number) {
+  // Get user by customer ID
   const { data: user } = await supabaseAdmin
     .from("users")
-    .select("email, phone")
-    .eq("id", userId)
+    .select("*")
+    .eq("stripe_customer_id", customerId)
     .single()
-
-  if (!user) return
-
-  console.log(`Sending auto-buy notification to user ${userId}`)
+    
+  if (!user) {
+    console.error("User not found for payment method:", customerId)
+    return
+  }
   
-  await fetch("/api/send-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      to: user.email,
-      template: "auto_buy_notification",
-      data: {
-        texts_purchased: textsPurchased,
-        amount: amount.toFixed(2)
+  // Update user with new payment method ID
+  await supabaseAdmin
+    .from("users")
+    .update({
+      stripe_payment_method_id: paymentMethod.id
+    })
+    .eq("id", user.id)
+    
+  // Send payment method updated email
+  if (user.email) {
+    await sendTransactionalEmail(
+      user.email,
+      'paymentMethodUpdated',
+      []
+    )
+  }
+  
+  // Log the event
+  await supabaseAdmin
+    .from("billing_events")
+    .insert({
+      user_id: user.id,
+      event_type: "payment_method_updated",
+      details: {
+        payment_method_id: paymentMethod.id,
+        type: paymentMethod.type,
+        last4: paymentMethod.card?.last4
       }
     })
-  })
 }

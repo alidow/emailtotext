@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Inter, Plus_Jakarta_Sans } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
+import { CookieConsent } from "@/components/cookie-consent"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -49,7 +50,10 @@ export default function RootLayout({
 }>) {
   const content = (
     <html lang="en">
-      <body className={`${inter.variable} ${plusJakarta.variable} font-sans`}>{children}</body>
+      <body className={`${inter.variable} ${plusJakarta.variable} font-sans`}>
+        {children}
+        <CookieConsent />
+      </body>
     </html>
   )
 

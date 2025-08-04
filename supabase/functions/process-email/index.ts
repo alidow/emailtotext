@@ -116,7 +116,17 @@ serve(async (req) => {
             .eq('id', user.id)
           
           // Send upgrade notification email
-          await sendAutoUpgradeEmail(user, 'free', 'basic')
+          if (user.email) {
+            await fetch(`${Deno.env.get('NEXT_PUBLIC_APP_URL')}/api/emails/send`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: user.email,
+                template: 'autoUpgraded',
+                data: []
+              })
+            })
+          }
           
           // Log the auto-upgrade
           await supabase
@@ -178,7 +188,17 @@ serve(async (req) => {
             .eq('id', user.id)
           
           // Send auto-buy notification
-          await sendAutoBuyEmail(user, 100, totalAmount / 100)
+          if (user.email) {
+            await fetch(`${Deno.env.get('NEXT_PUBLIC_APP_URL')}/api/emails/send`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: user.email,
+                template: 'quotaOverage',
+                data: [100, (totalAmount / 100).toFixed(2)]
+              })
+            })
+          }
           
           // Log the auto-buy
           await supabase
@@ -263,10 +283,50 @@ serve(async (req) => {
     })
 
     // Update usage count
+    const newUsageCount = user.usage_count + 1
     await supabase
       .from('users')
-      .update({ usage_count: user.usage_count + 1 })
+      .update({ usage_count: newUsageCount })
       .eq('id', user.id)
+      
+    // Check if we should send usage alert (at 80% of limit)
+    const usagePercentage = (newUsageCount / baseLimit) * 100
+    if (usagePercentage >= 80 && usagePercentage < 90) {
+      // Check if we already sent an alert for this billing period
+      const { data: existingAlert } = await supabase
+        .from('billing_events')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('event_type', 'usage_alert_80')
+        .gte('created_at', user.usage_reset_at)
+        .single()
+        
+      if (!existingAlert && user.email) {
+        // Send usage alert email
+        await fetch(`${Deno.env.get('NEXT_PUBLIC_APP_URL')}/api/emails/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: user.email,
+            template: 'usageAlert',
+            data: [80, newUsageCount, baseLimit]
+          })
+        })
+        
+        // Log that we sent the alert
+        await supabase
+          .from('billing_events')
+          .insert({
+            user_id: user.id,
+            event_type: 'usage_alert_80',
+            details: {
+              usage_count: newUsageCount,
+              limit: baseLimit,
+              percentage: 80
+            }
+          })
+      }
+    }
 
     return new Response('Email processed successfully', { status: 200 })
   } catch (error) {

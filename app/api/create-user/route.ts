@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { cookies } from "next/headers"
+import { sendTransactionalEmail } from "../emails/send/route"
+import * as Sentry from "@sentry/nextjs"
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,6 +47,13 @@ export async function POST(req: NextRequest) {
       .single()
     
     if (error) {
+      Sentry.captureException(error, {
+        extra: {
+          userId: user.id,
+          phone: verifiedPhone,
+          planType
+        }
+      })
       console.error("Error creating user:", error)
       return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
     }
@@ -52,8 +61,18 @@ export async function POST(req: NextRequest) {
     // Clear verification cookie
     cookieStore.delete("verified_phone")
     
+    // Send welcome email
+    if (user.primaryEmailAddress?.emailAddress) {
+      await sendTransactionalEmail(
+        user.primaryEmailAddress.emailAddress,
+        'welcome',
+        [verifiedPhone]
+      )
+    }
+    
     return NextResponse.json({ success: true, userId: newUser.id })
   } catch (error) {
+    Sentry.captureException(error)
     console.error("Create user error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
