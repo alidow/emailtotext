@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LucideIcon, Zap, Shield, Globe, Tool, Filter, Users, FileText, CheckCircle } from "lucide-react"
+import { LucideIcon, Zap, Shield, Globe, Wrench, Filter, Users, FileText, CheckCircle } from "lucide-react"
 
 interface Feature {
   title: string
@@ -16,11 +16,12 @@ const iconMap: Record<string, LucideIcon> = {
   Zap,
   Shield,
   Globe,
-  Tool,
+  Wrench,
   Filter,
   Users,
   FileText,
   CheckCircle,
+  Tool: Wrench, // Alias for backward compatibility
 }
 
 export function FeatureGrid({ features, title = "Key Features" }: FeatureGridProps) {
