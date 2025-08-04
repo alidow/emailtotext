@@ -21,7 +21,7 @@ const recentAttempts = new Map<string, number>()
 // Clean up old entries every hour
 setInterval(() => {
   const oneHourAgo = Date.now() - 3600000
-  for (const [key, timestamp] of recentAttempts) {
+  for (const [key, timestamp] of recentAttempts.entries()) {
     if (timestamp < oneHourAgo) {
       recentAttempts.delete(key)
     }

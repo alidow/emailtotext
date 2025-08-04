@@ -14,7 +14,7 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").filter(Boolean)
 export async function GET(req: NextRequest) {
   try {
     // Check authentication
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
