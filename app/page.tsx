@@ -137,7 +137,7 @@ export default function Home() {
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-1"></div>
             <CardContent className="p-8 md:p-10">
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
+                <div id="get-started">
                   <h2 className="text-3xl font-display font-bold text-center mb-2">Get Started</h2>
                   <p className="text-center text-gray-600 mb-6">
                     Enter your phone number to create your email forwarding address
