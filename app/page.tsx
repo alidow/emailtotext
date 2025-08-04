@@ -7,7 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { MessageSquare, Shield, Zap, ArrowRight, Check, Phone, Mail, Bell, Server, Clock, Star, ChevronRight, BookOpen, HelpCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Turnstile } from "@/components/Turnstile"
+import { MessageSquare, Shield, Zap, ArrowRight, Check, Phone, Mail, Bell, Server, Clock, Star, ChevronRight, BookOpen, HelpCircle, AlertCircle } from "lucide-react"
 
 export default function Home() {
   const router = useRouter()
@@ -15,6 +17,8 @@ export default function Home() {
   const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [error, setError] = useState("")
 
   const formatPhoneNumber = (value: string) => {
     const phoneNumber = value.replace(/[^\d]/g, "")
@@ -33,13 +37,51 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+    
     if (!consent) {
-      alert("Please accept the terms to continue")
+      setError("Please accept the terms to continue")
       return
     }
+    
+    if (!captchaToken) {
+      setError("Please complete the security check")
+      return
+    }
+    
+    // Validate phone number
+    const cleanPhone = phone.replace(/\D/g, "")
+    if (cleanPhone.length < 10) {
+      setError("Please enter a valid phone number")
+      return
+    }
+    
     setLoading(true)
-    // Navigate to verification page
-    window.location.href = `/verify?phone=${encodeURIComponent(phone)}`
+    
+    try {
+      // Send verification code with CAPTCHA token
+      const response = await fetch("/api/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          phone,
+          captchaToken 
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send verification code")
+      }
+      
+      // Navigate to verification page
+      window.location.href = `/verify?phone=${encodeURIComponent(phone)}`
+    } catch (err: any) {
+      setError(err.message)
+      setLoading(false)
+      setCaptchaToken(null) // Reset captcha on error
+    }
   }
 
   return (
@@ -125,6 +167,25 @@ export default function Home() {
                     </Label>
                   </div>
                 </div>
+
+                {/* CAPTCHA */}
+                <div className="flex justify-center">
+                  <Turnstile
+                    siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                    onVerify={(token) => setCaptchaToken(token)}
+                    onError={() => setError("Security check failed. Please try again.")}
+                    onExpire={() => setCaptchaToken(null)}
+                    theme="auto"
+                  />
+                </div>
+
+                {/* Error message */}
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
                 <Button 
                   type="submit" 
