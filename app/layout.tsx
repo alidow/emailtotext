@@ -38,35 +38,23 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>",
-  },
-  other: {
-    ...Sentry.getTraceData()
   }
 }
-
-// Check if we have valid Clerk credentials
-const hasValidClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && 
-  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.startsWith('pk_test_xxx')
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const content = (
+  return (
     <html lang="en">
       <body className={`${inter.variable} ${plusJakarta.variable} font-sans`}>
-        {children}
+        <ClerkProvider>
+          {children}
+        </ClerkProvider>
         <CookieConsent />
         <GoogleAnalytics gaId="G-CB0Q6E7ND3" />
       </body>
     </html>
   )
-
-  // Only wrap with ClerkProvider if we have valid credentials
-  if (hasValidClerkKey) {
-    return <ClerkProvider>{content}</ClerkProvider>
-  }
-  
-  return content
 }
