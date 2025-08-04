@@ -8,6 +8,10 @@ This checklist covers all the configuration steps needed to deploy Email to Text
 - [x] Email sending API endpoint
 - [x] Email triggers integrated into user flows
 - [x] Sentry error monitoring setup (code-side)
+- [x] SMS spam protection implementation
+- [x] Rate limiting system
+- [x] CAPTCHA integration
+- [x] Abuse monitoring dashboard
 
 ## 🔧 Required Configuration
 
@@ -59,7 +63,30 @@ This checklist covers all the configuration steps needed to deploy Email to Text
 - [ ] Verify `TWILIO_PHONE_NUMBER` is approved for A2P messaging
 - [ ] Ensure phone number is registered with carriers
 
-### 5. Supabase Edge Functions
+### 5. Security & Anti-Spam Setup
+- [ ] Configure Upstash Redis for rate limiting:
+  - [ ] Create account at [upstash.com](https://upstash.com)
+  - [ ] Create a Redis database (free tier is sufficient)
+  - [ ] Add credentials to environment:
+    ```
+    UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
+    UPSTASH_REDIS_REST_TOKEN=xxx
+    ```
+- [ ] Set up Cloudflare Turnstile CAPTCHA:
+  - [ ] Go to [Cloudflare Dashboard](https://dash.cloudflare.com) > Turnstile
+  - [ ] Create a new site (Managed or Non-interactive widget)
+  - [ ] Add domain(s) to allowed domains
+  - [ ] Add keys to environment:
+    ```
+    NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=xxx
+    CLOUDFLARE_TURNSTILE_SECRET_KEY=xxx
+    ```
+- [ ] Configure admin emails for monitoring:
+  ```
+  ADMIN_EMAILS=admin@example.com,security@example.com
+  ```
+
+### 6. Supabase Edge Functions
 - [ ] Deploy the `process-email` edge function
 - [ ] Add required secrets to edge function:
   ```bash
@@ -95,6 +122,12 @@ This checklist covers all the configuration steps needed to deploy Email to Text
   - Configure allowed actions (cancel, update payment method)
   - Add portal link to settings page
 
+### Security Monitoring
+- [ ] Set up abuse monitoring alerts
+- [ ] Configure rate limit thresholds based on usage
+- [ ] Review `/api/admin/abuse-monitor` dashboard regularly
+- [ ] Document incident response procedures
+
 ## 🚀 Pre-Launch Checklist
 
 1. [ ] All environment variables configured
@@ -112,3 +145,9 @@ This checklist covers all the configuration steps needed to deploy Email to Text
 8. [ ] All links and buttons functional
 9. [ ] SEO meta tags and sitemap verified
 10. [ ] Legal pages accessible (privacy, terms, refund)
+11. [ ] Security features tested:
+    - [ ] Rate limiting working (test with multiple requests)
+    - [ ] CAPTCHA appearing on signup form
+    - [ ] Suspicious phone numbers blocked
+    - [ ] Abuse monitoring dashboard accessible
+    - [ ] VPN/proxy detection functional
