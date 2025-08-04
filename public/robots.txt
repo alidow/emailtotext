@@ -5,6 +5,7 @@ Disallow: /dashboard
 Disallow: /settings
 Disallow: /onboarding
 Disallow: /api/
+Allow: /api/use-cases
 Disallow: /e/
 
 # Specifically allow major search engines
@@ -30,5 +31,31 @@ Disallow: /
 User-agent: MJ12bot
 Disallow: /
 
+# AI crawlers
+User-agent: GPTBot
+Allow: /
+Allow: /api/use-cases
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /api/use-cases
+
+User-agent: CCBot
+Allow: /
+Allow: /api/use-cases
+
+User-agent: Claude-Web
+Allow: /
+Allow: /api/use-cases
+
+User-agent: anthropic-ai
+Allow: /
+Allow: /api/use-cases
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /api/use-cases
+
 # Point to sitemap
 Sitemap: https://emailtotextnotify.com/sitemap.xml
+Sitemap: https://emailtotextnotify.com/api/use-cases

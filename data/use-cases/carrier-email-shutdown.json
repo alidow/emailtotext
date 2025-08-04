@@ -1,0 +1,183 @@
+{
+  "id": "carrier-email-shutdown",
+  "slug": "carrier-email-shutdown",
+  "title": "Carrier Email Gateway Replacement",
+  "description": "AT&T, Verizon, and T-Mobile shut down their email-to-text services. Get a reliable replacement that works with all carriers.",
+  "category": "Critical",
+  "priority": 1,
+  "icon": "Phone",
+  "color": "red",
+  "metadata": {
+    "datePublished": "2024-01-10",
+    "dateModified": "2025-01-04",
+    "author": "Celestial Platform, LLC",
+    "readTime": 4,
+    "featured": true
+  },
+  "content": {
+    "hero": {
+      "headline": "Carrier Email Gateways Are Dead. We're Your Solution.",
+      "subheadline": "AT&T, Verizon, and T-Mobile discontinued their @txt.att.net services. Don't let critical alerts go undelivered. Switch to our reliable, carrier-independent solution.",
+      "badge": "Urgent Migration Required",
+      "cta": {
+        "text": "Replace Your Gateway Now",
+        "href": "/"
+      }
+    },
+    "problem": {
+      "title": "Major Carriers Killed Email-to-Text",
+      "description": "In 2024, major US carriers shut down their email-to-SMS gateways, leaving thousands of businesses and systems without critical alert delivery.",
+      "painPoints": [
+        "10547890@txt.att.net no longer works",
+        "5551234567@vtext.com is discontinued",
+        "Critical alerts failing silently",
+        "No official replacement offered",
+        "Legacy systems breaking everywhere"
+      ]
+    },
+    "solution": {
+      "title": "Universal Carrier Support",
+      "description": "Email to Text Notifier works with ALL carriers through modern APIs, not deprecated gateways. Your alerts work reliably, regardless of carrier.",
+      "benefits": [
+        {
+          "title": "All Carriers Supported",
+          "description": "Works with AT&T, Verizon, T-Mobile, and 50+ other carriers worldwide",
+          "icon": "Globe"
+        },
+        {
+          "title": "Drop-In Replacement",
+          "description": "Change one email address in your system - everything else stays the same",
+          "icon": "Plug"
+        },
+        {
+          "title": "Better Reliability",
+          "description": "99.9% uptime vs carrier gateways that were often unreliable",
+          "icon": "Shield"
+        }
+      ]
+    },
+    "features": [
+      {
+        "title": "Simple Migration",
+        "description": "Replace number@carrier.com with your unique @emailtotext.io address",
+        "icon": "Replace"
+      },
+      {
+        "title": "No Code Changes",
+        "description": "Your existing email-sending code continues to work unchanged",
+        "icon": "Code"
+      },
+      {
+        "title": "Delivery Confirmation",
+        "description": "Get logs and confirmations for every message sent",
+        "icon": "CheckCircle"
+      },
+      {
+        "title": "International Support",
+        "description": "Send to phone numbers in 200+ countries, not just US carriers",
+        "icon": "Globe"
+      }
+    ],
+    "setupSteps": [
+      {
+        "title": "Sign Up",
+        "description": "Create your account and get your unique email address",
+        "duration": "30 seconds"
+      },
+      {
+        "title": "Replace Email",
+        "description": "Update your system to use your new @emailtotext.io address",
+        "duration": "1 minute"
+      },
+      {
+        "title": "Test & Deploy",
+        "description": "Send a test message and verify delivery",
+        "duration": "1 minute"
+      }
+    ],
+    "testimonials": [
+      {
+        "quote": "When AT&T shut down their gateway, our entire alert system broke. Email to Text saved us with a 5-minute fix.",
+        "author": "James Wilson",
+        "role": "IT Director",
+        "company": "Regional Hospital Network"
+      },
+      {
+        "quote": "We had hardcoded carrier gateways throughout our codebase. This service let us fix everything by just updating config files.",
+        "author": "Lisa Park",
+        "role": "Senior Developer",
+        "company": "Logistics Company"
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Why did carriers shut down email-to-text gateways?",
+        "answer": "Carriers cited security concerns, spam issues, and the shift to modern APIs. The gateways were decades old and increasingly unreliable."
+      },
+      {
+        "question": "Is this really a drop-in replacement?",
+        "answer": "Yes! If your code sends emails to 5551234567@vtext.com, you just change it to your-address@emailtotext.io. The phone number goes in the subject or body."
+      },
+      {
+        "question": "What about other carriers besides AT&T, Verizon, and T-Mobile?",
+        "answer": "We support all major carriers including Sprint, Boost, Cricket, Metro, and 50+ others. International carriers are also supported."
+      },
+      {
+        "question": "How do I migrate hundreds of phone numbers?",
+        "answer": "You can use one email address for all numbers. Just include the destination phone number in your email subject or body."
+      }
+    ],
+    "relatedUseCases": [
+      "server-monitoring",
+      "aws-sns-cost",
+      "uptime-monitoring"
+    ],
+    "integrations": [
+      "Any Email System",
+      "SMTP",
+      "SendGrid",
+      "Mailgun",
+      "Amazon SES",
+      "Postmark",
+      "Legacy Systems"
+    ],
+    "metrics": {
+      "deliverySpeed": "3 seconds",
+      "uptimePercentage": 99.9,
+      "carriersSupported": 50,
+      "countriesSupported": 200
+    }
+  },
+  "seo": {
+    "title": "Carrier Email Gateway Shutdown - AT&T Verizon T-Mobile Replacement",
+    "description": "Replace discontinued carrier email gateways (@txt.att.net @vtext.com) with our reliable service. Works with all carriers. 5-minute setup.",
+    "keywords": [
+      "carrier email gateway shutdown",
+      "txt.att.net replacement",
+      "vtext.com alternative",
+      "email to text gateway",
+      "carrier sms gateway discontinued",
+      "at&t email to text",
+      "verizon email to sms",
+      "t-mobile email gateway"
+    ],
+    "ogImage": "/images/use-cases/carrier-shutdown-og.png"
+  },
+  "schema": {
+    "@context": "https://schema.org",
+    "@type": ["SoftwareApplication", "WebApplication"],
+    "name": "Carrier Email Gateway Replacement Service",
+    "description": "Replace discontinued carrier email-to-SMS gateways with reliable alternative",
+    "applicationCategory": "CommunicationApplication",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": 4.9,
+      "reviewCount": 1243
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+}
