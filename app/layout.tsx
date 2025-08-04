@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter, Plus_Jakarta_Sans } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
 import { CookieConsent } from "@/components/cookie-consent"
+import { GoogleAnalytics } from '@next/third-parties/google'
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${plusJakarta.variable} font-sans`}>
         {children}
         <CookieConsent />
+        <GoogleAnalytics gaId="G-CB0Q6E7ND3" />
       </body>
     </html>
   )
