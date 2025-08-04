@@ -62,7 +62,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
+      <section id="get-started" className="container mx-auto px-4 py-16 md:py-24">
         <div className="text-center mb-16 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 tracking-tight">
             <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 bg-clip-text text-transparent">
@@ -984,7 +984,9 @@ export default function Home() {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              onClick={() => router.push('/verify')}
+              onClick={() => {
+                document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' });
+              }}
             >
               Switch from AT&T Today
             </Button>
@@ -1006,7 +1008,9 @@ export default function Home() {
             size="lg" 
             variant="secondary"
             className="h-14 px-8 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-            onClick={() => router.push('/verify')}
+            onClick={() => {
+              document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' });
+            }}
           >
             Start Free Trial
             <ArrowRight className="ml-2 h-5 w-5" />
