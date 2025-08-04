@@ -55,6 +55,7 @@ export default function Home() {
             <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Features</a>
             <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
             <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+            <a href="/use-cases" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Use Cases</a>
             <a href="#resources" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Resources</a>
             <Button variant="outline" size="sm" onClick={() => window.location.href = '/dashboard'}>Sign In</Button>
           </div>
@@ -1049,7 +1050,8 @@ export default function Home() {
               <h4 className="text-white font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-sm">
                 <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
-                <li><a href="#resources" className="hover:text-white transition-colors">Resources</a></li>
+                <li><a href="/use-cases" className="hover:text-white transition-colors">Use Cases</a></li>
+                <li><a href="#resources" className="hover:text-white transition-colors">Guides</a></li>
                 <li><a href="#att-notice" className="hover:text-white transition-colors">AT&T Alternative</a></li>
               </ul>
             </div>
