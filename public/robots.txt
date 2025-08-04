@@ -1,33 +1,34 @@
-# Block all crawlers while in development
+# Allow search engines to crawl the site
 User-agent: *
-Disallow: /
+Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /onboarding
+Disallow: /api/
+Disallow: /e/
 
-# Block specific bots
+# Specifically allow major search engines
 User-agent: Googlebot
-Disallow: /
+Allow: /
 
 User-agent: Bingbot
-Disallow: /
+Allow: /
 
 User-agent: Slurp
-Disallow: /
+Allow: /
 
 User-agent: DuckDuckBot
+Allow: /
+
+# Block bad bots
+User-agent: SemrushBot
 Disallow: /
 
-User-agent: Baiduspider
+User-agent: AhrefsBot
 Disallow: /
 
-User-agent: YandexBot
+User-agent: MJ12bot
 Disallow: /
 
-# Block archiving bots
-User-agent: ia_archiver
-Disallow: /
-
-User-agent: Wayback Machine
-Disallow: /
-
-# Allow humans
-# Remove these lines when ready to launch
-Sitemap: 
+# Point to sitemap
+Sitemap: https://emailtotextnotify.com/sitemap.xml
