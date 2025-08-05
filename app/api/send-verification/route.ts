@@ -229,7 +229,19 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Send verification error:", error)
     
-    // Don't leak specific error details to potential attackers
+    // In test mode, provide more details for debugging
+    if (isTestMode()) {
+      return NextResponse.json(
+        { 
+          error: "Failed to send verification code", 
+          details: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        },
+        { status: 500 }
+      )
+    }
+    
+    // Don't leak specific error details to potential attackers in production
     return NextResponse.json(
       { error: "Failed to send verification code. Please try again." },
       { status: 500 }
