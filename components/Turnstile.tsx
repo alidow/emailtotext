@@ -105,9 +105,7 @@ export function Turnstile({
       />
       <div 
         ref={containerRef} 
-        className="cf-turnstile"
         key={`turnstile-${siteKey}`}
-        data-sitekey={siteKey}
       />
     </>
   )
