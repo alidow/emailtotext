@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase-client"
+import { supabase, isSupabaseConfigured } from "@/lib/supabase-client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -80,7 +80,13 @@ export default function SMSLogsPage() {
     try {
       setLoading(true)
       
-      let query = supabase
+      if (!isSupabaseConfigured()) {
+        console.error('Supabase not configured')
+        setLogs([])
+        return
+      }
+      
+      let query = supabase!
         .from('sms_logs')
         .select('*')
         .order('created_at', { ascending: false })
@@ -187,6 +193,16 @@ export default function SMSLogsPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="font-semibold">
             {getTestModeMessage()}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!isSupabaseConfigured() && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Configuration Error:</strong> Supabase is not properly configured. 
+            Please set up your environment variables.
           </AlertDescription>
         </Alert>
       )}
