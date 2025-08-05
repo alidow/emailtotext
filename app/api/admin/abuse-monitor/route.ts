@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get recent verification attempts from database
-    const { data: recentAttempts, error: attemptsError } = await adminCheck.admin
+    const { data: recentAttempts, error: attemptsError } = await adminCheck.admin!
       .from("verification_logs")
       .select("*")
       .gte("created_at", oneHourAgo.toISOString())
@@ -152,7 +152,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get verification success/failure rates
-    const { data: verificationStats, error: statsError } = await adminCheck.admin
+    const { data: verificationStats, error: statsError } = await adminCheck.admin!
       .from("verification_logs")
       .select("success, count", { count: "exact" })
       .gte("created_at", oneDayAgo.toISOString())
