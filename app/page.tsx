@@ -116,7 +116,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section id="get-started" className="container mx-auto px-4 py-16 md:py-24">
+      <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="text-center mb-16 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 tracking-tight">
             <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 bg-clip-text text-transparent">
