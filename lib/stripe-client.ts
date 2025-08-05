@@ -16,6 +16,7 @@ interface CreateCheckoutParams {
   }>
   planType?: string
   billingCycle?: string
+  paymentMethodCollection?: 'always' | 'if_required'
 }
 
 interface CreateSubscriptionParams {
@@ -77,7 +78,8 @@ class StripeClient {
       mode: params.mode,
       success_url: params.successUrl,
       cancel_url: params.cancelUrl,
-      metadata: params.metadata
+      metadata: params.metadata,
+      payment_method_collection: params.paymentMethodCollection
     }
     
     if (params.mode === 'setup') {

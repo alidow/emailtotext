@@ -27,7 +27,9 @@ const plans = [
       "Email support"
     ],
     stripePriceId: null,
-    requiresCard: true // Free plan requires card for auto-upgrade
+    requiresCard: true, // Free plan requires card for auto-upgrade
+    monthlyPriceId: process.env.NEXT_PUBLIC_STRIPE_FREE_PLAN_PRICE_ID || "price_free_monthly",
+    annualPriceId: process.env.NEXT_PUBLIC_STRIPE_FREE_PLAN_PRICE_ID || "price_free_monthly" // Same price ID for both since it's $0
   },
   {
     name: "Basic",

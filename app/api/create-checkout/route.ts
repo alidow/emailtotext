@@ -47,22 +47,35 @@ export async function POST(req: NextRequest) {
         .eq("id", dbUser.id)
     }
     
-    // Handle free plan (collect card only)
-    if (collectCardOnly) {
+    // Handle free plan with $0 subscription
+    if (collectCardOnly && planType === 'free') {
+      // Use the free plan price ID for a $0 subscription
+      const freePriceId = process.env.NEXT_PUBLIC_STRIPE_FREE_PLAN_PRICE_ID || priceId
+      
       const session = await stripeClient.createCheckoutSession({
         customerId,
         userId: dbUser.id,
-        mode: "setup",
-        successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?setup=complete`,
+        mode: "subscription",
+        paymentMethodCollection: "always", // Force card collection even for $0
+        successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
+        lineItems: [
+          {
+            price: freePriceId,
+            quantity: 1
+          }
+        ],
+        planType: "free",
+        billingCycle: "monthly",
         metadata: {
           user_id: dbUser.id,
-          plan_type: "free"
+          plan_type: "free",
+          billing_cycle: "monthly"
         }
       })
       
       if (isTestMode()) {
-        console.log(`[TEST MODE] Created setup session for free plan: ${session.id}`)
+        console.log(`[TEST MODE] Created $0 subscription session for free plan: ${session.id}`)
       }
       
       return NextResponse.json({ 
