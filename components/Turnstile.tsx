@@ -29,64 +29,67 @@ export function Turnstile({
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetIdRef = useRef<string | null>(null)
   const [scriptLoaded, setScriptLoaded] = useState(false)
+  const isRendering = useRef(false)
 
   useEffect(() => {
-    // Debug logging
-    console.log('Turnstile: Received siteKey:', siteKey, 'Type:', typeof siteKey)
-    
-    // Ensure siteKey is a string and convert if needed
-    let validSiteKey = siteKey
-    
-    if (typeof siteKey === 'object' && siteKey !== null) {
-      console.warn('Turnstile: siteKey was provided as an object, attempting to extract string value')
-      console.log('Object keys:', Object.keys(siteKey))
-      console.log('Object values:', Object.values(siteKey))
-      // Try to extract the actual value if it's wrapped in an object
-      validSiteKey = (siteKey as any).toString() || String(siteKey)
-    }
-    
-    if (typeof validSiteKey !== 'string' || !validSiteKey) {
-      console.error('Turnstile: Invalid siteKey provided:', siteKey, 'Type:', typeof siteKey)
-      if (onError) onError()
-      return
-    }
-    
-    console.log('Turnstile: Using validSiteKey:', validSiteKey)
-
     if (!scriptLoaded || !window.turnstile || !containerRef.current) return
+    
+    // Prevent multiple simultaneous renders
+    if (isRendering.current) return
+    isRendering.current = true
 
     // Clean up any existing widget
     if (widgetIdRef.current) {
       try {
         window.turnstile.remove(widgetIdRef.current)
+        widgetIdRef.current = null
       } catch (e) {
-        console.error('Error removing turnstile widget:', e)
+        // Widget might already be removed
       }
     }
 
-    try {
-      // Create new widget
-      widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey: validSiteKey,
-        callback: onVerify,
-        "error-callback": onError,
-        "expired-callback": onExpire,
-        theme,
-        size,
-      })
-    } catch (e) {
-      console.error('Error rendering turnstile widget:', e)
-      if (onError) onError()
-    }
+    // Small delay to ensure container is ready
+    const timer = setTimeout(() => {
+      if (!containerRef.current) {
+        isRendering.current = false
+        return
+      }
+
+      try {
+        // Create new widget
+        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+          sitekey: siteKey,
+          callback: (token: string) => {
+            onVerify(token)
+          },
+          "error-callback": () => {
+            if (onError) onError()
+          },
+          "expired-callback": () => {
+            if (onExpire) onExpire()
+          },
+          theme,
+          size,
+        })
+      } catch (e) {
+        console.error('Error rendering turnstile widget:', e)
+        if (onError) onError()
+      } finally {
+        isRendering.current = false
+      }
+    }, 100)
 
     return () => {
-      if (widgetIdRef.current) {
+      clearTimeout(timer)
+      if (widgetIdRef.current && window.turnstile) {
         try {
           window.turnstile.remove(widgetIdRef.current)
+          widgetIdRef.current = null
         } catch (e) {
-          console.error('Error removing turnstile widget:', e)
+          // Widget might already be removed
         }
       }
+      isRendering.current = false
     }
   }, [siteKey, onVerify, onError, onExpire, theme, size, scriptLoaded])
 
@@ -100,7 +103,12 @@ export function Turnstile({
           setScriptLoaded(true)
         }}
       />
-      <div ref={containerRef} className="cf-turnstile" />
+      <div 
+        ref={containerRef} 
+        className="cf-turnstile"
+        key={`turnstile-${siteKey}`}
+        data-sitekey={siteKey}
+      />
     </>
   )
 }
