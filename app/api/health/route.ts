@@ -25,7 +25,7 @@ export async function GET() {
         .from('users')
         .select('count')
         .limit(1)
-        .single()
+        .single() as { data: any | null; error: any }
       
       checks.checks.database = !dbError
     } catch (error) {

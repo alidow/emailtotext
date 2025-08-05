@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       .gte("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(1)
-      .single()
+      .single() as { data: { attempts: number } | null; error: any }
     
     if (verifyError || !verification) {
       // Increment attempts
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       .eq("phone", e164Phone)
       .order("consented_at", { ascending: false })
       .limit(1)
-      .single()
+      .single() as { data: { consent_24hr_texts: boolean } | null; error: any }
     
     cookieStore.set("consent_24hr", consentLog?.consent_24hr_texts?.toString() || "false", {
       httpOnly: true,

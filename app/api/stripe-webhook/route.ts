@@ -119,7 +119,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       .from("users")
       .select("email, phone")
       .eq("id", metadata.user_id)
-      .single()
+      .single() as { data: { email: string; phone: string } | null; error: any }
     
     await supabaseAdmin
       .from("users")
@@ -184,7 +184,7 @@ async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
     .from("users")
     .select("*")
     .eq("stripe_customer_id", customerId)
-    .single()
+    .single() as { data: any | null; error: any }
     
   if (!user) {
     console.error("User not found for setup intent:", customerId)
@@ -212,7 +212,7 @@ async function handleSuccessfulPayment(invoice: Stripe.Invoice) {
     .from("users")
     .select("*")
     .eq("stripe_customer_id", customerId)
-    .single()
+    .single() as { data: any | null; error: any }
 
   if (error || !user) {
     console.error("User not found for customer:", customerId)
@@ -255,7 +255,7 @@ async function handleFailedPayment(invoice: Stripe.Invoice) {
     .from("users")
     .select("*")
     .eq("stripe_customer_id", customerId)
-    .single()
+    .single() as { data: any | null; error: any }
 
   if (!user) return
 
@@ -311,7 +311,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     .from("users")
     .select("*")
     .eq("stripe_customer_id", customerId)
-    .single()
+    .single() as { data: any | null; error: any }
 
   if (!user) return
 
@@ -371,7 +371,7 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
     .from("users")
     .select("*")
     .eq("stripe_customer_id", customerId)
-    .single()
+    .single() as { data: any | null; error: any }
 
   if (!user) return
 
@@ -416,7 +416,7 @@ async function handleAutoBuyCharge(charge: Stripe.Charge) {
     .from("users")
     .select("additional_texts_purchased")
     .eq("id", userId)
-    .single()
+    .single() as { data: { additional_texts_purchased: number | null } | null; error: any }
 
   if (!user) return
 
@@ -432,7 +432,7 @@ async function handleAutoBuyCharge(charge: Stripe.Charge) {
     .from("users")
     .select("email")
     .eq("id", userId)
-    .single()
+    .single() as { data: { email: string } | null; error: any }
     
   // Send auto-buy notification
   if (userData?.email) {
@@ -481,7 +481,7 @@ async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) 
     .from("users")
     .select("*")
     .eq("stripe_customer_id", customerId)
-    .single()
+    .single() as { data: any | null; error: any }
     
   if (!user) {
     console.error("User not found for payment method:", customerId)

@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       .from("users")
       .select("email, phone")
       .eq("id", userId)
-      .single()
+      .single() as { data: { email: string | null; phone: string } | null; error: any }
     
     if (error || !user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })

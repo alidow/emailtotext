@@ -23,7 +23,7 @@ export async function GET() {
       .from("users")
       .select("id")
       .eq("clerk_id", user.id)
-      .single()
+      .single() as { data: { id: string } | null; error: any }
     
     if (userError || !userData) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })

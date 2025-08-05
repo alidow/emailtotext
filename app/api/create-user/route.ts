@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       .from("users")
       .select("id, phone, plan_type")
       .eq("clerk_id", user.id)
-      .single()
+      .single() as { data: { id: string; phone: string; plan_type: string } | null; error: any }
     
     if (existingUser) {
       // Update plan type if different
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
         usage_reset_at: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
       })
       .select()
-      .single()
+      .single() as { data: any | null; error: any }
     
     if (error) {
       Sentry.captureException(error, {
