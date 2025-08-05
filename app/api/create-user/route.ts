@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { cookies } from "next/headers"
 import { sendTransactionalEmail } from "@/lib/send-transactional-email"
+import { isTestMode } from "@/lib/test-mode"
 import * as Sentry from "@sentry/nextjs"
 
 export const dynamic = 'force-dynamic'
@@ -53,10 +54,32 @@ export async function POST(req: NextRequest) {
         extra: {
           userId: user.id,
           phone: verifiedPhone,
-          planType
+          planType,
+          errorCode: error.code,
+          errorDetails: error.details,
+          errorHint: error.hint
         }
       })
-      console.error("Error creating user:", error)
+      console.error("Error creating user:", {
+        error,
+        errorCode: error.code,
+        errorDetails: error.details,
+        errorHint: error.hint,
+        errorMessage: error.message,
+        userId: user.id,
+        phone: verifiedPhone,
+        planType
+      })
+      
+      // In test mode, provide more details
+      if (isTestMode()) {
+        return NextResponse.json({ 
+          error: "Failed to create user",
+          details: error.message,
+          code: error.code
+        }, { status: 500 })
+      }
+      
       return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
     }
     
@@ -73,9 +96,19 @@ export async function POST(req: NextRequest) {
     }
     
     return NextResponse.json({ success: true, userId: newUser.id })
-  } catch (error) {
+  } catch (error: any) {
     Sentry.captureException(error)
     console.error("Create user error:", error)
+    
+    // In test mode, provide more details
+    if (isTestMode()) {
+      return NextResponse.json({ 
+        error: "Internal server error",
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }, { status: 500 })
+    }
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
