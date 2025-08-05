@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -186,9 +186,9 @@ export default function Home() {
                 <div className="flex justify-center">
                   <Turnstile
                     siteKey={TURNSTILE_SITE_KEY}
-                    onVerify={(token) => setCaptchaToken(token)}
-                    onError={() => setError("Security check failed. Please try again.")}
-                    onExpire={() => setCaptchaToken(null)}
+                    onVerify={useCallback((token: string) => setCaptchaToken(token), [])}
+                    onError={useCallback(() => setError("Security check failed. Please try again."), [])}
+                    onExpire={useCallback(() => setCaptchaToken(null), [])}
                     theme="auto"
                   />
                 </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, memo, useCallback } from "react"
 import Script from "next/script"
 
 interface TurnstileProps {
@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-export function Turnstile({
+function TurnstileComponent({
   siteKey,
   onVerify,
   onError,
@@ -34,23 +34,16 @@ export function Turnstile({
   useEffect(() => {
     if (!scriptLoaded || !window.turnstile || !containerRef.current) return
     
+    // Skip if widget already exists
+    if (widgetIdRef.current) return
+    
     // Prevent multiple simultaneous renders
     if (isRendering.current) return
     isRendering.current = true
 
-    // Clean up any existing widget
-    if (widgetIdRef.current) {
-      try {
-        window.turnstile.remove(widgetIdRef.current)
-        widgetIdRef.current = null
-      } catch (e) {
-        // Widget might already be removed
-      }
-    }
-
     // Small delay to ensure container is ready
     const timer = setTimeout(() => {
-      if (!containerRef.current) {
+      if (!containerRef.current || widgetIdRef.current) {
         isRendering.current = false
         return
       }
@@ -81,6 +74,13 @@ export function Turnstile({
 
     return () => {
       clearTimeout(timer)
+      // Don't remove widget on every cleanup, only on unmount
+    }
+  }, [siteKey, theme, size, scriptLoaded]) // Remove callbacks from dependencies
+
+  // Separate cleanup on unmount
+  useEffect(() => {
+    return () => {
       if (widgetIdRef.current && window.turnstile) {
         try {
           window.turnstile.remove(widgetIdRef.current)
@@ -89,9 +89,8 @@ export function Turnstile({
           // Widget might already be removed
         }
       }
-      isRendering.current = false
     }
-  }, [siteKey, onVerify, onError, onExpire, theme, size, scriptLoaded])
+  }, [])
 
   return (
     <>
@@ -110,3 +109,5 @@ export function Turnstile({
     </>
   )
 }
+
+export const Turnstile = memo(TurnstileComponent)
