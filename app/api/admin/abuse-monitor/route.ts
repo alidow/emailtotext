@@ -39,9 +39,51 @@ export async function GET(req: NextRequest) {
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
 
+    // Initialize variables that will be used in the response
+    let blockedIps: any[] = []
+    let suspiciousActivities: any[] = []
+    let rateLimitStats = {
+      phoneVerification: 0,
+      perPhone: 0,
+      globalIP: 0,
+      burst: 0,
+    }
+
     // Check if Supabase is configured
     const adminCheck = requireSupabaseAdmin('abuse monitoring')
     if (adminCheck.error) {
+      // Still try to get Redis data even without Supabase
+      try {
+        // Get blocked IPs from Redis
+        const blockedIpsKeys = await redis.keys("blocked-ip:*")
+        for (const key of blockedIpsKeys) {
+          const reason = await redis.get(key)
+          const ip = key.replace("blocked-ip:", "")
+          const ttl = await redis.ttl(key)
+          blockedIps.push({ ip, reason, expiresIn: ttl })
+        }
+
+        // Get suspicious activity logs
+        const suspiciousKeys = await redis.keys("suspicious:*")
+        for (const key of suspiciousKeys.slice(0, 50)) {
+          const data = await redis.get(key)
+          if (data) {
+            suspiciousActivities.push(JSON.parse(data as string))
+          }
+        }
+
+        // Get rate limit analytics
+        const rateLimitKeys = await redis.keys("rl:*")
+        for (const key of rateLimitKeys) {
+          if (key.includes("phone-verify")) rateLimitStats.phoneVerification++
+          else if (key.includes("per-phone")) rateLimitStats.perPhone++
+          else if (key.includes("global-ip")) rateLimitStats.globalIP++
+          else if (key.includes("burst")) rateLimitStats.burst++
+        }
+      } catch (redisError) {
+        console.error('Redis error in abuse monitor:', redisError)
+      }
+
       // Return partial data without database info
       return NextResponse.json({
         recentAttempts: [],
@@ -73,7 +115,7 @@ export async function GET(req: NextRequest) {
 
     // Get blocked IPs from Redis
     const blockedIpsKeys = await redis.keys("blocked-ip:*")
-    const blockedIps = []
+    blockedIps = []
     
     for (const key of blockedIpsKeys) {
       const reason = await redis.get(key)
@@ -84,7 +126,7 @@ export async function GET(req: NextRequest) {
 
     // Get suspicious activity logs
     const suspiciousKeys = await redis.keys("suspicious:*")
-    const suspiciousActivities = []
+    suspiciousActivities = []
     
     for (const key of suspiciousKeys.slice(0, 50)) { // Limit to 50 most recent
       const data = await redis.get(key)
@@ -95,7 +137,7 @@ export async function GET(req: NextRequest) {
 
     // Get rate limit analytics
     const rateLimitKeys = await redis.keys("rl:*")
-    const rateLimitStats = {
+    rateLimitStats = {
       phoneVerification: 0,
       perPhone: 0,
       globalIP: 0,
@@ -110,7 +152,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get verification success/failure rates
-    const { data: verificationStats, error: statsError } = await supabaseAdmin
+    const { data: verificationStats, error: statsError } = await adminCheck.admin
       .from("verification_logs")
       .select("success, count", { count: "exact" })
       .gte("created_at", oneDayAgo.toISOString())
