@@ -1,2 +1,0 @@
-console.log("TURNSTILE_SITE_KEY type:", typeof process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY);
-console.log("TURNSTILE_SITE_KEY value:", process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY);
