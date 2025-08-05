@@ -29,6 +29,12 @@ setInterval(() => {
 export async function POST(req: NextRequest) {
   try {
     const clientIp = getClientIp(req)
+    console.log("Client IP detected:", clientIp)
+    console.log("Headers:", {
+      "cf-connecting-ip": req.headers.get("cf-connecting-ip"),
+      "x-forwarded-for": req.headers.get("x-forwarded-for"),
+      "x-real-ip": req.headers.get("x-real-ip"),
+    })
     
     // 1. Check if IP is blocked
     if (await isVpnOrProxy(clientIp)) {
@@ -86,14 +92,16 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    // 6. Check per-phone-number rate limit
-    const phoneLimit = await rateLimiters.perPhoneNumber.limit(e164Phone)
-    if (!phoneLimit.success) {
-      await logSuspiciousActivity(clientIp, e164Phone, "Too many attempts for single phone number")
-      return NextResponse.json(
-        { error: "This phone number has received too many verification codes. Please try again tomorrow." },
-        { status: 429 }
-      )
+    // 6. Check per-phone-number rate limit (skip in test mode)
+    if (!isTestMode()) {
+      const phoneLimit = await rateLimiters.perPhoneNumber.limit(e164Phone)
+      if (!phoneLimit.success) {
+        await logSuspiciousActivity(clientIp, e164Phone, "Too many attempts for single phone number")
+        return NextResponse.json(
+          { error: "This phone number has received too many verification codes. Please try again tomorrow." },
+          { status: 429 }
+        )
+      }
     }
     
     // 7. Check for rapid repeated attempts to same number from different IPs
