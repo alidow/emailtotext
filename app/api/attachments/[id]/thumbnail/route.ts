@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from "next/server"
+import { currentUser } from "@clerk/nextjs/server"
+import { createClient } from "@/utils/supabase/server"
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Authenticate user
+    const user = await currentUser()
+    if (!user) {
+      return new NextResponse("Unauthorized", { status: 401 })
+    }
+
+    // Get user data from database
+    const supabase = createClient()
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", user.id)
+      .single()
+
+    if (userError || !userData) {
+      return new NextResponse("User not found", { status: 404 })
+    }
+
+    // Verify user owns this attachment
+    const { data: attachment, error: attachmentError } = await supabase
+      .from("email_attachments")
+      .select("*")
+      .eq("id", params.id)
+      .eq("user_id", userData.id)
+      .single()
+
+    if (attachmentError || !attachment) {
+      return new NextResponse("Attachment not found", { status: 404 })
+    }
+
+    // Check if attachment has expired
+    if (new Date(attachment.expires_at) < new Date()) {
+      return new NextResponse("Attachment has expired", { status: 410 })
+    }
+
+    // Check if thumbnail exists
+    if (!attachment.thumbnail_path) {
+      return new NextResponse("No thumbnail available", { status: 404 })
+    }
+
+    // Generate signed URL for thumbnail
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from("email-attachments")
+      .createSignedUrl(attachment.thumbnail_path, 300) // 5 minute expiry
+
+    if (signedUrlError || !signedUrlData) {
+      console.error("Error generating signed URL:", signedUrlError)
+      return new NextResponse("Error generating thumbnail link", { status: 500 })
+    }
+
+    // Fetch and return the thumbnail
+    const response = await fetch(signedUrlData.signedUrl)
+    const blob = await response.blob()
+
+    return new NextResponse(blob, {
+      headers: {
+        "Content-Type": attachment.content_type,
+        "Content-Disposition": `inline; filename="thumb_${attachment.filename}"`,
+        "Cache-Control": "private, max-age=3600", // Cache for 1 hour
+      },
+    })
+  } catch (error) {
+    console.error("Thumbnail error:", error)
+    return new NextResponse("Internal server error", { status: 500 })
+  }
+}

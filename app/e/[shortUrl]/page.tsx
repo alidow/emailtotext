@@ -2,9 +2,10 @@ import { supabaseAdmin } from "@/lib/supabase"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Mail } from "lucide-react"
+import { AlertCircle, Mail, Paperclip } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { notFound } from "next/navigation"
+import { AttachmentItem } from "@/components/AttachmentItem"
 
 interface PageProps {
   params: {
@@ -15,10 +16,20 @@ interface PageProps {
 export default async function EmailViewerPage({ params }: PageProps) {
   const { shortUrl } = params
   
-  // Fetch email by short URL
+  // Fetch email with attachments by short URL
   const { data: email, error } = await supabaseAdmin
     .from("emails")
-    .select("*")
+    .select(`
+      *,
+      email_attachments (
+        id,
+        filename,
+        content_type,
+        size_bytes,
+        storage_path,
+        thumbnail_path
+      )
+    `)
     .eq("short_url", shortUrl)
     .single()
   
@@ -65,6 +76,21 @@ export default async function EmailViewerPage({ params }: PageProps) {
               <div className="prose prose-slate max-w-none">
                 <pre className="whitespace-pre-wrap font-sans">{email.body}</pre>
               </div>
+
+              {/* Attachments section */}
+              {email.email_attachments && email.email_attachments.length > 0 && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Paperclip className="h-4 w-4" />
+                    Attachments ({email.email_attachments.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {email.email_attachments.map((attachment: any) => (
+                      <AttachmentItem key={attachment.id} attachment={attachment} />
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div className="mt-6 pt-6 border-t text-sm text-muted-foreground">
                 <p>This email will expire {formatDistanceToNow(new Date(email.expires_at), { addSuffix: true })}.</p>
