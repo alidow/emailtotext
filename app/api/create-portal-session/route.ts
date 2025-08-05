@@ -21,7 +21,7 @@ export async function POST() {
       .from("users")
       .select("stripe_customer_id")
       .eq("clerk_id", user.id)
-      .single()
+      .single() as { data: { stripe_customer_id: string } | null; error: any }
     
     if (!dbUser || !dbUser.stripe_customer_id) {
       return NextResponse.json({ error: "No billing account found" }, { status: 404 })
