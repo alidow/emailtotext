@@ -24,14 +24,46 @@ export async function POST(req: NextRequest) {
     }
     
     // Check if user already exists
-    const { data: existingUser } = await supabaseAdmin
+    const { data: existingUser, error: checkError } = await supabaseAdmin
       .from("users")
-      .select("id")
+      .select("id, phone, plan_type")
       .eq("clerk_id", user.id)
       .single()
     
     if (existingUser) {
+      // Update plan type if different
+      if (existingUser.plan_type !== planType) {
+        const { error: updateError } = await supabaseAdmin
+          .from("users")
+          .update({ plan_type: planType })
+          .eq("id", existingUser.id)
+        
+        if (updateError) {
+          console.error("Error updating plan type:", updateError)
+        }
+      }
+      
+      // Update phone if different
+      if (existingUser.phone !== verifiedPhone) {
+        const { error: updateError } = await supabaseAdmin
+          .from("users")
+          .update({ 
+            phone: verifiedPhone,
+            phone_verified: true
+          })
+          .eq("id", existingUser.id)
+        
+        if (updateError) {
+          console.error("Error updating phone:", updateError)
+        }
+      }
+      
       return NextResponse.json({ success: true, userId: existingUser.id })
+    }
+    
+    // If checkError is not PGRST116 (not found), there's an actual error
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError
     }
     
     // Create new user
