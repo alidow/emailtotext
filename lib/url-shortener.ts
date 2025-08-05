@@ -11,6 +11,13 @@ export async function generateUniqueShortUrl(): Promise<string> {
       shortUrl += chars[Math.floor(Math.random() * chars.length)]
     }
     
+    // If Supabase is not configured, just return the generated URL
+    // In test mode, we can't check for uniqueness
+    if (!supabase) {
+      console.warn('Supabase not configured - skipping uniqueness check')
+      return shortUrl
+    }
+    
     // Check if URL already exists
     const { data, error } = await supabase
       .from('emails')
