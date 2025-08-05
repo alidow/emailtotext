@@ -45,19 +45,21 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    // 2. Apply multiple rate limits
-    const [ipLimit, globalLimit, burstLimit] = await Promise.all([
-      rateLimiters.phoneVerification.limit(clientIp),
-      rateLimiters.globalIP.limit(clientIp),
-      rateLimiters.burst.limit(clientIp),
-    ])
-    
-    if (!ipLimit.success || !globalLimit.success || !burstLimit.success) {
-      await logSuspiciousActivity(clientIp, "unknown", "Rate limit exceeded")
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        { status: 429 }
-      )
+    // 2. Apply multiple rate limits (skip in test mode)
+    if (!isTestMode()) {
+      const [ipLimit, globalLimit, burstLimit] = await Promise.all([
+        rateLimiters.phoneVerification.limit(clientIp),
+        rateLimiters.globalIP.limit(clientIp),
+        rateLimiters.burst.limit(clientIp),
+      ])
+      
+      if (!ipLimit.success || !globalLimit.success || !burstLimit.success) {
+        await logSuspiciousActivity(clientIp, "unknown", "Rate limit exceeded")
+        return NextResponse.json(
+          { error: "Too many requests. Please try again later." },
+          { status: 429 }
+        )
+      }
     }
     
     // 3. Validate request body
@@ -104,17 +106,19 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // 7. Check for rapid repeated attempts to same number from different IPs
-    const recentKey = `recent:${e164Phone}`
-    const lastAttempt = recentAttempts.get(recentKey)
-    if (lastAttempt && Date.now() - lastAttempt < 30000) { // 30 seconds
-      await logSuspiciousActivity(clientIp, e164Phone, "Rapid repeated attempts")
-      return NextResponse.json(
-        { error: "Please wait before requesting another code" },
-        { status: 429 }
-      )
+    // 7. Check for rapid repeated attempts to same number from different IPs (skip in test mode)
+    if (!isTestMode()) {
+      const recentKey = `recent:${e164Phone}`
+      const lastAttempt = recentAttempts.get(recentKey)
+      if (lastAttempt && Date.now() - lastAttempt < 30000) { // 30 seconds
+        await logSuspiciousActivity(clientIp, e164Phone, "Rapid repeated attempts")
+        return NextResponse.json(
+          { error: "Please wait before requesting another code" },
+          { status: 429 }
+        )
+      }
+      recentAttempts.set(recentKey, Date.now())
     }
-    recentAttempts.set(recentKey, Date.now())
     
     // 8. Verify CAPTCHA if provided (will be required in frontend)
     if (captchaToken && process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY) {
@@ -144,33 +148,49 @@ export async function POST(req: NextRequest) {
     // Generate 6-digit code
     const code = isMockMode ? "123456" : Math.floor(100000 + Math.random() * 900000).toString()
     
-    // In mock mode or test mode, skip database operations
+    // Store verification code in database (skip in mock/test mode)
     if (!isMockMode && !isTestMode()) {
-      // Store verification code in database
-      const { error: dbError } = await supabaseAdmin
-        .from("phone_verifications")
-        .insert({
-          phone: e164Phone,
-          code,
-          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
-          ip_address: clientIp,
-          user_agent: req.headers.get("user-agent"),
-        })
-      
-      if (dbError) throw dbError
-      
-      // Log consent with additional tracking
-      const { error: consentError } = await supabaseAdmin
-        .from("consent_logs")
-        .insert({
-          phone: e164Phone,
-          consent_24hr_texts: false, // Default to standard hours only
-          ip_address: clientIp,
-          user_agent: req.headers.get("user-agent"),
-          created_at: new Date().toISOString(),
-        })
-      
-      if (consentError) throw consentError
+      try {
+        // Store verification code in database
+        const { error: dbError } = await supabaseAdmin
+          .from("phone_verifications")
+          .insert({
+            phone: e164Phone,
+            code,
+            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+            ip_address: clientIp,
+            user_agent: req.headers.get("user-agent"),
+          })
+        
+        if (dbError) {
+          console.error("Error storing verification code:", dbError)
+          throw dbError
+        }
+        
+        // Log consent with additional tracking
+        const { error: consentError } = await supabaseAdmin
+          .from("consent_logs")
+          .insert({
+            phone: e164Phone,
+            consent_24hr_texts: false, // Default to standard hours only
+            ip_address: clientIp,
+            user_agent: req.headers.get("user-agent"),
+            created_at: new Date().toISOString(),
+          })
+        
+        if (consentError) {
+          console.error("Error logging consent:", consentError)
+          throw consentError
+        }
+      } catch (dbError: any) {
+        console.error("Database operation error:", dbError)
+        // In test mode, continue even if DB operations fail
+        if (isTestMode()) {
+          console.log("[TEST MODE] Continuing despite database error")
+        } else {
+          throw dbError
+        }
+      }
     } else {
       console.log("[TEST/MOCK MODE] Would store verification code:", code, "for phone:", e164Phone)
     }
@@ -222,8 +242,7 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json({ 
       success: true,
-      rateLimitRemaining: ipLimit.remaining,
-      resetAt: new Date(ipLimit.reset).toISOString(),
+      testMode: isTestMode()
     })
     
   } catch (error: any) {

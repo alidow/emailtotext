@@ -53,14 +53,19 @@ ALTER TABLE public.phone_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.consent_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.verification_logs ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist and recreate them
+DROP POLICY IF EXISTS "Service role only" ON public.phone_verifications;
+DROP POLICY IF EXISTS "Service role only" ON public.consent_logs;
+DROP POLICY IF EXISTS "Service role only" ON public.verification_logs;
+
 -- Only service role can access these tables (they're used for verification flow)
-CREATE POLICY IF NOT EXISTS "Service role only" ON public.phone_verifications
+CREATE POLICY "Service role only" ON public.phone_verifications
   FOR ALL USING (auth.jwt()->>'role' = 'service_role');
 
-CREATE POLICY IF NOT EXISTS "Service role only" ON public.consent_logs
+CREATE POLICY "Service role only" ON public.consent_logs
   FOR ALL USING (auth.jwt()->>'role' = 'service_role');
 
-CREATE POLICY IF NOT EXISTS "Service role only" ON public.verification_logs
+CREATE POLICY "Service role only" ON public.verification_logs
   FOR ALL USING (auth.jwt()->>'role' = 'service_role');
 
 -- Output success
