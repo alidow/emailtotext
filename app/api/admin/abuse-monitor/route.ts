@@ -22,11 +22,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user is admin (you'd implement this based on your user system)
-    // For now, we'll use a simple check
-    const isAdmin = true // Replace with actual admin check
+    // Check if user is admin based on email
+    const userEmail = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      },
+    }).then(res => res.json()).then(data => data.email_addresses?.[0]?.email_address)
 
-    if (!isAdmin) {
+    if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

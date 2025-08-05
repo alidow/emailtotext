@@ -42,13 +42,54 @@ export const rateLimiters = {
   }),
 }
 
-// Helper to get client IP
+// Helper to get client IP with enhanced security
 export function getClientIp(request: Request): string {
-  const xff = request.headers.get("x-forwarded-for")
-  const xri = request.headers.get("x-real-ip")
-  const cfIp = request.headers.get("cf-connecting-ip") // Cloudflare
+  // Prioritize Cloudflare's connecting IP if available (most trustworthy)
+  const cfIp = request.headers.get("cf-connecting-ip")
+  if (cfIp) return cfIp
   
-  return cfIp || (xff ? xff.split(",")[0].trim() : xri || "unknown")
+  // For other proxies, be more careful with x-forwarded-for
+  const xff = request.headers.get("x-forwarded-for")
+  if (xff) {
+    // Take the first IP which should be the original client
+    // But validate it's a valid IP format
+    const firstIp = xff.split(",")[0].trim()
+    if (isValidIpAddress(firstIp)) {
+      return firstIp
+    }
+  }
+  
+  // Fallback to x-real-ip
+  const xri = request.headers.get("x-real-ip")
+  if (xri && isValidIpAddress(xri)) {
+    return xri
+  }
+  
+  // Last resort - but this is not reliable
+  return "unknown"
+}
+
+// Validate IP address format
+function isValidIpAddress(ip: string): boolean {
+  // IPv4 pattern
+  const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/
+  // Basic IPv6 pattern
+  const ipv6Pattern = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/
+  
+  if (!ipv4Pattern.test(ip) && !ipv6Pattern.test(ip)) {
+    return false
+  }
+  
+  // For IPv4, check that each octet is 0-255
+  if (ipv4Pattern.test(ip)) {
+    const parts = ip.split(".")
+    return parts.every(part => {
+      const num = parseInt(part, 10)
+      return num >= 0 && num <= 255
+    })
+  }
+  
+  return true
 }
 
 // Check if IP is from known VPN/proxy

@@ -1,11 +1,14 @@
+import { auth } from "@clerk/nextjs/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Mail, Paperclip } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { AlertCircle, Mail, Paperclip, Lock } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { notFound } from "next/navigation"
 import { AttachmentItem } from "@/components/AttachmentItem"
+import Link from "next/link"
 
 interface PageProps {
   params: {
@@ -15,6 +18,9 @@ interface PageProps {
 
 export default async function EmailViewerPage({ params }: PageProps) {
   const { shortUrl } = params
+  
+  // Check authentication
+  const { userId } = await auth()
   
   // Fetch email with attachments by short URL
   const { data: email, error } = await supabaseAdmin
@@ -40,6 +46,92 @@ export default async function EmailViewerPage({ params }: PageProps) {
   // Check if email has expired
   const isExpired = new Date(email.expires_at) < new Date()
   
+  // If user is not authenticated, show login prompt
+  if (!userId) {
+    // Get user data to check if this is their email
+    const { data: userData } = await supabaseAdmin
+      .from("users")
+      .select("id, clerk_id")
+      .eq("id", email.user_id)
+      .single()
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Mail className="h-6 w-6" />
+              Email to Text Notifier
+            </h1>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Authentication Required
+              </CardTitle>
+              <CardDescription>
+                This email is private and requires authentication to view.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  To view this email, please sign in to your account.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="mt-4 space-y-2">
+                <Link href={`/sign-in?redirect_url=/e/${shortUrl}`}>
+                  <Button className="w-full">Sign In to View Email</Button>
+                </Link>
+                <p className="text-sm text-muted-foreground text-center">
+                  Don't have an account?{" "}
+                  <Link href="/sign-up" className="underline">
+                    Sign up
+                  </Link>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+  
+  // User is authenticated - verify they own this email
+  const { data: currentUser } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("clerk_id", userId)
+    .single()
+  
+  if (!currentUser || currentUser.id !== email.user_id) {
+    // User is logged in but doesn't own this email
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Mail className="h-6 w-6" />
+              Email to Text Notifier
+            </h1>
+          </div>
+
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You don't have permission to view this email.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
+
+  // User owns this email - show content
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">

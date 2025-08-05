@@ -3,8 +3,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import * as twilio from "https://esm.sh/twilio@4.19.0"
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'https://emailtotextnotify.com',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req) => {
@@ -30,17 +32,36 @@ serve(async (req) => {
     const timestamp = formData.get('timestamp') as string
     const token = formData.get('token') as string
 
-    // Verify webhook signature
+    // Verify webhook signature using proper HMAC
     const crypto = await import('https://deno.land/std@0.168.0/crypto/mod.ts')
-    const expectedSignature = await crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(timestamp + token + Deno.env.get('MAILGUN_WEBHOOK_SIGNING_KEY')!)
+    
+    // Check timestamp to prevent replay attacks (must be within 5 minutes)
+    const timestampNum = parseInt(timestamp)
+    const currentTime = Math.floor(Date.now() / 1000)
+    if (Math.abs(currentTime - timestampNum) > 300) {
+      console.error('Webhook timestamp too old:', { timestamp, currentTime })
+      return new Response('Request timestamp too old', { status: 401 })
+    }
+    
+    // Verify HMAC signature
+    const signingKey = Deno.env.get('MAILGUN_WEBHOOK_SIGNING_KEY')!
+    const encoder = new TextEncoder()
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(signingKey),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign', 'verify']
     )
+    
+    const signatureData = encoder.encode(timestamp + token)
+    const expectedSignature = await crypto.subtle.sign('HMAC', key, signatureData)
     const expectedHex = Array.from(new Uint8Array(expectedSignature))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('')
     
     if (expectedHex !== signature) {
+      console.error('Invalid webhook signature')
       return new Response('Invalid signature', { status: 401 })
     }
 
