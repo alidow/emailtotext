@@ -49,12 +49,18 @@ create index idx_users_is_test_user on public.users(is_test_user) where is_test_
 -- RLS policies for SMS logs (admin only)
 alter table public.sms_logs enable row level security;
 
+-- Drop existing policy if it exists
+drop policy if exists "SMS logs are viewable by authenticated users for their own logs" on public.sms_logs;
+
 create policy "SMS logs are viewable by authenticated users for their own logs"
   on public.sms_logs for select
   using (auth.uid()::text = (select clerk_id from public.users where id = user_id));
 
 -- RLS policies for payment logs (admin only)
 alter table public.payment_logs enable row level security;
+
+-- Drop existing policy if it exists
+drop policy if exists "Payment logs are viewable by authenticated users for their own logs" on public.payment_logs;
 
 create policy "Payment logs are viewable by authenticated users for their own logs"
   on public.payment_logs for select

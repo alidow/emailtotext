@@ -27,8 +27,7 @@ interface SMSLog {
   created_at: string
 }
 
-// Admin emails allowed to view logs
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",").filter(Boolean)
+// Admin emails are set server-side, we'll check via API
 
 export default function SMSLogsPage() {
   const router = useRouter()
@@ -62,7 +61,9 @@ export default function SMSLogsPage() {
       const userData = await response.json()
       const email = userData.email
       
-      if (!email || !ADMIN_EMAILS.includes(email)) {
+      // Check if user is admin via separate endpoint
+      const adminResponse = await fetch('/api/admin/check-access')
+      if (!adminResponse.ok) {
         router.push('/dashboard')
         return
       }
