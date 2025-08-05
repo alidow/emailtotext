@@ -65,7 +65,11 @@ export async function POST(req: NextRequest) {
         console.log(`[TEST MODE] Created setup session for free plan: ${session.id}`)
       }
       
-      return NextResponse.json({ sessionId: session.id })
+      return NextResponse.json({ 
+        sessionId: session.id,
+        url: (session as any).url,
+        testMode: isTestMode()
+      })
     }
     
     // Get the correct price ID based on plan and billing cycle
@@ -119,8 +123,8 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json({ 
       sessionId: session.id,
-      testMode: isTestMode(),
-      checkoutUrl: isTestMode() ? `/test-checkout/${session.id}` : undefined
+      url: (session as any).url,
+      testMode: isTestMode()
     })
   } catch (error) {
     console.error("Create checkout error:", error)
