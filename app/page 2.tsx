@@ -7,11 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Turnstile } from "@/components/Turnstile"
-import { MessageSquare, Shield, Zap, ArrowRight, Check, Phone, Mail, Bell, Server, Clock, Star, ChevronRight, BookOpen, HelpCircle, AlertCircle } from "lucide-react"
-
-const TURNSTILE_SITE_KEY = String(process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA")
+import { MessageSquare, Shield, Zap, ArrowRight, Check, Phone, Mail, Bell, Server, Clock, Star, ChevronRight, BookOpen, HelpCircle } from "lucide-react"
 
 export default function Home() {
   const router = useRouter()
@@ -19,19 +15,6 @@ export default function Home() {
   const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const [error, setError] = useState("")
-
-  // Helper function to handle smooth scrolling
-  const scrollToGetStarted = () => {
-    const element = document.getElementById('get-started')
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    } else {
-      // Fallback to top of page if element not found
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
 
   const formatPhoneNumber = (value: string) => {
     const phoneNumber = value.replace(/[^\d]/g, "")
@@ -50,51 +33,13 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    
     if (!consent) {
-      setError("Please accept the terms to continue")
+      alert("Please accept the terms to continue")
       return
     }
-    
-    if (!captchaToken) {
-      setError("Please complete the security check")
-      return
-    }
-    
-    // Validate phone number
-    const cleanPhone = phone.replace(/\D/g, "")
-    if (cleanPhone.length < 10) {
-      setError("Please enter a valid phone number")
-      return
-    }
-    
     setLoading(true)
-    
-    try {
-      // Send verification code with CAPTCHA token
-      const response = await fetch("/api/send-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          phone,
-          captchaToken 
-        })
-      })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to send verification code")
-      }
-      
-      // Navigate to verification page
-      window.location.href = `/verify?phone=${encodeURIComponent(phone)}`
-    } catch (err: any) {
-      setError(err.message)
-      setLoading(false)
-      setCaptchaToken(null) // Reset captcha on error
-    }
+    // Navigate to verification page
+    window.location.href = `/verify?phone=${encodeURIComponent(phone)}`
   }
 
   return (
@@ -110,7 +55,6 @@ export default function Home() {
             <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Features</a>
             <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
             <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-            <a href="/use-cases" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Use Cases</a>
             <a href="#resources" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Resources</a>
             <Button variant="outline" size="sm" onClick={() => window.location.href = '/dashboard'}>Sign In</Button>
           </div>
@@ -139,7 +83,7 @@ export default function Home() {
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-1"></div>
             <CardContent className="p-8 md:p-10">
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div id="get-started">
+                <div>
                   <h2 className="text-3xl font-display font-bold text-center mb-2">Get Started</h2>
                   <p className="text-center text-gray-600 mb-6">
                     Enter your phone number to create your email forwarding address
@@ -180,25 +124,6 @@ export default function Home() {
                     </Label>
                   </div>
                 </div>
-
-                {/* CAPTCHA */}
-                <div className="flex justify-center">
-                  <Turnstile
-                    siteKey={TURNSTILE_SITE_KEY}
-                    onVerify={(token) => setCaptchaToken(token)}
-                    onError={() => setError("Security check failed. Please try again.")}
-                    onExpire={() => setCaptchaToken(null)}
-                    theme="auto"
-                  />
-                </div>
-
-                {/* Error message */}
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
 
                 <Button 
                   type="submit" 
@@ -546,7 +471,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = `/get-started?plan=free&billing=${billingCycle}`}
+                  onClick={() => router.push('/verify')}
                 >
                   Start Free
                 </Button>
@@ -600,7 +525,7 @@ export default function Home() {
                 </ul>
                 <Button 
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                  onClick={() => window.location.href = `/get-started?plan=basic&billing=${billingCycle}`}
+                  onClick={() => router.push(`/verify?plan=basic&billing=${billingCycle}`)}
                 >
                   Get Started
                 </Button>
@@ -652,7 +577,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = `/get-started?plan=standard&billing=${billingCycle}`}
+                  onClick={() => router.push(`/verify?plan=standard&billing=${billingCycle}`)}
                 >
                   Get Started
                 </Button>
@@ -704,7 +629,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = `/get-started?plan=premium&billing=${billingCycle}`}
+                  onClick={() => router.push(`/verify?plan=premium&billing=${billingCycle}`)}
                 >
                   Get Started
                 </Button>
@@ -1059,7 +984,7 @@ export default function Home() {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              onClick={scrollToGetStarted}
+              onClick={() => router.push('/verify')}
             >
               Switch from AT&T Today
             </Button>
@@ -1081,7 +1006,7 @@ export default function Home() {
             size="lg" 
             variant="secondary"
             className="h-14 px-8 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-            onClick={scrollToGetStarted}
+            onClick={() => router.push('/verify')}
           >
             Start Free Trial
             <ArrowRight className="ml-2 h-5 w-5" />
@@ -1120,8 +1045,7 @@ export default function Home() {
               <h4 className="text-white font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-sm">
                 <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
-                <li><a href="/use-cases" className="hover:text-white transition-colors">Use Cases</a></li>
-                <li><a href="#resources" className="hover:text-white transition-colors">Guides</a></li>
+                <li><a href="#resources" className="hover:text-white transition-colors">Resources</a></li>
                 <li><a href="#att-notice" className="hover:text-white transition-colors">AT&T Alternative</a></li>
               </ul>
             </div>

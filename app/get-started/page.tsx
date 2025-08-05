@@ -12,7 +12,7 @@ import { Turnstile } from "@/components/Turnstile"
 import { ArrowLeft, Check, Shield, MessageSquare } from "lucide-react"
 import Link from "next/link"
 
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"
+const TURNSTILE_SITE_KEY = String(process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA")
 
 const plans = {
   free: {
