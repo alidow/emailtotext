@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-// import { useUser } from "@clerk/nextjs"
+import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -80,10 +80,8 @@ const plans = [
 ]
 
 export default function OnboardingPage() {
-  // const { user, isLoaded } = useUser()
+  const { user, isLoaded } = useUser()
   const router = useRouter()
-  const isLoaded = true // Mock mode
-  const user = { id: "mock-user" } // Mock user
   const [loading, setLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')

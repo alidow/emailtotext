@@ -10,7 +10,12 @@
     "test:upstash": "node scripts/test-upstash.js",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "qa:check": "node scripts/pre-deploy-check.js",
+    "qa:env": "node -e 'require(\"./lib/env-validation\").logEnvStatus()'",
+    "qa:build": "npm run lint && npm run build",
+    "qa:full": "npm run qa:check && npm run qa:build",
+    "deploy:check": "npm run qa:full"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",
