@@ -172,7 +172,7 @@ export async function isTestUser(userId: string): Promise<boolean> {
     .from('users')
     .select('is_test_user')
     .eq('id', userId)
-    .single()
+    .single() as { data: { is_test_user: boolean } | null; error: any }
   
   if (error) {
     console.error('Error checking test user status:', error)

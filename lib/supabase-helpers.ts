@@ -5,7 +5,9 @@ import { supabaseAdmin, isSupabaseAdminConfigured } from './supabase'
  * Helper to ensure supabaseAdmin is available for API routes
  * Returns early with error response if not configured
  */
-export function requireSupabaseAdmin(context: string = 'This operation') {
+export function requireSupabaseAdmin(context: string = 'This operation'): 
+  | { error: true; response: NextResponse; admin?: never }
+  | { error: false; admin: typeof supabaseAdmin; response?: never } {
   if (!isSupabaseAdminConfigured()) {
     console.error(`Supabase Admin not configured for: ${context}`)
     return {

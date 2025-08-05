@@ -35,8 +35,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Phone verification required" }, { status: 400 })
     }
     
+    // adminCheck.admin is guaranteed to exist after the error check
+    const admin = adminCheck.admin!
+    
     // Check if user already exists
-    const { data: existingUser, error: checkError } = await adminCheck.admin
+    const { data: existingUser, error: checkError } = await admin
       .from("users")
       .select("id, phone, plan_type")
       .eq("clerk_id", user.id)
@@ -45,7 +48,7 @@ export async function POST(req: NextRequest) {
     if (existingUser) {
       // Update plan type if different
       if (existingUser.plan_type !== planType) {
-        const { error: updateError } = await adminCheck.admin
+        const { error: updateError } = await admin
           .from("users")
           .update({ plan_type: planType })
           .eq("id", existingUser.id)
@@ -57,7 +60,7 @@ export async function POST(req: NextRequest) {
       
       // Update phone if different
       if (existingUser.phone !== verifiedPhone) {
-        const { error: updateError } = await adminCheck.admin
+        const { error: updateError } = await admin
           .from("users")
           .update({ 
             phone: verifiedPhone,
@@ -79,7 +82,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Create new user
-    const { data: newUser, error } = await adminCheck.admin
+    const { data: newUser, error } = await admin
       .from("users")
       .insert({
         clerk_id: user.id,

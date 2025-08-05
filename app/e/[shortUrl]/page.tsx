@@ -37,7 +37,29 @@ export default async function EmailViewerPage({ params }: PageProps) {
       )
     `)
     .eq("short_url", shortUrl)
-    .single()
+    .single() as { 
+      data: {
+        id: string;
+        user_id: string;
+        from_email: string;
+        subject: string;
+        body: string;
+        preview_text: string;
+        received_at: string;
+        created_at: string;
+        short_url: string;
+        expires_at: string;
+        email_attachments: Array<{
+          id: string;
+          filename: string;
+          content_type: string;
+          size_bytes: number;
+          storage_path: string;
+          thumbnail_path: string | null;
+        }>;
+      } | null;
+      error: any;
+    }
   
   if (error || !email) {
     notFound()
@@ -53,7 +75,7 @@ export default async function EmailViewerPage({ params }: PageProps) {
       .from("users")
       .select("id, clerk_id")
       .eq("id", email.user_id)
-      .single()
+      .single() as { data: { id: string; clerk_id: string } | null; error: any }
     
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-8">
@@ -106,7 +128,7 @@ export default async function EmailViewerPage({ params }: PageProps) {
     .from("users")
     .select("id")
     .eq("clerk_id", userId)
-    .single()
+    .single() as { data: { id: string } | null; error: any }
   
   if (!currentUser || currentUser.id !== email.user_id) {
     // User is logged in but doesn't own this email
