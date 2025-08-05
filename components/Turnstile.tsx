@@ -31,11 +31,16 @@ export function Turnstile({
   const [scriptLoaded, setScriptLoaded] = useState(false)
 
   useEffect(() => {
+    // Debug logging
+    console.log('Turnstile: Received siteKey:', siteKey, 'Type:', typeof siteKey)
+    
     // Ensure siteKey is a string and convert if needed
     let validSiteKey = siteKey
     
     if (typeof siteKey === 'object' && siteKey !== null) {
       console.warn('Turnstile: siteKey was provided as an object, attempting to extract string value')
+      console.log('Object keys:', Object.keys(siteKey))
+      console.log('Object values:', Object.values(siteKey))
       // Try to extract the actual value if it's wrapped in an object
       validSiteKey = (siteKey as any).toString() || String(siteKey)
     }
@@ -45,6 +50,8 @@ export function Turnstile({
       if (onError) onError()
       return
     }
+    
+    console.log('Turnstile: Using validSiteKey:', validSiteKey)
 
     if (!scriptLoaded || !window.turnstile || !containerRef.current) return
 
