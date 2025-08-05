@@ -37,6 +37,7 @@ export async function GET(
         content_type: string;
         filename: string;
         size_bytes: number;
+        thumbnail_path?: string;
       } | null; error: any }
 
     if (attachmentError || !attachment) {
