@@ -58,14 +58,14 @@ const useCases = [
     metrics: { speed: "Real-time", accuracy: "100%" }
   },
   {
-    title: "AWS SNS Cost Alternative",
-    description: "Save up to 95% compared to AWS SNS pricing. Our flat-rate plans beat AWS's $0.00645 per SMS pricing model.",
+    title: "AWS SNS Alternative",
+    description: "Better than AWS SNS for teams. Get message history, web links to full content, and simpler setup without AWS complexity.",
     href: "/use-cases/aws-sns-cost",
     icon: Shield,
-    category: "Cost Savings",
+    category: "DevOps",
     color: "indigo",
     priority: 6,
-    metrics: { savings: "95%", setup: "5 min" }
+    metrics: { history: "∞", setup: "60 sec" }
   },
   {
     title: "Cloudflare Security Alerts",

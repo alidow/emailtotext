@@ -874,18 +874,18 @@ export default function Home() {
                   <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
                     <Shield className="h-5 w-5 text-indigo-600" />
                   </div>
-                  <span className="text-sm text-indigo-600 font-medium">COST SAVINGS</span>
+                  <span className="text-sm text-indigo-600 font-medium">AWS ALTERNATIVE</span>
                 </div>
                 <CardTitle className="text-xl font-display mb-3">
                   AWS SNS Alternative
                 </CardTitle>
                 <CardDescription>
-                  Save up to 95% compared to AWS SNS pricing. Our flat-rate plans beat AWS's $0.00645 per SMS pricing model.
+                  Get message history, web links, and simpler setup than AWS SNS. Perfect for teams that need more than basic SMS delivery.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center text-indigo-600 font-medium">
-                  <span>Calculate Savings</span>
+                  <span>Compare Features</span>
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </div>
               </CardContent>
