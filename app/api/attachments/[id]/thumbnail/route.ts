@@ -30,7 +30,14 @@ export async function GET(
       .select("*")
       .eq("id", params.id)
       .eq("user_id", userData.id)
-      .single()
+      .single() as { data: { 
+        id: string;
+        expires_at: string;
+        storage_path: string;
+        content_type: string;
+        filename: string;
+        size_bytes: number;
+      } | null; error: any }
 
     if (attachmentError || !attachment) {
       return new NextResponse("Attachment not found", { status: 404 })
