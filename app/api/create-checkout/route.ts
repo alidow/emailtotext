@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       .from("users")
       .select("*")
       .eq("clerk_id", user.id)
-      .single()
+      .single() as { data: any | null; error: any }
     
     if (!dbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
