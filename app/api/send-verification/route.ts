@@ -144,8 +144,8 @@ export async function POST(req: NextRequest) {
     // Generate 6-digit code
     const code = isMockMode ? "123456" : Math.floor(100000 + Math.random() * 900000).toString()
     
-    // In mock mode, skip database operations
-    if (!isMockMode) {
+    // In mock mode or test mode, skip database operations
+    if (!isMockMode && !isTestMode()) {
       // Store verification code in database
       const { error: dbError } = await supabaseAdmin
         .from("phone_verifications")
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
       
       if (consentError) throw consentError
     } else {
-      console.log("[MOCK MODE] Would store verification code:", code, "for phone:", e164Phone)
+      console.log("[TEST/MOCK MODE] Would store verification code:", code, "for phone:", e164Phone)
     }
     
     // Send SMS using the wrapper (handles test mode automatically)
@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Log successful verification for monitoring
-    if (!isMockMode) {
+    if (!isMockMode && !isTestMode()) {
       await supabaseAdmin
         .from("verification_logs")
         .insert({
