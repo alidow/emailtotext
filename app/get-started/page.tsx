@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -67,7 +67,7 @@ const plans = {
   }
 }
 
-export default function GetStarted() {
+function GetStartedContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const selectedPlan = searchParams.get("plan") as keyof typeof plans || "free"
@@ -317,5 +317,17 @@ export default function GetStarted() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function GetStarted() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <GetStartedContent />
+    </Suspense>
   )
 }
