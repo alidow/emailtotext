@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { supabaseAdmin } from "@/lib/supabase"
+import { requireSupabaseAdmin } from "@/lib/supabase-helpers"
 import { cookies } from "next/headers"
 import { sendTransactionalEmail } from "@/lib/send-transactional-email"
 import { isTestMode } from "@/lib/test-mode"
@@ -22,6 +23,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
     
+    // Check if Supabase is configured
+    const adminCheck = requireSupabaseAdmin('create user')
+    if (adminCheck.error) return adminCheck.response
+    
     const { planType } = await req.json()
     const cookieStore = await cookies()
     const verifiedPhone = cookieStore.get("verified_phone")?.value
@@ -31,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Check if user already exists
-    const { data: existingUser, error: checkError } = await supabaseAdmin
+    const { data: existingUser, error: checkError } = await adminCheck.admin
       .from("users")
       .select("id, phone, plan_type")
       .eq("clerk_id", user.id)
@@ -40,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (existingUser) {
       // Update plan type if different
       if (existingUser.plan_type !== planType) {
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await adminCheck.admin
           .from("users")
           .update({ plan_type: planType })
           .eq("id", existingUser.id)
@@ -52,7 +57,7 @@ export async function POST(req: NextRequest) {
       
       // Update phone if different
       if (existingUser.phone !== verifiedPhone) {
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await adminCheck.admin
           .from("users")
           .update({ 
             phone: verifiedPhone,
@@ -74,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Create new user
-    const { data: newUser, error } = await supabaseAdmin
+    const { data: newUser, error } = await adminCheck.admin
       .from("users")
       .insert({
         clerk_id: user.id,

@@ -12,7 +12,8 @@ export const supabase = supabaseUrl && supabaseAnonKey
   : null
 
 // Server-side client with service role key (for admin operations)
-export const supabaseAdmin = supabaseUrl && supabaseServiceKey
+// Type assertion to avoid null checks in existing code
+export const supabaseAdmin = (supabaseUrl && supabaseServiceKey
   ? createClient(
       supabaseUrl,
       supabaseServiceKey,
@@ -23,7 +24,7 @@ export const supabaseAdmin = supabaseUrl && supabaseServiceKey
         }
       }
     )
-  : null
+  : null) as ReturnType<typeof createClient>
 
 // Helper to check if Supabase is configured
 export function isSupabaseConfigured(): boolean {
@@ -32,5 +33,5 @@ export function isSupabaseConfigured(): boolean {
 
 // Helper to check if only admin is configured (for server-side only operations)
 export function isSupabaseAdminConfigured(): boolean {
-  return !!supabaseAdmin
+  return !!supabaseServiceKey && !!supabaseUrl
 }

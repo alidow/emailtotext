@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@clerk/nextjs/server"
 import { Redis } from "@upstash/redis"
 import { supabaseAdmin } from "@/lib/supabase"
+import { requireSupabaseAdmin } from "@/lib/supabase-helpers"
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -38,8 +39,30 @@ export async function GET(req: NextRequest) {
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
 
+    // Check if Supabase is configured
+    const adminCheck = requireSupabaseAdmin('abuse monitoring')
+    if (adminCheck.error) {
+      // Return partial data without database info
+      return NextResponse.json({
+        recentAttempts: [],
+        blockedIps,
+        suspiciousActivities: suspiciousActivities.sort((a, b) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        ).slice(0, 50),
+        rateLimitStats,
+        verificationStats: { total: 0, successful: 0, failed: 0, successRate: 0 },
+        summary: {
+          totalAttempts: 0,
+          uniqueIPs: 0,
+          uniquePhones: 0,
+          blockedIPs: blockedIps.length,
+          suspiciousActivities: suspiciousActivities.length
+        }
+      })
+    }
+
     // Get recent verification attempts from database
-    const { data: recentAttempts, error: attemptsError } = await supabaseAdmin
+    const { data: recentAttempts, error: attemptsError } = await adminCheck.admin
       .from("verification_logs")
       .select("*")
       .gte("created_at", oneHourAgo.toISOString())
