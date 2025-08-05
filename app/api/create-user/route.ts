@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { currentUser } from "@clerk/nextjs/server"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { cookies } from "next/headers"
 import { sendTransactionalEmail } from "@/lib/send-transactional-email"
@@ -10,9 +10,16 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
+    // Verify authentication
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    
+    // Get user details
     const user = await currentUser()
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
     
     const { planType } = await req.json()

@@ -1,3 +1,4 @@
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { Ratelimit } from '@upstash/ratelimit'
@@ -21,7 +22,31 @@ const ratelimit = redis
     })
   : null
 
-export async function middleware(request: NextRequest) {
+// Create matchers
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/admin(.*)',
+  '/api/create-user',
+  '/api/user',
+  '/api/admin/(.*)',
+  '/onboarding',
+])
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/send-verification',
+  '/api/verify-phone',
+  '/api/webhooks/(.*)',
+  '/api/stripe-webhook',
+  '/features/(.*)',
+  '/pricing',
+  '/e/(.*)',
+])
+
+// Custom middleware function for rate limiting
+async function rateLimitMiddleware(request: NextRequest) {
   // Only apply to API routes
   if (!request.nextUrl.pathname.startsWith('/api/')) {
     return NextResponse.next()
@@ -85,10 +110,26 @@ export async function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
+// Export Clerk middleware with custom rate limiting
+export default clerkMiddleware(async (auth, req) => {
+  // Apply rate limiting first
+  const rateLimitResponse = await rateLimitMiddleware(req)
+  if (rateLimitResponse.status === 429) {
+    return rateLimitResponse
+  }
+
+  // Protect routes that require authentication
+  if (isProtectedRoute(req)) {
+    await auth.protect()
+  }
+
+  return NextResponse.next()
+})
+
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
