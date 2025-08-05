@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Turnstile } from "@/components/Turnstile"
 import { MessageSquare, Shield, Zap, ArrowRight, Check, Phone, Mail, Bell, Server, Clock, Star, ChevronRight, BookOpen, HelpCircle, AlertCircle } from "lucide-react"
 
-const TURNSTILE_SITE_KEY = String(process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA")
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"
 
 export default function Home() {
   const router = useRouter()

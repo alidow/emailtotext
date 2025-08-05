@@ -31,9 +31,18 @@ export function Turnstile({
   const [scriptLoaded, setScriptLoaded] = useState(false)
 
   useEffect(() => {
-    // Ensure siteKey is a string
-    if (typeof siteKey !== 'string' || !siteKey) {
-      console.error('Turnstile: Invalid siteKey provided:', siteKey)
+    // Ensure siteKey is a string and convert if needed
+    let validSiteKey = siteKey
+    
+    if (typeof siteKey === 'object' && siteKey !== null) {
+      console.warn('Turnstile: siteKey was provided as an object, attempting to extract string value')
+      // Try to extract the actual value if it's wrapped in an object
+      validSiteKey = (siteKey as any).toString() || String(siteKey)
+    }
+    
+    if (typeof validSiteKey !== 'string' || !validSiteKey) {
+      console.error('Turnstile: Invalid siteKey provided:', siteKey, 'Type:', typeof siteKey)
+      if (onError) onError()
       return
     }
 
@@ -51,7 +60,7 @@ export function Turnstile({
     try {
       // Create new widget
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey: siteKey,
+        sitekey: validSiteKey,
         callback: onVerify,
         "error-callback": onError,
         "expired-callback": onExpire,
@@ -79,7 +88,14 @@ export function Turnstile({
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
-        onLoad={() => setScriptLoaded(true)}
+        onLoad={() => {
+          // Disable debugger in production
+          if (typeof window !== 'undefined' && window.turnstile) {
+            const originalDebugger = window.debugger
+            window.debugger = undefined
+          }
+          setScriptLoaded(true)
+        }}
       />
       <div ref={containerRef} className="cf-turnstile" />
     </>
