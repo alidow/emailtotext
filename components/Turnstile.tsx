@@ -56,9 +56,12 @@ export function Turnstile({
       }
 
       try {
+        // Clean sitekey - remove any surrounding quotes
+        const cleanSiteKey = siteKey.replace(/^["']|["']$/g, '').trim()
+        
         // Create new widget
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
-          sitekey: siteKey,
+          sitekey: cleanSiteKey,
           callback: (token: string) => {
             onVerify(token)
           },

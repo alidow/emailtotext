@@ -13,9 +13,7 @@ import { ArrowLeft, Check, Shield, MessageSquare } from "lucide-react"
 import Link from "next/link"
 
 // Use test key if environment variable is not properly loaded
-const TURNSTILE_SITE_KEY = typeof process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY === 'string' 
-  ? process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY 
-  : "1x00000000000000000000AA"
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"
 
 const plans = {
   free: {
