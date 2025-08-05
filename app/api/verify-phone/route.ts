@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { cookies } from "next/headers"
 import { isMockMode } from "@/lib/mock-mode"
+import { isTestMode } from "@/lib/test-mode"
 import * as Sentry from "@sentry/nextjs"
 
 export async function POST(req: NextRequest) {
@@ -23,11 +24,14 @@ export async function POST(req: NextRequest) {
     const cleanPhone = phone.replace(/\D/g, "")
     const e164Phone = cleanPhone.startsWith("1") ? `+${cleanPhone}` : `+1${cleanPhone}`
     
-    // In mock mode, accept code "123456"
-    if (isMockMode) {
-      if (code !== "123456") {
+    // In mock mode or test mode, accept code "123456" or any 6-digit code in test mode
+    if (isMockMode || isTestMode()) {
+      // In test mode, accept any 6-digit code; in mock mode, only "123456"
+      const isValidCode = isMockMode ? code === "123456" : /^\d{6}$/.test(code)
+      
+      if (!isValidCode) {
         return NextResponse.json(
-          { error: "Invalid verification code. Use 123456 in mock mode." },
+          { error: isMockMode ? "Invalid verification code. Use 123456 in mock mode." : "Invalid verification code. Must be 6 digits." },
           { status: 400 }
         )
       }
@@ -47,6 +51,8 @@ export async function POST(req: NextRequest) {
         sameSite: "lax",
         maxAge: 60 * 60 // 1 hour
       })
+      
+      console.log(`[TEST/MOCK MODE] Phone ${e164Phone} verified with code ${code}`)
       
       return NextResponse.json({ success: true })
     }
