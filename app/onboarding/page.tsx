@@ -40,7 +40,7 @@ const plans = [
     features: [
       "100 texts per month",
       "30-day message history",
-      "Auto-buy: $0.055/text after quota",
+      "Email attachments",
       "Priority support",
       "SMS delivery reports"
     ],
@@ -56,8 +56,8 @@ const plans = [
     features: [
       "500 texts per month",
       "90-day message history",
-      "Auto-buy: $0.022/text after quota",
-      "Advanced analytics",
+      "Email attachments",
+      "24/7 delivery option",
       "Priority support"
     ],
     monthlyPriceId: process.env.NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID || "price_standard_monthly",
@@ -72,8 +72,8 @@ const plans = [
     features: [
       "1,000 texts per month",
       "Unlimited message history",
-      "Auto-buy: $0.022/text after quota",
-      "API access",
+      "Email attachments",
+      "24/7 delivery",
       "Dedicated support"
     ],
     monthlyPriceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID || "price_premium_monthly",
@@ -286,10 +286,11 @@ export default function OnboardingPage() {
           <p className="font-medium mb-2">How our pricing works:</p>
           <ul className="space-y-1 text-left">
             <li>• <strong>Free Plan:</strong> Automatically upgrades to Basic when you exceed 10 texts</li>
-            <li>• <strong>Paid Plans:</strong> Auto-purchase 100 additional texts when you exceed your quota</li>
+            <li>• <strong>Paid Plans:</strong> When you reach your monthly limit, we'll automatically purchase 100 additional texts for you</li>
+            <li>• <strong>Notifications:</strong> You'll receive an email alert when you reach 80% of your quota, before any additional charges</li>
             <li>• <strong>Annual Billing:</strong> Save 20% when you pay annually</li>
           </ul>
-          <p className="mt-4">All plans include TCPA compliance and secure message delivery. Cancel anytime.</p>
+          <p className="mt-4">All plans include email attachments, TCPA compliance, and secure message delivery. Cancel anytime.</p>
         </div>
       </div>
     </div>

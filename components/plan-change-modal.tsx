@@ -28,7 +28,7 @@ const plans = [
     features: [
       "100 texts per month",
       "30-day message history",
-      "Auto-buy: $0.055/text after quota",
+      "Email attachments",
       "Priority support"
     ]
   },
@@ -41,7 +41,7 @@ const plans = [
     features: [
       "500 texts per month",
       "90-day message history",
-      "Auto-buy: $0.022/text after quota",
+      "24/7 delivery option",
       "Advanced analytics"
     ]
   },
@@ -54,7 +54,7 @@ const plans = [
     features: [
       "1,000 texts per month",
       "Unlimited message history",
-      "Auto-buy: $0.022/text after quota",
+      "24/7 delivery",
       "API access"
     ]
   }
@@ -254,6 +254,16 @@ export function PlanChangeModal({ currentPlan, currentBillingCycle, currentUsage
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          
+          {/* Fine print */}
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p className="font-medium">Note:</p>
+            <ul className="space-y-1">
+              <li>• When you reach your monthly limit, we'll automatically purchase 100 additional texts</li>
+              <li>• You'll receive an email notification at 80% usage before any additional charges</li>
+              <li>• Changes take effect immediately with prorated billing</li>
+            </ul>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t">

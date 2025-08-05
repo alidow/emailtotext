@@ -35,7 +35,7 @@ const plans = {
     features: [
       "100 texts per month",
       "30-day message history",
-      "Auto-buy: $0.055/text after quota",
+      "Email attachments",
       "SMS delivery reports",
       "Priority support"
     ]
@@ -48,7 +48,7 @@ const plans = {
     features: [
       "500 texts per month",
       "90-day message history",
-      "Auto-buy: $0.022/text after quota",
+      "24/7 delivery option",
       "Advanced analytics",
       "Priority support"
     ]
@@ -61,7 +61,7 @@ const plans = {
     features: [
       "1,000 texts per month",
       "Unlimited message history",
-      "Auto-buy: $0.022/text after quota",
+      "24/7 delivery",
       "API access",
       "Dedicated support"
     ]
@@ -315,6 +315,17 @@ function GetStartedContent() {
               </CardContent>
             </Card>
           </div>
+        </div>
+        
+        {/* Fine print */}
+        <div className="mt-12 text-center text-sm text-muted-foreground max-w-3xl mx-auto">
+          <p className="font-medium mb-2">How our pricing works:</p>
+          <ul className="space-y-1 text-left">
+            <li>• <strong>Free Plan:</strong> Automatically upgrades to Basic when you exceed 10 texts</li>
+            <li>• <strong>Paid Plans:</strong> When you reach your monthly limit, we'll automatically purchase 100 additional texts for you</li>
+            <li>• <strong>Notifications:</strong> You'll receive an email alert when you reach 80% of your quota, before any additional charges</li>
+            <li>• <strong>30-Day Guarantee:</strong> Not satisfied? Get a full refund within 30 days</li>
+          </ul>
         </div>
       </main>
     </div>

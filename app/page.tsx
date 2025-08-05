@@ -642,11 +642,11 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
-                    <span>Auto-buy: $0.022/text after quota</span>
+                    <span>24/7 delivery option</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
-                    <span>Advanced analytics</span>
+                    <span>Email attachments</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
@@ -694,11 +694,11 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
-                    <span>Auto-buy: $0.022/text after quota</span>
+                    <span>24/7 delivery</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
-                    <span>API access</span>
+                    <span>Email attachments</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-green-500" />
@@ -725,7 +725,7 @@ export default function Home() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 mt-0.5">•</span>
-                <span><strong>Paid Plans:</strong> After using your monthly quota, additional texts are automatically purchased in blocks of 100 at your plan's rate + 10%.</span>
+                <span><strong>Paid Plans:</strong> When you reach your monthly limit, we'll automatically purchase 100 additional texts for you. You'll receive an email notification when you reach 80% of your quota.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 mt-0.5">•</span>
