@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
-import { createClient } from "@/utils/supabase/server"
+import { supabaseAdmin } from "@/lib/supabase"
 
 export async function GET(
   request: NextRequest,
@@ -14,8 +14,7 @@ export async function GET(
     }
 
     // Get user data from database
-    const supabase = createClient()
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabaseAdmin
       .from("users")
       .select("id")
       .eq("clerk_id", user.id)
@@ -26,7 +25,7 @@ export async function GET(
     }
 
     // Verify user owns this attachment
-    const { data: attachment, error: attachmentError } = await supabase
+    const { data: attachment, error: attachmentError } = await supabaseAdmin
       .from("email_attachments")
       .select("*")
       .eq("id", params.id)
@@ -49,7 +48,7 @@ export async function GET(
     }
 
     // Generate signed URL for temporary access
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+    const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin.storage
       .from("email-attachments")
       .createSignedUrl(attachment.storage_path, 300) // 5 minute expiry
 
