@@ -81,7 +81,7 @@ export default function GetStarted() {
 
   const plan = plans[selectedPlan] || plans.free
   const isYearly = billingCycle === "annual"
-  const displayPrice = isYearly && plan.yearlyPrice ? plan.yearlyPrice : plan.price
+  const displayPrice = isYearly && 'yearlyPrice' in plan ? plan.yearlyPrice : plan.price
 
   const formatPhoneNumber = (value: string) => {
     const phoneNumber = value.replace(/[^\d]/g, "")
