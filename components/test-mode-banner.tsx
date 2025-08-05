@@ -14,13 +14,7 @@ export function TestModeBanner() {
       <Alert className="rounded-none border-none bg-transparent">
         <AlertCircle className="h-4 w-4 text-yellow-600" />
         <AlertDescription className="text-yellow-800 font-semibold">
-          TEST MODE ACTIVE - No real payments or SMS messages will be processed. 
-          <a 
-            href="/admin/sms-logs" 
-            className="underline ml-2 hover:text-yellow-900"
-          >
-            View SMS logs
-          </a>
+          TEST MODE ACTIVE - No real payments or SMS messages will be processed.
         </AlertDescription>
       </Alert>
     </div>

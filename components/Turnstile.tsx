@@ -89,11 +89,7 @@ export function Turnstile({
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
         onLoad={() => {
-          // Disable debugger in production
-          if (typeof window !== 'undefined' && window.turnstile) {
-            const originalDebugger = window.debugger
-            window.debugger = undefined
-          }
+          // Script loaded successfully
           setScriptLoaded(true)
         }}
       />
