@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import twilio from "twilio"
 import { supabaseAdmin } from "@/lib/supabase"
 import { isMockMode } from "@/lib/mock-mode"
+import { twilioClient } from "@/lib/twilio-client"
+import { isTestMode } from "@/lib/test-mode"
 import { 
   rateLimiters, 
   getClientIp, 
@@ -10,10 +11,6 @@ import {
   logSuspiciousActivity,
   blockIp 
 } from "@/lib/rate-limit"
-
-const twilioClient = process.env.TWILIO_ACCOUNT_SID !== 'mock_account_sid' 
-  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
-  : null
 
 // Track recent verification attempts in memory for additional protection
 const recentAttempts = new Map<string, number>()
@@ -170,29 +167,37 @@ export async function POST(req: NextRequest) {
       console.log("[MOCK MODE] Would store verification code:", code, "for phone:", e164Phone)
     }
     
-    // Send SMS
-    if (twilioClient) {
-      try {
-        await twilioClient.messages.create({
-          body: `Your Email to Text Notifier verification code is: ${code}. This code expires in 10 minutes.`,
-          to: e164Phone,
-          from: process.env.TWILIO_PHONE_NUMBER
-        })
-      } catch (twilioError: any) {
-        console.error("Twilio error:", twilioError)
-        
-        // Check if it's a blacklisted number error
-        if (twilioError.code === 21610) {
-          return NextResponse.json(
-            { error: "This phone number cannot receive SMS messages" },
-            { status: 400 }
-          )
+    // Send SMS using the wrapper (handles test mode automatically)
+    try {
+      await twilioClient.sendSMS({
+        to: e164Phone,
+        body: `Your Email to Text Notifier verification code is: ${code}. This code expires in 10 minutes.`,
+        type: 'verification',
+        metadata: {
+          code,
+          ip_address: clientIp,
+          user_agent: req.headers.get("user-agent")
         }
-        
-        throw twilioError
+      })
+      
+      if (isTestMode()) {
+        console.log(`[TEST MODE] Verification code ${code} logged for ${e164Phone}`)
       }
-    } else {
-      console.log("[MOCK MODE] Would send SMS to", e164Phone, "with code:", code)
+    } catch (twilioError: any) {
+      console.error("SMS send error:", twilioError)
+      
+      // Check if it's a blacklisted number error
+      if (twilioError.code === 21610) {
+        return NextResponse.json(
+          { error: "This phone number cannot receive SMS messages" },
+          { status: 400 }
+        )
+      }
+      
+      return NextResponse.json(
+        { error: "Failed to send verification code. Please try again." },
+        { status: 500 }
+      )
     }
     
     // Log successful verification for monitoring

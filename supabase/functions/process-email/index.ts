@@ -2,6 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import * as twilio from "https://esm.sh/twilio@4.19.0"
 
+// Test mode check
+const isTestMode = () => Deno.env.get('ENABLE_TEST_MODE') === 'true'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'https://emailtotextnotify.com',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -108,23 +111,51 @@ serve(async (req) => {
         console.log('Free user exceeded limit, auto-upgrading to Basic')
         
         try {
-          // Create Stripe subscription for Basic plan
-          const stripe = await import('https://esm.sh/stripe@13.10.0')
-          const stripeClient = new stripe.default(Deno.env.get('STRIPE_SECRET_KEY')!, {
-            apiVersion: '2023-10-16'
-          })
+          let subscription: any
           
-          // Create subscription
-          const subscription = await stripeClient.subscriptions.create({
-            customer: user.stripe_customer_id,
-            items: [{
-              price: Deno.env.get('STRIPE_BASIC_MONTHLY_PRICE_ID')!
-            }],
-            metadata: {
-              user_id: user.id,
-              auto_upgrade: 'true'
-            }
-          })
+          if (isTestMode()) {
+            // In test mode, simulate subscription creation
+            const mockSubscriptionId = `sub_test_${Date.now()}`
+            
+            // Log the payment attempt
+            await supabase
+              .from('payment_logs')
+              .insert({
+                user_id: user.id,
+                type: 'subscription',
+                status: 'test_mode',
+                stripe_session_id: mockSubscriptionId,
+                plan_type: 'basic',
+                billing_cycle: 'monthly',
+                metadata: {
+                  auto_upgrade: true,
+                  trigger: 'quota_exceeded'
+                }
+              })
+            
+            console.log('[TEST MODE] Auto-upgrade to Basic plan logged')
+            
+            // Simulate the subscription
+            subscription = { id: mockSubscriptionId }
+          } else {
+            // Create real Stripe subscription
+            const stripe = await import('https://esm.sh/stripe@13.10.0')
+            const stripeClient = new stripe.default(Deno.env.get('STRIPE_SECRET_KEY')!, {
+              apiVersion: '2023-10-16'
+            })
+            
+            // Create subscription
+            subscription = await stripeClient.subscriptions.create({
+              customer: user.stripe_customer_id,
+              items: [{
+                price: Deno.env.get('STRIPE_BASIC_MONTHLY_PRICE_ID')!
+              }],
+              metadata: {
+                user_id: user.id,
+                auto_upgrade: 'true'
+              }
+            })
+          }
           
           // Update user to Basic plan
           await supabase
@@ -326,17 +357,59 @@ serve(async (req) => {
       return new Response('Queued for delivery', { status: 202 })
     }
 
-    // Send SMS via Twilio
-    const twilioClient = twilio.default(
-      Deno.env.get('TWILIO_ACCOUNT_SID')!,
-      Deno.env.get('TWILIO_AUTH_TOKEN')!
-    )
+    // Send SMS via Twilio or log in test mode
+    if (isTestMode()) {
+      // In test mode, log the SMS instead of sending
+      await supabase
+        .from('sms_logs')
+        .insert({
+          user_id: user.id,
+          phone: phone,
+          message: smsBody,
+          type: 'email_forward',
+          status: 'test_mode',
+          metadata: {
+            email_id: email.id,
+            from_email: sender,
+            subject: subject,
+            attachment_count: attachmentCount,
+            short_url: shortUrl
+          }
+        })
+      
+      console.log(`[TEST MODE] SMS logged for ${phone}:`, smsBody.substring(0, 50) + '...')
+    } else {
+      // In production, send real SMS
+      const twilioClient = twilio.default(
+        Deno.env.get('TWILIO_ACCOUNT_SID')!,
+        Deno.env.get('TWILIO_AUTH_TOKEN')!
+      )
 
-    await twilioClient.messages.create({
-      body: smsBody,
-      to: phone,
-      from: Deno.env.get('TWILIO_PHONE_NUMBER')!
-    })
+      const message = await twilioClient.messages.create({
+        body: smsBody,
+        to: phone,
+        from: Deno.env.get('TWILIO_PHONE_NUMBER')!
+      })
+      
+      // Log the sent SMS
+      await supabase
+        .from('sms_logs')
+        .insert({
+          user_id: user.id,
+          phone: phone,
+          message: smsBody,
+          type: 'email_forward',
+          status: 'sent',
+          twilio_sid: message.sid,
+          metadata: {
+            email_id: email.id,
+            from_email: sender,
+            subject: subject,
+            attachment_count: attachmentCount,
+            short_url: shortUrl
+          }
+        })
+    }
 
     // Update usage count
     const newUsageCount = user.usage_count + 1

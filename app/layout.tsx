@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter, Plus_Jakarta_Sans } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
 import { CookieConsent } from "@/components/cookie-consent"
+import { TestModeBanner } from "@/components/test-mode-banner"
 import { GoogleAnalytics } from '@next/third-parties/google'
 import "./globals.css"
 
@@ -50,6 +51,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} ${plusJakarta.variable} font-sans`}>
         <ClerkProvider>
+          <TestModeBanner />
           {children}
         </ClerkProvider>
         <CookieConsent />

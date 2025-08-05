@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { currentUser } from "@clerk/nextjs/server"
 import { supabaseAdmin } from "@/lib/supabase"
-import Stripe from "stripe"
+import { stripeClient } from "@/lib/stripe-client"
+import { isTestMode } from "@/lib/test-mode"
 
 export const dynamic = 'force-dynamic'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-07-30.basil"
-})
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,7 +30,7 @@ export async function POST(req: NextRequest) {
     let customerId = dbUser.stripe_customer_id
     
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await stripeClient.createCustomer({
         email: user.primaryEmailAddress?.emailAddress,
         metadata: {
           clerk_id: user.id,
@@ -52,17 +49,21 @@ export async function POST(req: NextRequest) {
     
     // Handle free plan (collect card only)
     if (collectCardOnly) {
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ["card"],
+      const session = await stripeClient.createCheckoutSession({
+        customerId,
+        userId: dbUser.id,
         mode: "setup",
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?setup=complete`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
+        successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?setup=complete`,
+        cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
         metadata: {
           user_id: dbUser.id,
           plan_type: "free"
         }
       })
+      
+      if (isTestMode()) {
+        console.log(`[TEST MODE] Created setup session for free plan: ${session.id}`)
+      }
       
       return NextResponse.json({ sessionId: session.id })
     }
@@ -82,33 +83,45 @@ export async function POST(req: NextRequest) {
     }
     
     // Create subscription checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [
+    const session = await stripeClient.createCheckoutSession({
+      customerId,
+      userId: dbUser.id,
+      mode: "subscription",
+      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
+      lineItems: [
         {
           price: finalPriceId,
           quantity: 1
         }
       ],
-      mode: "subscription",
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
+      planType,
+      billingCycle: billingCycle || "monthly",
       metadata: {
         user_id: dbUser.id,
         plan_type: planType,
         billing_cycle: billingCycle || "monthly"
-      },
-      subscription_data: {
-        metadata: {
-          user_id: dbUser.id,
-          plan_type: planType,
-          billing_cycle: billingCycle || "monthly"
-        }
       }
     })
     
-    return NextResponse.json({ sessionId: session.id })
+    if (isTestMode()) {
+      console.log(`[TEST MODE] Created subscription session for ${planType} plan: ${session.id}`)
+      
+      // In test mode, automatically mark the user as upgraded
+      await supabaseAdmin
+        .from("users")
+        .update({ 
+          plan_type: planType,
+          billing_cycle: billingCycle || "monthly"
+        })
+        .eq("id", dbUser.id)
+    }
+    
+    return NextResponse.json({ 
+      sessionId: session.id,
+      testMode: isTestMode(),
+      checkoutUrl: isTestMode() ? `/test-checkout/${session.id}` : undefined
+    })
   } catch (error) {
     console.error("Create checkout error:", error)
     return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 })
