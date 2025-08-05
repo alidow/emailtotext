@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export const metadata: Metadata = {
   title: "Salesforce Email Alerts → Instant SMS | Email to Text",
-  description: "Salesforce SMS costs $1,250/year minimum. Convert email alerts to SMS for $4.99/month. Get texts for hot leads, big deals, and urgent cases without expensive add-ons.",
+  description: "Convert Salesforce email alerts to SMS without expensive add-ons. Get texts for hot leads, big deals, and urgent cases. Simple flat-rate pricing.",
   keywords: "salesforce sms alerts, hubspot email to sms, crm text notification, salesforce mobile alerts, lead notification sms, deal closed text alert",
 }
 
@@ -27,11 +27,11 @@ export default function SalesforceCRMPage() {
             </div>
             <h1 className="text-4xl md:text-6xl font-display font-bold mb-6">
               Salesforce Only Emails Hot Leads?
-              <span className="block text-blue-600 mt-2">Get SMS Without $1,250/Year Add-Ons</span>
+              <span className="block text-blue-600 mt-2">Get SMS Without Expensive Add-Ons</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Your biggest deal just came in. The email is sitting unread. Salesforce wants 
-              $1,250/year for SMS. We convert their emails to texts for $4.99/month.
+              Your biggest deal just came in. The email is sitting unread. Salesforce SMS 
+              add-ons are expensive. We convert their emails to texts affordably.
             </p>
             <Button asChild size="lg" className="text-lg px-8 py-6">
               <Link href="/">
@@ -67,11 +67,11 @@ export default function SalesforceCRMPage() {
                   </li>
                   <li className="flex justify-between">
                     <span>SMS Add-on:</span>
-                    <span className="font-mono">+$1,250/year</span>
+                    <span className="font-mono">Additional cost</span>
                   </li>
                   <li className="flex justify-between border-t pt-3">
-                    <span className="font-bold">Total First Year:</span>
-                    <span className="font-mono font-bold text-red-600">$2,150+</span>
+                    <span className="font-bold">Result:</span>
+                    <span className="font-mono font-bold text-red-600">Expensive</span>
                   </li>
                 </ul>
               </CardContent>
@@ -108,8 +108,8 @@ export default function SalesforceCRMPage() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center p-6 bg-gray-50 rounded-lg">
               <DollarSign className="h-8 w-8 text-green-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">96% Cheaper</h3>
-              <p className="text-sm text-gray-600">Than native Salesforce SMS pricing</p>
+              <h3 className="font-semibold mb-2">Affordable</h3>
+              <p className="text-sm text-gray-600">Simple flat-rate pricing</p>
             </div>
             <div className="text-center p-6 bg-gray-50 rounded-lg">
               <Clock className="h-8 w-8 text-blue-600 mx-auto mb-3" />

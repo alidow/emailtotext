@@ -43,10 +43,10 @@ export default function WordPressWooCommercePage() {
             <AlertTitle className="text-orange-900">The Real Cost of Missed Orders</AlertTitle>
             <AlertDescription className="text-orange-700">
               <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li><strong>23% of customers</strong> cancel orders if not confirmed within 1 hour</li>
-                <li><strong>$1,260 average loss</strong> per month from delayed order processing</li>
-                <li><strong>4.7 hours</strong> average delay when relying on email notifications</li>
-                <li><strong>SMS plugins cost</strong> $49-199/month + $0.08 per message</li>
+                <li><strong>Customers expect</strong> quick order confirmations</li>
+                <li><strong>Email delays</strong> can lead to cancelled orders</li>
+                <li><strong>SMS notifications</strong> provide instant alerts</li>
+                <li><strong>Simple pricing</strong> compared to complex SMS plugins</li>
               </ul>
             </AlertDescription>
           </Alert>
@@ -744,7 +744,7 @@ Content: $\{{ order.total }} from \{{ order.billing_first_name }}`}</pre>
         <div className="container mx-auto max-w-2xl px-4 text-center">
           <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <ShoppingCart className="h-4 w-4" />
-            Join 5,000+ WooCommerce Store Owners
+            WooCommerce Compatible
           </div>
           <h2 className="text-3xl font-display font-bold mb-6">
             Stop Losing Sales to Email Delays

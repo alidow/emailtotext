@@ -627,103 +627,13 @@ Receiver: 5551234567@txt.emailtotextnotify.com</pre>
         </div>
       </section>
 
-      {/* Success Stories Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto max-w-4xl px-4">
-          <h2 className="text-3xl font-display font-bold mb-8 text-center">
-            Real Stories: SMS Alerts That Saved the Day
-          </h2>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-green-200">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3 mb-3">
-                  <Shield className="h-6 w-6 text-green-600 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold">Prevented Break-In</p>
-                    <p className="text-sm text-gray-500">Home Assistant + Hikvision</p>
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-3">
-                  "Motion alert at back door at 2:17 AM. Checked camera, saw someone 
-                  trying the handle. Called 911 while they were still there. Police 
-                  arrived in 4 minutes. Without SMS, I'd have slept through it."
-                </p>
-                <p className="text-sm font-semibold text-green-600">
-                  Result: Attempted burglary prevented
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-200">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3 mb-3">
-                  <Home className="h-6 w-6 text-blue-600 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold">Water Damage Avoided</p>
-                    <p className="text-sm text-gray-500">SmartThings + Leak Sensors</p>
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-3">
-                  "Water heater started leaking while at work. Got SMS instantly, 
-                  rushed home, shut off water main. Plumber said 30 more minutes 
-                  would've meant replacing the entire floor."
-                </p>
-                <p className="text-sm font-semibold text-green-600">
-                  Result: Saved $8,000 in damages
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-200">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3 mb-3">
-                  <Camera className="h-6 w-6 text-purple-600 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold">Package Theft Caught</p>
-                    <p className="text-sm text-gray-500">Dahua NVR System</p>
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-3">
-                  "Driveway motion alert, saw delivery truck. Then another motion 
-                  alert 2 minutes later - someone taking the package! Got clear 
-                  footage, police made arrest same day."
-                </p>
-                <p className="text-sm font-semibold text-green-600">
-                  Result: Thief prosecuted, packages recovered
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-200">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3 mb-3">
-                  <AlertTriangle className="h-6 w-6 text-orange-600 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold">Elderly Parent Safety</p>
-                    <p className="text-sm text-gray-500">Custom RPi + Motion Sensors</p>
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-3">
-                  "Dad has dementia, lives alone. No motion in kitchen by 9 AM = SMS 
-                  alert. Found him confused in basement one morning. This system 
-                  literally saved his life."
-                </p>
-                <p className="text-sm font-semibold text-green-600">
-                  Result: Medical emergency caught early
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto max-w-2xl px-4 text-center">
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Home className="h-4 w-4" />
-            Trusted by 25,000+ Smart Homes
+            Smart Home Compatible
           </div>
           <h2 className="text-3xl font-display font-bold mb-6">
             Your Home Security Shouldn't Depend on Carrier Gateways

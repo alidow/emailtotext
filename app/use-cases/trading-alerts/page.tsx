@@ -31,7 +31,7 @@ export default function TradingAlertsPage() {
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
               TradingView, IBKR, and ThinkOrSwim only send emails. We convert them to SMS 
-              in under 3 seconds. Never miss a price target or trade signal again.
+              quickly. Never miss a price target or trade signal again.
             </p>
             <Button asChild size="lg" className="text-lg px-8 py-6">
               <Link href="/">
@@ -55,7 +55,7 @@ export default function TradingAlertsPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Alerts delivered in under 3 seconds. Never miss a price target or stop loss again.
+                  Fast alert delivery. Never miss a price target or stop loss again.
                 </p>
               </CardContent>
             </Card>
@@ -65,7 +65,7 @@ export default function TradingAlertsPage() {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Shield className="h-8 w-8 text-blue-600" />
                 </div>
-                <CardTitle className="text-xl">100% Reliable</CardTitle>
+                <CardTitle className="text-xl">Reliable Delivery</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">

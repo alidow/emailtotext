@@ -42,10 +42,10 @@ export default function UptimeMonitoringPage() {
             <AlertTitle className="text-blue-900">The Real Cost of Email-Only Monitoring</AlertTitle>
             <AlertDescription className="text-blue-700">
               <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>Average time to notice email alert: <strong>47 minutes</strong></li>
-                <li>Average time to notice SMS alert: <strong>2 minutes</strong></li>
-                <li>Revenue lost per hour of e-commerce downtime: <strong>$5,600</strong></li>
-                <li>Customer trust lost after 30+ minute outage: <strong>Priceless</strong></li>
+                <li>Email alerts can get lost in inbox clutter</li>
+                <li>SMS alerts are noticed immediately</li>
+                <li>Every minute of downtime costs revenue</li>
+                <li>Quick response times maintain customer trust</li>
               </ul>
             </AlertDescription>
           </Alert>
@@ -600,7 +600,7 @@ export default function UptimeMonitoringPage() {
         <div className="container mx-auto max-w-2xl px-4 text-center">
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Activity className="h-4 w-4" />
-            Join 15,000+ Website Owners
+            Free SMS Alerts
           </div>
           <h2 className="text-3xl font-display font-bold mb-6">
             Never Miss Another Website Outage

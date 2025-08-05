@@ -464,7 +464,7 @@ subject:("Reminder" OR "Alert")
         <div className="container mx-auto max-w-2xl px-4 text-center">
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Bell className="h-4 w-4" />
-            Join 10,000+ Who Never Miss Important Events
+            Never Miss Important Events
           </div>
           <h2 className="text-3xl font-display font-bold mb-6">
             Stop Missing Life's Important Moments
@@ -502,9 +502,8 @@ subject:("Reminder" OR "Alert")
             <div>
               <h3 className="text-lg font-semibold mb-2">Is this more reliable than the old carrier email tricks?</h3>
               <p className="text-gray-600">
-                Yes, significantly. We use official carrier APIs with 99.9% delivery rates. The 
-                old email gateways had ~60% success rates even when they worked, plus delays of 
-                5-30 minutes.
+                Yes, significantly. We use official carrier APIs for reliable delivery. The 
+                old email gateways often had delivery issues and delays.
               </p>
             </div>
 

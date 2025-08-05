@@ -55,7 +55,7 @@ const useCases = [
     category: "Trading",
     color: "purple",
     priority: 5,
-    metrics: { speed: "Real-time", accuracy: "100%" }
+    metrics: { speed: "Real-time", reliability: "High" }
   },
   {
     title: "AWS SNS Alternative",
@@ -65,7 +65,7 @@ const useCases = [
     category: "DevOps",
     color: "indigo",
     priority: 6,
-    metrics: { history: "∞", setup: "60 sec" }
+    metrics: { history: "Full", setup: "60 sec" }
   },
   {
     title: "Cloudflare Security Alerts",
@@ -199,23 +199,23 @@ export default function UseCasesPage() {
         <section className="relative py-20 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-hidden">
           <div className="absolute inset-0 bg-grid-gray-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] -z-10" />
           <div className={`container mx-auto px-4 text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6 animate-pulse">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
               <Sparkles className="h-4 w-4" />
-              Trusted by 10,000+ Users
+              Proven Solutions
             </div>
             <h1 className="text-4xl md:text-6xl font-display font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
               Use Cases & Solutions
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-              Discover how thousands of users rely on Email to Text Notifier to solve critical 
+              Discover how Email to Text Notifier helps solve critical 
               notification challenges across industries and applications.
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               {[
                 { icon: Package, label: `${useCases.length} Solutions`, value: "Proven" },
-                { icon: TrendingUp, label: "99.9%", value: "Uptime" },
+                { icon: TrendingUp, label: "Reliable", value: "Service" },
                 { icon: Globe, label: "All Carriers", value: "Supported" },
-                { icon: Users, label: "10K+", value: "Active Users" }
+                { icon: Users, label: "Growing", value: "Community" }
               ].map((stat, idx) => (
                 <div 
                   key={idx}
@@ -362,7 +362,7 @@ export default function UseCasesPage() {
               Ready to Solve Your Notification Challenges?
             </h2>
             <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-              Join thousands who trust Email to Text Notifier for critical alerts. 
+              Get reliable email-to-SMS forwarding for your critical alerts. 
               Start with 10 free texts per month.
             </p>
             <Button 

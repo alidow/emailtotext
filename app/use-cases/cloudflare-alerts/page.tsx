@@ -129,7 +129,7 @@ export default function CloudflareAlertsPage() {
                     <td className="py-2">Enterprise</td>
                     <td className="text-center py-2">✅</td>
                     <td className="text-center py-2">✅</td>
-                    <td className="text-right py-2">$5,000+</td>
+                    <td className="text-right py-2">Contact sales</td>
                   </tr>
                 </tbody>
               </table>
