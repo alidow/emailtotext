@@ -546,7 +546,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = '/verify'}
+                  onClick={() => window.location.href = `/get-started?plan=free&billing=${billingCycle}`}
                 >
                   Start Free
                 </Button>
@@ -600,7 +600,7 @@ export default function Home() {
                 </ul>
                 <Button 
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                  onClick={() => window.location.href = `/verify?plan=basic&billing=${billingCycle}`}
+                  onClick={() => window.location.href = `/get-started?plan=basic&billing=${billingCycle}`}
                 >
                   Get Started
                 </Button>
@@ -652,7 +652,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = `/verify?plan=standard&billing=${billingCycle}`}
+                  onClick={() => window.location.href = `/get-started?plan=standard&billing=${billingCycle}`}
                 >
                   Get Started
                 </Button>
@@ -704,7 +704,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = `/verify?plan=premium&billing=${billingCycle}`}
+                  onClick={() => window.location.href = `/get-started?plan=premium&billing=${billingCycle}`}
                 >
                   Get Started
                 </Button>
