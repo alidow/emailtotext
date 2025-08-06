@@ -94,8 +94,11 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    // 6. Check per-phone-number rate limit (skip in test mode)
-    if (!isTestMode()) {
+    // Check if this is a test phone number
+    const isTestPhone = isTestPhoneNumber(e164Phone)
+    
+    // 6. Check per-phone-number rate limit (skip for test phones and test mode)
+    if (!isTestMode() && !isTestPhone) {
       const phoneLimit = await rateLimiters.perPhoneNumber.limit(e164Phone)
       if (!phoneLimit.success) {
         await logSuspiciousActivity(clientIp, e164Phone, "Too many attempts for single phone number")
@@ -106,8 +109,8 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // 7. Check for rapid repeated attempts to same number from different IPs (skip in test mode)
-    if (!isTestMode()) {
+    // 7. Check for rapid repeated attempts to same number from different IPs (skip for test phones and test mode)
+    if (!isTestMode() && !isTestPhone) {
       const recentKey = `recent:${e164Phone}`
       const lastAttempt = recentAttempts.get(recentKey)
       if (lastAttempt && Date.now() - lastAttempt < 30000) { // 30 seconds
@@ -144,9 +147,6 @@ export async function POST(req: NextRequest) {
         )
       }
     }
-    
-    // Check if this is a test phone number
-    const isTestPhone = isTestPhoneNumber(e164Phone)
     
     // Generate 6-digit code (use fixed code for test phones in development)
     const code = (isMockMode || (isTestPhone && process.env.NODE_ENV !== 'production')) 
