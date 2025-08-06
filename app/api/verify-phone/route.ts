@@ -31,67 +31,7 @@ export async function POST(req: NextRequest) {
       console.log(`[TEST PHONE] Verifying test phone ${e164Phone} with code ${code}`)
     }
     
-    // In mock mode or for test phones, handle verification differently
-    if (isMockMode || isTestPhone) {
-      // For test phones and mock mode, accept the fixed code "123456"
-      if ((isMockMode || isTestPhone) && code === "123456") {
-        console.log(`[TEST PHONE] Accepting fixed code 123456 for ${e164Phone}`)
-        // Continue to set cookies below
-      } else if (isTestPhone) {
-        // If they didn't use the fixed code, check the database just in case
-        const { data: verification, error: verifyError } = await supabaseAdmin
-          .from("phone_verifications")
-          .select("*")
-          .eq("phone", e164Phone)
-          .eq("code", code)
-          .eq("is_test_phone", true)
-          .gte("expires_at", new Date().toISOString())
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single() as { data: any | null; error: any }
-        
-        if (verifyError || !verification) {
-          console.log(`[TEST PHONE] Verification failed for ${e164Phone} with code ${code} (expected 123456)`)
-          return NextResponse.json(
-            { error: "Invalid or expired verification code. Test phones should use code: 123456" },
-            { status: 400 }
-          )
-        }
-        
-        // Delete used verification codes for test phone
-        await supabaseAdmin
-          .from("phone_verifications")
-          .delete()
-          .eq("phone", e164Phone)
-      } else {
-        return NextResponse.json(
-          { error: "Invalid verification code" },
-          { status: 400 }
-        )
-      }
-      
-      // Set verified phone in cookie
-      const cookieStore = await cookies()
-      cookieStore.set("verified_phone", e164Phone, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 // 1 hour
-      })
-      
-      cookieStore.set("consent_24hr", "true", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 // 1 hour
-      })
-      
-      console.log(`[${isMockMode ? 'MOCK MODE' : 'TEST PHONE'}] Phone ${e164Phone} verified with code ${code}`)
-      
-      return NextResponse.json({ success: true })
-    }
-    
-    // Check verification code
+    // Check verification code in database (for all phones including test phones)
     const { data: verification, error: verifyError } = await supabaseAdmin
       .from("phone_verifications")
       .select("*")
@@ -103,18 +43,26 @@ export async function POST(req: NextRequest) {
       .single() as { data: { attempts: number } | null; error: any }
     
     if (verifyError || !verification) {
-      // Increment attempts
-      await supabaseAdmin
-        .from("phone_verifications")
-        .update({ attempts: verification?.attempts ? verification.attempts + 1 : 1 })
-        .eq("phone", e164Phone)
-        .eq("code", code)
+      console.log(`[${isTestPhone ? 'TEST PHONE' : 'VERIFY'}] Failed for ${e164Phone} with code ${code}`)
+      console.log(`[${isTestPhone ? 'TEST PHONE' : 'VERIFY'}] Error:`, verifyError)
+      console.log(`[${isTestPhone ? 'TEST PHONE' : 'VERIFY'}] Verification data:`, verification)
+      
+      // Increment attempts if we found a record
+      if (!verifyError && verification) {
+        await supabaseAdmin
+          .from("phone_verifications")
+          .update({ attempts: verification?.attempts ? verification.attempts + 1 : 1 })
+          .eq("phone", e164Phone)
+          .eq("code", code)
+      }
       
       return NextResponse.json(
         { error: "Invalid or expired verification code" },
         { status: 400 }
       )
     }
+    
+    console.log(`[${isTestPhone ? 'TEST PHONE' : 'VERIFY'}] Success for ${e164Phone} with code ${code}`)
     
     // Delete used verification codes
     await supabaseAdmin

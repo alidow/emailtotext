@@ -153,8 +153,8 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // Generate 6-digit code (use fixed code for test phones)
-    const code = (isMockMode || isTestPhone) 
+    // Generate 6-digit code
+    const code = isMockMode 
       ? "123456" 
       : Math.floor(100000 + Math.random() * 900000).toString()
     
