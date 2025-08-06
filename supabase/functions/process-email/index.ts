@@ -333,6 +333,12 @@ serve(async (req) => {
       })
     }
 
+    // Check if user has opted out of SMS
+    if (user.sms_opted_out) {
+      console.log(`User ${user.id} has opted out of SMS, not sending`)
+      return new Response('User opted out of SMS', { status: 200 })
+    }
+
     // Format SMS message with attachment count
     const smsBody = formatSMS(
       sender, 
