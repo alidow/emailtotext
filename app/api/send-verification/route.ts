@@ -28,24 +28,7 @@ setInterval(() => {
 
 export async function POST(req: NextRequest) {
   try {
-    const clientIp = getClientIp(req)
-    console.log("Client IP detected:", clientIp)
-    console.log("Headers:", {
-      "cf-connecting-ip": req.headers.get("cf-connecting-ip"),
-      "x-forwarded-for": req.headers.get("x-forwarded-for"),
-      "x-real-ip": req.headers.get("x-real-ip"),
-    })
-    
-    // 1. Check if IP is blocked
-    if (await isVpnOrProxy(clientIp)) {
-      await logSuspiciousActivity(clientIp, "unknown", "VPN/Proxy detected")
-      return NextResponse.json(
-        { error: "Access denied. VPNs and proxies are not allowed." },
-        { status: 403 }
-      )
-    }
-    
-    // 2. Validate request body first to check for test phone
+    // 1. Parse request body FIRST to check for test phone
     const body = await req.json()
     const { phone, captchaToken } = body
     
@@ -56,7 +39,7 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    // 3. Clean and validate phone number
+    // 2. Clean and validate phone number
     const cleanPhone = phone.replace(/\D/g, "")
     if (cleanPhone.length < 10 || cleanPhone.length > 15) {
       return NextResponse.json(
@@ -67,10 +50,32 @@ export async function POST(req: NextRequest) {
     
     const e164Phone = cleanPhone.startsWith("1") ? `+${cleanPhone}` : `+1${cleanPhone}`
     
-    // Check if this is a test phone number EARLY
+    // 3. Check if this is a test phone number FIRST, before any blocking
     const isTestPhone = isTestPhoneNumber(e164Phone)
     
-    // 4. Apply multiple rate limits (skip for test phones and test mode)
+    if (isTestPhone) {
+      console.log(`[TEST PHONE] Detected test phone number: ${e164Phone}`)
+    }
+    
+    // 4. Get client IP for logging and rate limiting
+    const clientIp = getClientIp(req)
+    console.log("Client IP detected:", clientIp)
+    console.log("Headers:", {
+      "cf-connecting-ip": req.headers.get("cf-connecting-ip"),
+      "x-forwarded-for": req.headers.get("x-forwarded-for"),
+      "x-real-ip": req.headers.get("x-real-ip"),
+    })
+    
+    // 5. Check if IP is blocked (skip for test phones)
+    if (!isTestPhone && await isVpnOrProxy(clientIp)) {
+      await logSuspiciousActivity(clientIp, "unknown", "VPN/Proxy detected")
+      return NextResponse.json(
+        { error: "Access denied. VPNs and proxies are not allowed." },
+        { status: 403 }
+      )
+    }
+    
+    // 6. Apply multiple rate limits (skip for test phones and test mode)
     if (!isTestMode() && !isTestPhone) {
       const [ipLimit, globalLimit, burstLimit] = await Promise.all([
         rateLimiters.phoneVerification.limit(clientIp),
@@ -87,7 +92,7 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // 5. Check for suspicious phone numbers (skip for test phones)
+    // 7. Check for suspicious phone numbers (skip for test phones)
     if (!isTestPhone && await isSuspiciousPhoneNumber(cleanPhone)) {
       await logSuspiciousActivity(clientIp, e164Phone, "Suspicious phone number pattern")
       await blockIp(clientIp, "Suspicious phone number usage", 86400) // 24 hour ban
@@ -97,7 +102,7 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    // 6. Check per-phone-number rate limit (skip for test phones and test mode)
+    // 8. Check per-phone-number rate limit (skip for test phones and test mode)
     if (!isTestMode() && !isTestPhone) {
       const phoneLimit = await rateLimiters.perPhoneNumber.limit(e164Phone)
       if (!phoneLimit.success) {
@@ -109,7 +114,7 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // 7. Check for rapid repeated attempts to same number from different IPs (skip for test phones and test mode)
+    // 9. Check for rapid repeated attempts to same number from different IPs (skip for test phones and test mode)
     if (!isTestMode() && !isTestPhone) {
       const recentKey = `recent:${e164Phone}`
       const lastAttempt = recentAttempts.get(recentKey)
@@ -123,7 +128,7 @@ export async function POST(req: NextRequest) {
       recentAttempts.set(recentKey, Date.now())
     }
     
-    // 8. Verify CAPTCHA if provided (will be required in frontend)
+    // 10. Verify CAPTCHA if provided (will be required in frontend)
     if (captchaToken && process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY) {
       const captchaResponse = await fetch(
         'https://challenges.cloudflare.com/turnstile/v0/siteverify',
