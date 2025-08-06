@@ -153,10 +153,14 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // Generate 6-digit code (use fixed code for test phones in development)
-    const code = (isMockMode || (isTestPhone && process.env.NODE_ENV !== 'production')) 
+    // Generate 6-digit code (use fixed code for test phones)
+    const code = (isMockMode || isTestPhone) 
       ? "123456" 
       : Math.floor(100000 + Math.random() * 900000).toString()
+    
+    if (isTestPhone) {
+      console.log(`[TEST PHONE] Generated verification code ${code} for ${e164Phone}`)
+    }
     
     // Always store verification code in database (even for test phones)
     try {

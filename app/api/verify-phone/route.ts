@@ -27,14 +27,18 @@ export async function POST(req: NextRequest) {
     // Check if this is a test phone number
     const isTestPhone = isTestPhoneNumber(e164Phone)
     
+    if (isTestPhone) {
+      console.log(`[TEST PHONE] Verifying test phone ${e164Phone} with code ${code}`)
+    }
+    
     // In mock mode or for test phones, handle verification differently
     if (isMockMode || isTestPhone) {
-      // For test phones, we still need to verify against the actual code in the database
-      // unless we're in mock mode where we accept "123456"
-      if (isMockMode && code === "123456") {
-        // Mock mode accepts fixed code
+      // For test phones and mock mode, accept the fixed code "123456"
+      if ((isMockMode || isTestPhone) && code === "123456") {
+        console.log(`[TEST PHONE] Accepting fixed code 123456 for ${e164Phone}`)
+        // Continue to set cookies below
       } else if (isTestPhone) {
-        // For test phones, verify against the actual code in the database
+        // If they didn't use the fixed code, check the database just in case
         const { data: verification, error: verifyError } = await supabaseAdmin
           .from("phone_verifications")
           .select("*")
@@ -47,9 +51,9 @@ export async function POST(req: NextRequest) {
           .single() as { data: any | null; error: any }
         
         if (verifyError || !verification) {
-          console.log(`[TEST PHONE] Verification failed for ${e164Phone} with code ${code}`)
+          console.log(`[TEST PHONE] Verification failed for ${e164Phone} with code ${code} (expected 123456)`)
           return NextResponse.json(
-            { error: "Invalid or expired verification code" },
+            { error: "Invalid or expired verification code. Test phones should use code: 123456" },
             { status: 400 }
           )
         }
