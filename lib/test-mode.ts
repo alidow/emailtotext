@@ -1,8 +1,43 @@
 import { supabaseAdmin } from "./supabase"
 
-// Check if test mode is enabled
+// Check if test mode is enabled (deprecated - use isTestPhoneNumber instead)
 export const isTestMode = () => {
   return process.env.ENABLE_TEST_MODE === 'true'
+}
+
+// Get list of test phone numbers from environment
+export const getTestPhoneNumbers = (): string[] => {
+  const testNumbers = process.env.TEST_PHONE_NUMBERS || ''
+  return testNumbers.split(',').map(num => num.trim()).filter(Boolean)
+}
+
+// Check if a phone number is a test number
+export const isTestPhoneNumber = (phone: string): boolean => {
+  const testNumbers = getTestPhoneNumbers()
+  const cleanPhone = phone.replace(/\D/g, '')
+  
+  return testNumbers.some(testNum => {
+    const cleanTestNum = testNum.replace(/\D/g, '')
+    return cleanPhone.endsWith(cleanTestNum) || cleanTestNum.endsWith(cleanPhone)
+  })
+}
+
+// Check if a user has a test phone number
+export const isTestPhoneUser = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('is_test_phone, phone')
+      .eq('id', userId)
+      .single() as { data: { is_test_phone: boolean; phone: string } | null; error: any }
+    
+    if (error || !data) return false
+    
+    // Check both database flag and environment list
+    return data.is_test_phone || isTestPhoneNumber(data.phone)
+  } catch {
+    return false
+  }
 }
 
 // Log SMS message to database instead of sending

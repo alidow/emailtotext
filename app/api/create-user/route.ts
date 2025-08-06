@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase"
 import { requireSupabaseAdmin } from "@/lib/supabase-helpers"
 import { cookies } from "next/headers"
 import { sendTransactionalEmail } from "@/lib/send-transactional-email"
-import { isTestMode } from "@/lib/test-mode"
+import { isTestMode, isTestPhoneNumber } from "@/lib/test-mode"
 import * as Sentry from "@sentry/nextjs"
 
 export const dynamic = 'force-dynamic'
@@ -81,6 +81,9 @@ export async function POST(req: NextRequest) {
       throw checkError
     }
     
+    // Check if this is a test phone number
+    const isTestPhone = isTestPhoneNumber(verifiedPhone)
+    
     // Create new user
     const { data: newUser, error } = await admin
       .from("users")
@@ -91,7 +94,8 @@ export async function POST(req: NextRequest) {
         email: user.primaryEmailAddress?.emailAddress,
         plan_type: planType,
         accepts_24hr_texts: false, // Default to standard hours only
-        usage_reset_at: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+        usage_reset_at: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+        is_test_phone: isTestPhone
       })
       .select()
       .single() as { data: any | null; error: any }

@@ -357,9 +357,16 @@ serve(async (req) => {
       return new Response('Queued for delivery', { status: 202 })
     }
 
-    // Send SMS via Twilio or log in test mode
-    if (isTestMode()) {
-      // In test mode, log the SMS instead of sending
+    // Check if user has a test phone
+    const isTestPhone = user.is_test_phone || (Deno.env.get('TEST_PHONE_NUMBERS') || '').split(',').some(testNum => {
+      const cleanTestNum = testNum.trim().replace(/\D/g, '')
+      const cleanPhone = phone.replace(/\D/g, '')
+      return cleanPhone.endsWith(cleanTestNum) || cleanTestNum.endsWith(cleanPhone)
+    })
+    
+    // Send SMS via Twilio or log for test phones/mode
+    if (isTestMode() || isTestPhone) {
+      // Log the SMS instead of sending for test phones or test mode
       await supabase
         .from('sms_logs')
         .insert({
@@ -367,17 +374,18 @@ serve(async (req) => {
           phone: phone,
           message: smsBody,
           type: 'email_forward',
-          status: 'test_mode',
+          status: isTestPhone ? 'test_phone' : 'test_mode',
           metadata: {
             email_id: email.id,
             from_email: sender,
             subject: subject,
             attachment_count: attachmentCount,
-            short_url: shortUrl
+            short_url: shortUrl,
+            test_phone: isTestPhone
           }
         })
       
-      console.log(`[TEST MODE] SMS logged for ${phone}:`, smsBody.substring(0, 50) + '...')
+      console.log(`[${isTestPhone ? 'TEST PHONE' : 'TEST MODE'}] SMS logged for ${phone}:`, smsBody.substring(0, 50) + '...')
     } else {
       // In production, send real SMS
       const twilioClient = twilio.default(

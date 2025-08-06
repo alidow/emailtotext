@@ -1,5 +1,5 @@
 import twilio from "twilio"
-import { isTestMode, logSMS, createMockTwilioMessage } from "./test-mode"
+import { isTestMode, isTestPhoneNumber, isTestPhoneUser, logSMS, createMockTwilioMessage } from "./test-mode"
 import { supabaseAdmin } from "./supabase"
 
 // Types
@@ -15,8 +15,8 @@ class TwilioClient {
   private client: twilio.Twilio | null
   
   constructor() {
-    // Only initialize real Twilio client if not in test mode and credentials exist
-    if (!isTestMode() && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+    // Initialize Twilio client if credentials exist
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
       this.client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
     } else {
       this.client = null
@@ -24,8 +24,12 @@ class TwilioClient {
   }
   
   async sendSMS({ to, body, userId, type = 'notification', metadata = {} }: SendSMSParams) {
-    // In test mode, log the SMS instead of sending
-    if (isTestMode()) {
+    // Check if this is a test phone number or test user
+    const isTestPhone = isTestPhoneNumber(to)
+    const isTestUser = userId ? await isTestPhoneUser(userId) : false
+    
+    // If test phone or test user, log instead of sending
+    if (isTestPhone || isTestUser || isTestMode()) {
       await logSMS({
         userId,
         phone: to,
@@ -33,9 +37,13 @@ class TwilioClient {
         type,
         metadata: {
           ...metadata,
-          from: process.env.TWILIO_PHONE_NUMBER || 'TEST_NUMBER'
+          from: process.env.TWILIO_PHONE_NUMBER || 'TEST_NUMBER',
+          test_phone: isTestPhone,
+          test_user: isTestUser
         }
       })
+      
+      console.log(`[TEST ${isTestPhone ? 'PHONE' : isTestUser ? 'USER' : 'MODE'}] SMS logged for ${to}`)
       
       // Return mock response
       return createMockTwilioMessage({
@@ -95,6 +103,11 @@ class TwilioClient {
   
   // Check if phone number can receive SMS
   async validatePhoneNumber(phone: string): Promise<boolean> {
+    // Test phones are always valid
+    if (isTestPhoneNumber(phone)) {
+      return true
+    }
+    
     if (isTestMode()) {
       // In test mode, accept all phone numbers except obviously fake ones
       const fakePatterns = [

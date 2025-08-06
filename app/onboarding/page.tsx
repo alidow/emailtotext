@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Check } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
-import { isTestMode } from "@/lib/test-mode"
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -153,21 +152,14 @@ export default function OnboardingPage() {
         
         const checkoutData = await checkoutResponse.json()
         
-        // In test mode or if Stripe not configured, handle differently
-        if (isTestMode() || !stripePromise) {
-          // Extract the test checkout URL from the session
-          if (checkoutData.url) {
-            window.location.href = checkoutData.url
-          } else if (checkoutData.sessionId) {
-            // Fallback for test mode - redirect to test checkout page
-            router.push(`/test-checkout/${checkoutData.sessionId}`)
-          }
-        } else {
-          // Production mode with real Stripe
-          const stripe = await stripePromise
-          if (stripe && checkoutData.sessionId) {
-            await stripe.redirectToCheckout({ sessionId: checkoutData.sessionId })
-          }
+        // Redirect to Stripe checkout
+        if (!stripePromise) {
+          throw new Error("Stripe is not configured")
+        }
+        
+        const stripe = await stripePromise
+        if (stripe && checkoutData.sessionId) {
+          await stripe.redirectToCheckout({ sessionId: checkoutData.sessionId })
         }
       } else {
         // This shouldn't happen anymore since all plans require card

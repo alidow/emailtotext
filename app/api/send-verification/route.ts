@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { isMockMode } from "@/lib/mock-mode"
 import { twilioClient } from "@/lib/twilio-client"
-import { isTestMode } from "@/lib/test-mode"
+import { isTestMode, isTestPhoneNumber } from "@/lib/test-mode"
 import { 
   rateLimiters, 
   getClientIp, 
@@ -145,54 +145,56 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // Generate 6-digit code
-    const code = isMockMode ? "123456" : Math.floor(100000 + Math.random() * 900000).toString()
+    // Check if this is a test phone number
+    const isTestPhone = isTestPhoneNumber(e164Phone)
     
-    // Store verification code in database (skip in mock/test mode)
-    if (!isMockMode && !isTestMode()) {
-      try {
-        // Store verification code in database
-        const { error: dbError } = await supabaseAdmin
-          .from("phone_verifications")
-          .insert({
-            phone: e164Phone,
-            code,
-            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
-            ip_address: clientIp,
-            user_agent: req.headers.get("user-agent"),
-          })
+    // Generate 6-digit code (use fixed code for test phones in development)
+    const code = (isMockMode || (isTestPhone && process.env.NODE_ENV !== 'production')) 
+      ? "123456" 
+      : Math.floor(100000 + Math.random() * 900000).toString()
+    
+    // Always store verification code in database (even for test phones)
+    try {
+      // Store verification code in database
+      const { error: dbError } = await supabaseAdmin
+        .from("phone_verifications")
+        .insert({
+          phone: e164Phone,
+          code,
+          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+          ip_address: clientIp,
+          user_agent: req.headers.get("user-agent"),
+          is_test_phone: isTestPhone
+        })
         
         if (dbError) {
           console.error("Error storing verification code:", dbError)
           throw dbError
         }
         
-        // Log consent with additional tracking
-        const { error: consentError } = await supabaseAdmin
-          .from("consent_logs")
-          .insert({
-            phone: e164Phone,
-            consent_24hr_texts: false, // Default to standard hours only
-            ip_address: clientIp,
-            user_agent: req.headers.get("user-agent"),
-            created_at: new Date().toISOString(),
-          })
-        
-        if (consentError) {
-          console.error("Error logging consent:", consentError)
-          throw consentError
-        }
-      } catch (dbError: any) {
-        console.error("Database operation error:", dbError)
-        // In test mode, continue even if DB operations fail
-        if (isTestMode()) {
-          console.log("[TEST MODE] Continuing despite database error")
-        } else {
-          throw dbError
-        }
+      // Log consent with additional tracking
+      const { error: consentError } = await supabaseAdmin
+        .from("consent_logs")
+        .insert({
+          phone: e164Phone,
+          consent_24hr_texts: false, // Default to standard hours only
+          ip_address: clientIp,
+          user_agent: req.headers.get("user-agent"),
+          created_at: new Date().toISOString(),
+        })
+      
+      if (consentError) {
+        console.error("Error logging consent:", consentError)
+        throw consentError
       }
-    } else {
-      console.log("[TEST/MOCK MODE] Would store verification code:", code, "for phone:", e164Phone)
+    } catch (dbError: any) {
+      console.error("Database operation error:", dbError)
+      // Continue for test phones or test mode
+      if (isTestPhone || isTestMode()) {
+        console.log(`[${isTestPhone ? 'TEST PHONE' : 'TEST MODE'}] Continuing despite database error`)
+      } else {
+        throw dbError
+      }
     }
     
     // Send SMS using the wrapper (handles test mode automatically)
@@ -208,8 +210,8 @@ export async function POST(req: NextRequest) {
         }
       })
       
-      if (isTestMode()) {
-        console.log(`[TEST MODE] Verification code ${code} logged for ${e164Phone}`)
+      if (isTestPhone || isTestMode()) {
+        console.log(`[${isTestPhone ? 'TEST PHONE' : 'TEST MODE'}] Verification code ${code} logged for ${e164Phone}`)
       }
     } catch (twilioError: any) {
       console.error("SMS send error:", twilioError)
@@ -229,12 +231,13 @@ export async function POST(req: NextRequest) {
     }
     
     // Log successful verification for monitoring
-    if (!isMockMode && !isTestMode()) {
+    if (!isMockMode) {
       await supabaseAdmin
         .from("verification_logs")
         .insert({
           phone: e164Phone,
           ip_address: clientIp,
+          is_test_phone: isTestPhone,
           success: true,
           created_at: new Date().toISOString(),
         })
