@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     // Handle free plan with $0 subscription
     if (collectCardOnly && planType === 'free') {
       // Use the free plan price ID for a $0 subscription
-      const freePriceId = process.env.NEXT_PUBLIC_STRIPE_FREE_PLAN_PRICE_ID || priceId
+      const freePriceId = process.env.STRIPE_FREE_PLAN_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_FREE_PLAN_PRICE_ID || priceId
       
       const session = await stripeClient.createCheckoutSession({
         customerId,
@@ -91,9 +91,9 @@ export async function POST(req: NextRequest) {
     if (billingCycle === "annual") {
       // Map monthly price IDs to annual ones
       const annualPriceMap: Record<string, string> = {
-        [process.env.NEXT_PUBLIC_STRIPE_BASIC_MONTHLY_PRICE_ID!]: process.env.NEXT_PUBLIC_STRIPE_BASIC_ANNUAL_PRICE_ID!,
-        [process.env.NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID!]: process.env.NEXT_PUBLIC_STRIPE_STANDARD_ANNUAL_PRICE_ID!,
-        [process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID!]: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_ANNUAL_PRICE_ID!
+        [process.env.STRIPE_BASIC_MONTHLY_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_BASIC_MONTHLY_PRICE_ID!]: process.env.STRIPE_BASIC_ANNUAL_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_BASIC_ANNUAL_PRICE_ID!,
+        [process.env.STRIPE_STANDARD_MONTHLY_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_STANDARD_MONTHLY_PRICE_ID!]: process.env.STRIPE_STANDARD_ANNUAL_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_STANDARD_ANNUAL_PRICE_ID!,
+        [process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID!]: process.env.STRIPE_PREMIUM_ANNUAL_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PREMIUM_ANNUAL_PRICE_ID!
       }
       
       finalPriceId = annualPriceMap[priceId] || priceId
