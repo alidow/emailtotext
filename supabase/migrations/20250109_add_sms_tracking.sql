@@ -31,6 +31,10 @@ CREATE INDEX IF NOT EXISTS idx_sms_events_created_at ON sms_events(created_at DE
 -- Add RLS policies
 ALTER TABLE sms_events ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (to make idempotent)
+DROP POLICY IF EXISTS "Users can view own SMS events" ON sms_events;
+DROP POLICY IF EXISTS "Service role has full access to SMS events" ON sms_events;
+
 -- Users can only see their own SMS events
 CREATE POLICY "Users can view own SMS events" ON sms_events
   FOR SELECT

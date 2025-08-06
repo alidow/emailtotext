@@ -12,15 +12,19 @@ interface SendSMSParams {
 }
 
 class TwilioClient {
-  private client: twilio.Twilio | null
+  private client: twilio.Twilio | null = null
   
-  constructor() {
-    // Initialize Twilio client if credentials exist
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-      this.client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
-    } else {
-      this.client = null
+  private getClient(): twilio.Twilio | null {
+    // Lazy initialize Twilio client to avoid build-time errors
+    if (!this.client && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      try {
+        this.client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+      } catch (error) {
+        console.error('Failed to initialize Twilio client:', error)
+        return null
+      }
     }
+    return this.client
   }
   
   async sendSMS({ to, body, userId, type = 'notification', metadata = {} }: SendSMSParams) {
@@ -54,12 +58,13 @@ class TwilioClient {
     }
     
     // In production, send real SMS
-    if (!this.client) {
+    const client = this.getClient()
+    if (!client) {
       throw new Error('Twilio client not initialized')
     }
     
     try {
-      const message = await this.client.messages.create({
+      const message = await client.messages.create({
         body,
         to,
         from: process.env.TWILIO_PHONE_NUMBER!
@@ -121,12 +126,15 @@ class TwilioClient {
     }
     
     // In production, use Twilio's lookup API
-    if (!this.client) {
-      throw new Error('Twilio client not initialized')
+    const client = this.getClient()
+    if (!client) {
+      // If Twilio is not configured, accept all valid-looking numbers
+      const phoneRegex = /^\+?[1-9]\d{1,14}$/
+      return phoneRegex.test(phone.replace(/\D/g, ''))
     }
     
     try {
-      await this.client.lookups.v1.phoneNumbers(phone).fetch()
+      await client.lookups.v1.phoneNumbers(phone).fetch()
       return true
     } catch (error) {
       return false

@@ -102,7 +102,7 @@ async function handleIncomingMessage(data: Record<string, string>) {
     .from('users')
     .select('*')
     .eq('phone', cleanPhone)
-    .single()
+    .single() as { data: { id: string; phone: string; sms_opted_out?: boolean } | null; error: any }
   
   if (!user) {
     console.log(`No user found for phone: ${cleanPhone}`)
