@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { cookies } from "next/headers"
 import { isMockMode } from "@/lib/mock-mode"
-import { isTestMode } from "@/lib/test-mode"
+import { isTestMode, isTestPhoneNumber } from "@/lib/test-mode"
 import * as Sentry from "@sentry/nextjs"
 
 export async function POST(req: NextRequest) {
@@ -24,14 +24,44 @@ export async function POST(req: NextRequest) {
     const cleanPhone = phone.replace(/\D/g, "")
     const e164Phone = cleanPhone.startsWith("1") ? `+${cleanPhone}` : `+1${cleanPhone}`
     
-    // In mock mode or test mode, accept code "123456" or any 6-digit code in test mode
-    if (isMockMode || isTestMode()) {
-      // In test mode, accept any 6-digit code; in mock mode, only "123456"
-      const isValidCode = isMockMode ? code === "123456" : /^\d{6}$/.test(code)
-      
-      if (!isValidCode) {
+    // Check if this is a test phone number
+    const isTestPhone = isTestPhoneNumber(e164Phone)
+    
+    // In mock mode or for test phones, handle verification differently
+    if (isMockMode || isTestPhone) {
+      // For test phones, we still need to verify against the actual code in the database
+      // unless we're in mock mode where we accept "123456"
+      if (isMockMode && code === "123456") {
+        // Mock mode accepts fixed code
+      } else if (isTestPhone) {
+        // For test phones, verify against the actual code in the database
+        const { data: verification, error: verifyError } = await supabaseAdmin
+          .from("phone_verifications")
+          .select("*")
+          .eq("phone", e164Phone)
+          .eq("code", code)
+          .eq("is_test_phone", true)
+          .gte("expires_at", new Date().toISOString())
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single() as { data: any | null; error: any }
+        
+        if (verifyError || !verification) {
+          console.log(`[TEST PHONE] Verification failed for ${e164Phone} with code ${code}`)
+          return NextResponse.json(
+            { error: "Invalid or expired verification code" },
+            { status: 400 }
+          )
+        }
+        
+        // Delete used verification codes for test phone
+        await supabaseAdmin
+          .from("phone_verifications")
+          .delete()
+          .eq("phone", e164Phone)
+      } else {
         return NextResponse.json(
-          { error: isMockMode ? "Invalid verification code. Use 123456 in mock mode." : "Invalid verification code. Must be 6 digits." },
+          { error: "Invalid verification code" },
           { status: 400 }
         )
       }
@@ -52,7 +82,7 @@ export async function POST(req: NextRequest) {
         maxAge: 60 * 60 // 1 hour
       })
       
-      console.log(`[TEST/MOCK MODE] Phone ${e164Phone} verified with code ${code}`)
+      console.log(`[${isMockMode ? 'MOCK MODE' : 'TEST PHONE'}] Phone ${e164Phone} verified with code ${code}`)
       
       return NextResponse.json({ success: true })
     }
