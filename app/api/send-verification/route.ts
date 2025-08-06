@@ -166,14 +166,14 @@ export async function POST(req: NextRequest) {
     // Always store verification code in database (even for test phones)
     try {
       // Store verification code in database
-      // Note: Temporarily removing ip_address, user_agent, is_test_phone until migration is run
       const verificationData = {
         phone: e164Phone,
         code,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
-        // ip_address: clientIp,  // TODO: Uncomment after migration
-        // user_agent: req.headers.get("user-agent"),  // TODO: Uncomment after migration
-        // is_test_phone: isTestPhone  // TODO: Uncomment after migration
+        ip_address: clientIp,
+        user_agent: req.headers.get("user-agent"),
+        is_test_phone: isTestPhone,
+        attempts: 0  // Initialize attempts counter
       }
       
       console.log(`[DEBUG] Inserting verification:`, verificationData)
@@ -193,9 +193,9 @@ export async function POST(req: NextRequest) {
         .insert({
           phone: e164Phone,
           consent_24hr_texts: false, // Default to standard hours only
-          // ip_address: clientIp,  // TODO: Add after migration if column exists
-          // user_agent: req.headers.get("user-agent"),  // TODO: Add after migration if column exists
-          consented_at: new Date().toISOString(),
+          ip_address: clientIp,
+          user_agent: req.headers.get("user-agent"),
+          created_at: new Date().toISOString(),
         })
       
       if (consentError) {
@@ -251,8 +251,7 @@ export async function POST(req: NextRequest) {
         .from("verification_logs")
         .insert({
           phone: e164Phone,
-          // ip_address: clientIp,  // TODO: Add after migration if column exists
-          // is_test_phone: isTestPhone,  // TODO: Add after migration if column exists
+          ip_address: clientIp,
           success: true,
           created_at: new Date().toISOString(),
         })
