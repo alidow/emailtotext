@@ -45,8 +45,33 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    // 2. Apply multiple rate limits (skip in test mode)
-    if (!isTestMode()) {
+    // 2. Validate request body first to check for test phone
+    const body = await req.json()
+    const { phone, captchaToken } = body
+    
+    if (!phone || typeof phone !== 'string') {
+      return NextResponse.json(
+        { error: "Invalid phone number" },
+        { status: 400 }
+      )
+    }
+    
+    // 3. Clean and validate phone number
+    const cleanPhone = phone.replace(/\D/g, "")
+    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+      return NextResponse.json(
+        { error: "Invalid phone number format" },
+        { status: 400 }
+      )
+    }
+    
+    const e164Phone = cleanPhone.startsWith("1") ? `+${cleanPhone}` : `+1${cleanPhone}`
+    
+    // Check if this is a test phone number EARLY
+    const isTestPhone = isTestPhoneNumber(e164Phone)
+    
+    // 4. Apply multiple rate limits (skip for test phones and test mode)
+    if (!isTestMode() && !isTestPhone) {
       const [ipLimit, globalLimit, burstLimit] = await Promise.all([
         rateLimiters.phoneVerification.limit(clientIp),
         rateLimiters.globalIP.limit(clientIp),
@@ -62,30 +87,8 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // 3. Validate request body
-    const body = await req.json()
-    const { phone, captchaToken } = body
-    
-    if (!phone || typeof phone !== 'string') {
-      return NextResponse.json(
-        { error: "Invalid phone number" },
-        { status: 400 }
-      )
-    }
-    
-    // 4. Clean and validate phone number
-    const cleanPhone = phone.replace(/\D/g, "")
-    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
-      return NextResponse.json(
-        { error: "Invalid phone number format" },
-        { status: 400 }
-      )
-    }
-    
-    const e164Phone = cleanPhone.startsWith("1") ? `+${cleanPhone}` : `+1${cleanPhone}`
-    
-    // 5. Check for suspicious phone numbers
-    if (await isSuspiciousPhoneNumber(cleanPhone)) {
+    // 5. Check for suspicious phone numbers (skip for test phones)
+    if (!isTestPhone && await isSuspiciousPhoneNumber(cleanPhone)) {
       await logSuspiciousActivity(clientIp, e164Phone, "Suspicious phone number pattern")
       await blockIp(clientIp, "Suspicious phone number usage", 86400) // 24 hour ban
       return NextResponse.json(
@@ -93,9 +96,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    
-    // Check if this is a test phone number
-    const isTestPhone = isTestPhoneNumber(e164Phone)
     
     // 6. Check per-phone-number rate limit (skip for test phones and test mode)
     if (!isTestMode() && !isTestPhone) {
