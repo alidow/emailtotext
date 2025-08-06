@@ -160,21 +160,26 @@ export async function POST(req: NextRequest) {
     
     if (isTestPhone) {
       console.log(`[TEST PHONE] Generated verification code ${code} for ${e164Phone}`)
+      console.log(`[TEST PHONE] Storing in database with phone format: ${e164Phone}`)
     }
     
     // Always store verification code in database (even for test phones)
     try {
       // Store verification code in database
+      const verificationData = {
+        phone: e164Phone,
+        code,
+        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+        ip_address: clientIp,
+        user_agent: req.headers.get("user-agent"),
+        is_test_phone: isTestPhone
+      }
+      
+      console.log(`[DEBUG] Inserting verification:`, verificationData)
+      
       const { error: dbError } = await supabaseAdmin
         .from("phone_verifications")
-        .insert({
-          phone: e164Phone,
-          code,
-          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
-          ip_address: clientIp,
-          user_agent: req.headers.get("user-agent"),
-          is_test_phone: isTestPhone
-        })
+        .insert(verificationData)
         
         if (dbError) {
           console.error("Error storing verification code:", dbError)

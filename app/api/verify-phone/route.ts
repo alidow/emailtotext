@@ -24,12 +24,31 @@ export async function POST(req: NextRequest) {
     const cleanPhone = phone.replace(/\D/g, "")
     const e164Phone = cleanPhone.startsWith("1") ? `+${cleanPhone}` : `+1${cleanPhone}`
     
+    console.log(`[DEBUG] Phone formatting: input="${phone}" -> clean="${cleanPhone}" -> e164="${e164Phone}"`)
+    
     // Check if this is a test phone number
     const isTestPhone = isTestPhoneNumber(e164Phone)
     
     if (isTestPhone) {
       console.log(`[TEST PHONE] Verifying test phone ${e164Phone} with code ${code}`)
     }
+    
+    // First, let's see what's in the database for this phone
+    console.log(`[DEBUG] Looking for verification with phone: ${e164Phone} and code: ${code}`)
+    
+    // Get all recent verifications for debugging
+    const { data: allVerifications, error: allError } = await supabaseAdmin
+      .from("phone_verifications")
+      .select("*")
+      .eq("phone", e164Phone)
+      .gte("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(5)
+    
+    console.log(`[DEBUG] Found ${allVerifications?.length || 0} non-expired verifications for ${e164Phone}:`)
+    allVerifications?.forEach((v: any) => {
+      console.log(`[DEBUG]   - Code: ${v.code}, Created: ${v.created_at}, Expires: ${v.expires_at}, Test: ${v.is_test_phone}`)
+    })
     
     // Check verification code in database (for all phones including test phones)
     const { data: verification, error: verifyError } = await supabaseAdmin
