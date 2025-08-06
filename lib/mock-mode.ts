@@ -13,7 +13,6 @@ export const mockUserData = {
   plan_type: "basic",
   usage_count: 42,
   usage_reset_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days from now
-  accepts_24hr_texts: true,
   created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days ago
 }
 

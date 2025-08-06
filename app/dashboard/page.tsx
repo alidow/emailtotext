@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Mail, MessageSquare, Settings, Copy, CheckCircle2 } from "lucide-react"
+import { Mail, Settings, Copy, CheckCircle2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 
 interface UserData {
@@ -20,7 +20,6 @@ interface UserData {
   plan_type: string
   usage_count: number
   usage_reset_at: string
-  accepts_24hr_texts: boolean
 }
 
 interface Email {
@@ -151,7 +150,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle>Plan</CardTitle>
@@ -182,25 +181,6 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground">
                     Resets {formatDistanceToNow(new Date(userData.usage_reset_at), { addSuffix: true })}
                   </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>SMS Settings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    <span className="text-sm">
-                      {userData.accepts_24hr_texts ? "24/7 delivery enabled" : "Standard hours only"}
-                    </span>
-                  </div>
-                  <Button variant="link" size="sm" onClick={() => router.push("/settings#sms")}>
-                    Change settings
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -277,7 +257,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8 text-muted-foreground">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Usage statistics coming soon!</p>
                 </div>
               </CardContent>

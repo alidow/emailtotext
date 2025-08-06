@@ -6,11 +6,9 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, CreditCard, MessageSquare, User } from "lucide-react"
+import { ArrowLeft, CreditCard, User } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import { PlanChangeModal } from "@/components/plan-change-modal"
 
@@ -25,7 +23,6 @@ interface UserData {
   phone: string
   email: string
   plan_type: string
-  accepts_24hr_texts: boolean
   stripe_customer_id: string
   stripe_subscription_id: string
   billing_cycle?: string
@@ -39,8 +36,6 @@ export default function SettingsPage() {
   const user = { id: "mock-user" } // Mock user
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [accepts24hr, setAccepts24hr] = useState(false)
   const [showPlanChange, setShowPlanChange] = useState(false)
 
   useEffect(() => {
@@ -60,7 +55,6 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json()
         setUserData(data)
-        setAccepts24hr(data.accepts_24hr_texts)
       }
     } catch (error) {
       console.error("Error fetching user data:", error)
@@ -69,27 +63,6 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSaveSettings = async () => {
-    setSaving(true)
-    try {
-      const response = await fetch("/api/user/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accepts_24hr_texts: accepts24hr
-        })
-      })
-      
-      if (response.ok) {
-        alert("Settings saved successfully!")
-      }
-    } catch (error) {
-      console.error("Error saving settings:", error)
-      alert("Failed to save settings")
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const handleManageBilling = async () => {
     try {
@@ -127,10 +100,6 @@ export default function SettingsPage() {
               <User className="h-4 w-4 mr-2" />
               Account
             </TabsTrigger>
-            <TabsTrigger value="sms">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              SMS Settings
-            </TabsTrigger>
             <TabsTrigger value="billing">
               <CreditCard className="h-4 w-4 mr-2" />
               Billing
@@ -159,48 +128,6 @@ export default function SettingsPage() {
                   <code className="block text-sm bg-muted px-2 py-1 rounded mt-1">
                     {userData.phone.replace('+1', '')}@txt.emailtotextnotify.com
                   </code>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="sms" id="sms">
-            <Card>
-              <CardHeader>
-                <CardTitle>SMS Delivery Settings</CardTitle>
-                <CardDescription>
-                  Configure when you want to receive text messages
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-2">
-                    <Checkbox
-                      id="24hr"
-                      checked={accepts24hr}
-                      onCheckedChange={(checked) => setAccepts24hr(checked as boolean)}
-                    />
-                    <div>
-                      <Label htmlFor="24hr" className="text-base cursor-pointer">
-                        Enable 24/7 message delivery
-                      </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        When enabled, you'll receive SMS messages at any time of day. 
-                        When disabled, messages are only sent between 8am-9pm in your timezone.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <Alert>
-                    <AlertDescription>
-                      Messages received outside of allowed hours will be queued and delivered 
-                      at the next available time.
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <Button onClick={handleSaveSettings} disabled={saving}>
-                    {saving ? "Saving..." : "Save Settings"}
-                  </Button>
                 </div>
               </CardContent>
             </Card>

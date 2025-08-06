@@ -145,20 +145,7 @@ serve(async (req) => {
       attachmentCount
     )
 
-    // Check time restrictions (existing logic)
-    const userTimezone = 'America/New_York' // TODO: Store user timezone
-    const currentHour = new Date().toLocaleString('en-US', { 
-      hour: 'numeric', 
-      hour12: false, 
-      timeZone: userTimezone 
-    })
-    const hour = parseInt(currentHour)
-
-    if (!user.accepts_24hr_texts && (hour < 8 || hour >= 21)) {
-      // Queue for later delivery
-      console.log('Message queued for delivery during allowed hours')
-      return new Response('Queued for delivery', { status: 202 })
-    }
+    // No time restrictions - always deliver immediately
 
     // Send SMS via Twilio
     const twilioClient = twilio.default(
