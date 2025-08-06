@@ -45,7 +45,8 @@ export default function SMSPolicyPage() {
                 email notifications.
               </p>
               <p>
-                <strong>Phone Number:</strong> Messages are sent from <span className="font-mono">+1 (877) 674-4599</span>
+                <strong>Sending Numbers:</strong> Messages are sent from our toll-free numbers including (866) 942-1024 and others. 
+                All our numbers are verified toll-free SMS numbers.
               </p>
             </CardContent>
           </Card>
@@ -216,7 +217,7 @@ export default function SMSPolicyPage() {
               <ul className="space-y-2 text-gray-600">
                 <li>• Receive SMS messages at the phone number you provide</li>
                 <li>• Standard message and data rates may apply</li>
-                <li>• Messages are sent via toll-free number +1 (877) 674-4599</li>
+                <li>• Messages are sent via our verified toll-free numbers</li>
                 <li>• You can opt-out at any time by replying STOP</li>
               </ul>
               
