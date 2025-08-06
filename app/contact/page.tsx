@@ -19,9 +19,26 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In production, this would send to your email service
-    console.log("Contact form submitted:", formData)
-    setSubmitted(true)
+    
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        setSubmitted(true)
+      } else {
+        alert(data.error || "Failed to send message. Please try again.")
+      }
+    } catch (error) {
+      alert("An error occurred. Please try again later.")
+    }
   }
 
   if (submitted) {
@@ -63,22 +80,22 @@ export default function Contact() {
           <Card>
             <CardHeader>
               <MessageSquare className="h-8 w-8 text-green-600 mb-2" />
-              <CardTitle>SMS Support</CardTitle>
+              <CardTitle>Response Time</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Text HELP to any message</p>
-              <p className="text-sm text-gray-500 mt-2">Instant automated help</p>
+              <p className="text-gray-600">We typically respond within 24 hours</p>
+              <p className="text-sm text-gray-500 mt-2">Monday - Friday</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <HelpCircle className="h-8 w-8 text-purple-600 mb-2" />
-              <CardTitle>FAQ</CardTitle>
+              <CardTitle>Documentation</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Check our help center</p>
-              <p className="text-sm text-gray-500 mt-2">Common questions answered</p>
+              <p className="text-gray-600">Visit our guides section</p>
+              <p className="text-sm text-gray-500 mt-2">Setup and usage instructions</p>
             </CardContent>
           </Card>
         </div>

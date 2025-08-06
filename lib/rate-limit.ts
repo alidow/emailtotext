@@ -40,6 +40,14 @@ export const rateLimiters = {
     analytics: true,
     prefix: "rl:burst",
   }),
+  
+  // For contact form submissions
+  contactForm: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, "1 h"), // 3 submissions per hour per IP
+    analytics: true,
+    prefix: "rl:contact",
+  }),
 }
 
 // Helper to get client IP with enhanced security
