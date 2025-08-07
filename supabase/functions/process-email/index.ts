@@ -18,27 +18,17 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Received request from:', req.headers.get('user-agent'))
-    console.log('Content-Type:', req.headers.get('content-type'))
-    
     // Parse form data from Mailgun
     let formData: FormData
     try {
       formData = await req.formData()
     } catch (parseError) {
       console.error('Failed to parse form data:', parseError)
-      return new Response(JSON.stringify({ error: 'Invalid form data', details: String(parseError) }), { 
+      return new Response(JSON.stringify({ error: 'Invalid form data' }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       })
     }
-    
-    // Log all form fields for debugging
-    const formFields: Record<string, any> = {}
-    for (const [key, value] of formData.entries()) {
-      formFields[key] = typeof value === 'string' ? value.substring(0, 100) : 'file'
-    }
-    console.log('Form fields received:', formFields)
     
     const recipient = formData.get('recipient') as string
     const sender = formData.get('sender') as string
@@ -49,19 +39,15 @@ serve(async (req) => {
     const token = formData.get('token') as string
     const signature = formData.get('signature') as string
 
-    console.log('Signature data:', { signature: signature?.substring(0, 20), timestamp, token: token?.substring(0, 20) })
-
     // Verify Mailgun signature (for Routes, signature is in form data, not headers)
-    // Note: We're being lenient with signature verification for now to get it working
     if (signature && timestamp && token) {
       try {
-        // Check timestamp to prevent replay attacks (must be within 15 minutes for debugging)
+        // Check timestamp to prevent replay attacks (must be within 5 minutes)
         const timestampNum = parseInt(timestamp)
         const currentTime = Math.floor(Date.now() / 1000)
-        if (Math.abs(currentTime - timestampNum) > 900) { // 15 minutes instead of 5
-          console.error('Webhook timestamp too old:', { timestamp, currentTime, diff: Math.abs(currentTime - timestampNum) })
-          // For now, just log but don't fail
-          console.warn('Proceeding despite old timestamp for debugging')
+        if (Math.abs(currentTime - timestampNum) > 300) {
+          console.error('Webhook timestamp too old')
+          return new Response('Request timestamp too old', { status: 401 })
         }
         
         // Verify HMAC signature using Web Crypto API
@@ -87,17 +73,13 @@ serve(async (req) => {
           .join('')
         
         if (expectedHex !== signature) {
-          console.error('Invalid signature:', { expected: expectedHex, received: signature })
-          // For now, log but don't fail - Mailgun routes may not always send signatures
-          console.warn('Signature mismatch - proceeding anyway for debugging')
+          console.error('Invalid signature')
+          return new Response('Invalid signature', { status: 401 })
         }
       } catch (cryptoError) {
         console.error('Error verifying signature:', cryptoError)
-        console.warn('Proceeding without signature verification')
+        // Continue processing even if signature verification fails for now
       }
-    } else {
-      console.warn('No signature data in request - this is normal for Mailgun routes')
-      // Mailgun routes don't always send signatures, so we proceed
     }
 
     // Extract phone number from recipient email
@@ -392,14 +374,14 @@ serve(async (req) => {
     // Send SMS via Twilio or log for test phones/mode
     if (isTestMode() || isTestPhone) {
       // Log the SMS instead of sending for test phones or test mode
-      await supabase
+      const { error: smsLogError } = await supabase
         .from('sms_logs')
         .insert({
           user_id: user.id,
           phone: phone,
           message: smsBody,
           type: 'email_forward',
-          status: isTestPhone ? 'test_phone' : 'test_mode',
+          status: 'test_mode', // Use 'test_mode' for both test phones and test mode
           metadata: {
             email_id: email.id,
             from_email: sender,
@@ -409,6 +391,11 @@ serve(async (req) => {
             test_phone: isTestPhone
           }
         })
+      
+      if (smsLogError) {
+        console.error('Failed to log SMS:', smsLogError)
+        throw smsLogError
+      }
       
       console.log(`[${isTestPhone ? 'TEST PHONE' : 'TEST MODE'}] SMS logged for ${phone}:`, smsBody.substring(0, 50) + '...')
     } else {
@@ -510,15 +497,7 @@ serve(async (req) => {
     return new Response('Email processed successfully', { status: 200 })
   } catch (error) {
     console.error('Error processing email:', error)
-    console.error('Error stack:', error.stack)
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error', 
-      message: String(error),
-      stack: error.stack 
-    }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return new Response('Internal server error', { status: 500 })
   }
 })
 

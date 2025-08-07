@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { CookieConsent } from "@/components/cookie-consent"
 import { TestModeBanner } from "@/components/test-mode-banner"
 import { GoogleAnalytics } from '@next/third-parties/google'
+import { Analytics } from "@vercel/analytics/react"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -56,6 +57,7 @@ export default function RootLayout({
         </ClerkProvider>
         <CookieConsent />
         <GoogleAnalytics gaId="G-CB0Q6E7ND3" />
+        <Analytics />
       </body>
     </html>
   )
