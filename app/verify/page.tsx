@@ -127,6 +127,19 @@ function VerifyContent() {
               />
             </div>
 
+            {/* Consent confirmation notice */}
+            <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+              <p className="text-sm text-gray-700">
+                <strong>By entering this verification code, you confirm your consent to receive:</strong>
+              </p>
+              <ul className="text-xs text-gray-600 mt-2 space-y-1 ml-4">
+                <li>• SMS notifications of emails forwarded to your unique @txt.emailtotextnotify.com address</li>
+                <li>• Account alerts and usage notifications</li>
+                <li>• Messages from toll-free number (866) 942-1024</li>
+                <li>• Reply STOP at any time to opt-out</li>
+              </ul>
+            </div>
+
             <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
               {loading ? "Verifying..." : "Verify Phone Number"}
             </Button>

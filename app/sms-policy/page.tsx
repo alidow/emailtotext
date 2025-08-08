@@ -29,6 +29,37 @@ export default function SMSPolicyPage() {
           </p>
         </div>
 
+        {/* Critical Opt-In Notice */}
+        <Card className="mb-8 border-amber-400 bg-amber-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-700">
+              <Shield className="h-6 w-6" />
+              EXPLICIT OPT-IN REQUIRED
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="font-semibold text-lg text-gray-900">
+                Email to Text Notifier requires explicit, voluntary consent before sending any SMS messages.
+              </p>
+              <div className="bg-white p-4 rounded-lg border border-amber-200">
+                <p className="font-medium mb-3">Users must:</p>
+                <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                  <li>Check a consent checkbox that clearly states they agree to receive text messages</li>
+                  <li>Understand exactly what types of messages they'll receive (forwarded emails from their unique address)</li>
+                  <li>Know the frequency and source of messages (toll-free number 866-942-1024)</li>
+                  <li>Have the ability to opt-out at any time by replying STOP</li>
+                </ol>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <p className="font-semibold text-red-900">
+                  ⚠️ IMPORTANT: Consent for SMS messaging is NEVER required to use any other features of our service.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="space-y-8">
           {/* Service Overview */}
           <Card>
@@ -65,23 +96,42 @@ export default function SMSPolicyPage() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-semibold mb-2">Web Form Opt-In</h3>
+                  <h3 className="font-semibold mb-2">Two-Step Consent Process</h3>
                   <p className="text-gray-600 mb-2">
-                    During registration at emailtotextnotify.com, you:
+                    We use a comprehensive two-step consent process to ensure clear, explicit opt-in:
                   </p>
-                  <ol className="list-decimal list-inside space-y-2 text-gray-600">
-                    <li>Enter your mobile phone number in our sign-up form</li>
-                    <li>Check a consent checkbox agreeing to receive SMS messages</li>
-                    <li>Receive a verification code via SMS to confirm your number</li>
-                    <li>Enter the verification code to complete registration</li>
+                  <ol className="list-decimal list-inside space-y-3 text-gray-600">
+                    <li>
+                      <strong>Initial Consent (Website):</strong> You enter your phone number and check an explicit consent checkbox that clearly states you agree to receive text messages from Email to Text Notifier
+                    </li>
+                    <li>
+                      <strong>First SMS Consent:</strong> The verification code SMS itself includes consent language: <em>"By requesting this code, you consent to receive SMS from us at (866) 942-1024"</em>
+                    </li>
+                    <li>
+                      <strong>Final Confirmation:</strong> When entering the verification code on our website, you see a notice confirming: <em>"By entering this verification code, you confirm your consent to receive SMS notifications"</em>
+                    </li>
+                    <li>
+                      <strong>Account Creation:</strong> Only after all consent steps are completed is your account created and SMS forwarding activated
+                    </li>
                   </ol>
                 </div>
                 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm">
-                    <strong>Consent Statement:</strong> "I consent to receive SMS messages at this number. 
-                    Message and data rates may apply. Reply STOP to opt out at any time."
-                  </p>
+                <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-200">
+                  <p className="text-sm font-semibold mb-2">Exact Consent Statement Users See:</p>
+                  <div className="bg-white p-3 rounded border border-amber-100">
+                    <p className="text-sm mb-2">
+                      <strong>"By checking this box, I expressly consent to receive text messages from Email to Text Notifier at the phone number provided above."</strong>
+                    </p>
+                    <ul className="text-xs space-y-1 ml-4">
+                      <li>• I will receive SMS messages containing forwarded email content that I send to my unique @txt.emailtotextnotify.com address</li>
+                      <li>• Messages will be sent from toll-free number (866) 942-1024</li>
+                      <li>• Message frequency depends on how many emails I forward (typically 10-100/month)</li>
+                      <li>• I will also receive account notifications (usage alerts, billing updates)</li>
+                      <li>• Standard message and data rates may apply</li>
+                      <li>• I can reply STOP to opt-out at any time</li>
+                      <li className="font-semibold">• This consent is not required to purchase any goods or services</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -112,17 +162,24 @@ export default function SMSPolicyPage() {
                   <span className="text-green-600 mt-1">•</span>
                   <div>
                     <strong>Verification Codes:</strong> One-time codes for account security and phone 
-                    number verification
+                    number verification (with consent reminder in each message)
                   </div>
                 </li>
               </ul>
               
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">
-                  <strong>Example Message:</strong><br />
-                  "New email from noreply@github.com: Your CI build #1234 passed successfully. 
-                  View full message at emailtotextnotify.com/messages"
-                </p>
+              <div className="mt-4 space-y-3">
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    <strong>Example Verification Message:</strong><br />
+                    "Email to Text Notifier: Your verification code is 123456. By requesting this code, you consent to receive SMS from us at (866) 942-1024. Reply STOP to opt-out. Msg&data rates may apply."
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    <strong>Example Forwarded Email:</strong><br />
+                    "New email from noreply@github.com: Your CI build #1234 passed. View at emailtotextnotify.com/e/abc123"
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

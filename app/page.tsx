@@ -167,18 +167,56 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity duration-500 -z-10 scale-110" />
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="bg-amber-50 p-5 rounded-lg border-2 border-amber-200">
                   <div className="flex items-start space-x-3">
                     <Checkbox
                       id="consent"
                       checked={consent}
                       onCheckedChange={(checked) => setConsent(checked as boolean)}
-                      className="mt-0.5"
+                      className="mt-1"
                     />
-                    <Label htmlFor="consent" className="text-sm font-normal text-gray-700 leading-relaxed">
-                      I consent to receive SMS messages at this number. Message and data rates may apply. 
-                      Reply STOP to opt out at any time. View our <a href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>.
-                    </Label>
+                    <div className="flex-1">
+                      <Label htmlFor="consent" className="text-base font-medium text-gray-900 leading-relaxed cursor-pointer block mb-3">
+                        By checking this box, I expressly consent to receive text messages from Email to Text Notifier at the phone number provided above.
+                      </Label>
+                      <div className="text-sm text-gray-700 space-y-1.5 ml-1">
+                        <p className="flex items-start">
+                          <span className="text-blue-600 mr-2">•</span>
+                          I will receive SMS messages containing forwarded email content that I send to my unique @txt.emailtotextnotify.com address
+                        </p>
+                        <p className="flex items-start">
+                          <span className="text-blue-600 mr-2">•</span>
+                          Messages will be sent from toll-free number (866) 942-1024
+                        </p>
+                        <p className="flex items-start">
+                          <span className="text-blue-600 mr-2">•</span>
+                          Message frequency depends on how many emails I forward (typically 10-100/month)
+                        </p>
+                        <p className="flex items-start">
+                          <span className="text-blue-600 mr-2">•</span>
+                          I will also receive account notifications (usage alerts, billing updates)
+                        </p>
+                        <p className="flex items-start">
+                          <span className="text-blue-600 mr-2">•</span>
+                          Standard message and data rates may apply
+                        </p>
+                        <p className="flex items-start">
+                          <span className="text-blue-600 mr-2">•</span>
+                          I can reply STOP to opt-out at any time
+                        </p>
+                        <p className="flex items-start font-medium">
+                          <span className="text-blue-600 mr-2">•</span>
+                          This consent is not required to purchase any goods or services
+                        </p>
+                      </div>
+                      <div className="mt-3 text-sm">
+                        <a href="/sms-policy" className="text-blue-600 hover:underline font-medium">SMS Policy</a>
+                        <span className="mx-2 text-gray-400">|</span>
+                        <a href="/privacy" className="text-blue-600 hover:underline font-medium">Privacy Policy</a>
+                        <span className="mx-2 text-gray-400">|</span>
+                        <a href="/terms" className="text-blue-600 hover:underline font-medium">Terms of Service</a>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

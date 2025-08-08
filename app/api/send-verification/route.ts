@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
     try {
       await twilioClient.sendSMS({
         to: e164Phone,
-        body: `Your Email to Text Notifier verification code is: ${code}. This code expires in 10 minutes.`,
+        body: `Email to Text Notifier: Your verification code is ${code}. By requesting this code, you consent to receive SMS from us at (866) 942-1024. Reply STOP to opt-out. Msg&data rates may apply. Expires in 10 min.`,
         type: 'verification',
         metadata: {
           code,
