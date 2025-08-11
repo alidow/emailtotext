@@ -371,6 +371,32 @@ function GetStartedContent() {
             <li>• <strong>30-Day Guarantee:</strong> Not satisfied? Get a full refund within 30 days</li>
           </ul>
         </div>
+        
+        {/* Footer */}
+        <footer className="mt-16 py-8 border-t border-gray-200">
+          <div className="text-center">
+            <Link href="/" className="inline-block mb-4">
+              <div className="flex items-center justify-center space-x-2 hover:opacity-80 transition-opacity">
+                <span className="text-2xl">💬</span>
+                <span className="font-bold text-lg">Email to Text Notifier</span>
+              </div>
+            </Link>
+            <p className="text-sm text-gray-600 mb-3">
+              Operated by Celestial Platform, LLC
+            </p>
+            <div className="flex justify-center gap-6 text-sm">
+              <Link href="/terms" className="text-gray-600 hover:text-blue-600">
+                Terms of Service
+              </Link>
+              <Link href="/privacy" className="text-gray-600 hover:text-blue-600">
+                Privacy Policy
+              </Link>
+              <Link href="/sms-policy" className="text-gray-600 hover:text-blue-600">
+                SMS Policy
+              </Link>
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   )
