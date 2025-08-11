@@ -13,16 +13,16 @@ export default function OptInProcessPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex flex-col">
-            <div className="text-xs text-gray-500 font-medium">Operated by</div>
-            <div className="font-bold text-lg">Celestial Platform, LLC</div>
-          </div>
           <div className="flex items-center space-x-3">
             <span className="text-4xl">💬</span>
             <div className="flex flex-col">
               <span className="font-display font-bold text-xl">Email to Text Notifier</span>
               <span className="text-xs text-gray-600">SMS Gateway Service</span>
             </div>
+          </div>
+          <div className="flex flex-col text-right">
+            <div className="text-xs text-gray-500 font-medium">Operated by</div>
+            <div className="font-bold text-lg">Celestial Platform, LLC</div>
           </div>
         </div>
       </nav>
