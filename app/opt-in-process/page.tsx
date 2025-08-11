@@ -12,31 +12,42 @@ export default function OptInProcessPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back to Home</span>
-          </Link>
-          <div className="flex items-center space-x-2">
-            <span className="text-3xl">💬</span>
-            <span className="font-display font-bold text-xl">Email to Text Notifier</span>
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="text-xs text-gray-500 font-medium">Operated by</div>
+            <div className="font-bold text-lg">Celestial Platform, LLC</div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className="text-4xl">💬</span>
+            <div className="flex flex-col">
+              <span className="font-display font-bold text-xl">Email to Text Notifier</span>
+              <span className="text-xs text-gray-600">SMS Gateway Service</span>
+            </div>
           </div>
         </div>
       </nav>
 
       <main className="container mx-auto px-4 py-8 md:py-16 max-w-5xl">
-        {/* Header Section */}
+        {/* Header Section with Business Branding */}
         <div className="text-center mb-12">
+          <div className="mb-6">
+            <div className="inline-flex items-center justify-center bg-blue-600 text-white px-6 py-3 rounded-full mb-4">
+              <span className="text-2xl mr-2">💬</span>
+              <span className="font-bold text-lg">Email to Text Notifier</span>
+            </div>
+            <p className="text-sm text-gray-600 font-medium">A service of Celestial Platform, LLC</p>
+          </div>
+          
           <h1 className="text-4xl font-bold mb-4">SMS Opt-In Process & User Consent</h1>
           <p className="text-xl text-muted-foreground mb-4">
             Complete walkthrough of how users sign up and consent to receive text messages
           </p>
-          <div className="bg-blue-50 p-4 rounded-lg max-w-3xl mx-auto">
+          <div className="bg-blue-50 p-4 rounded-lg max-w-3xl mx-auto border-2 border-blue-200">
             <p className="text-gray-700">
-              <strong>Email to Text Notifier</strong> is a transactional email-to-SMS forwarding service. 
+              <strong>Email to Text Notifier by Celestial Platform, LLC</strong> is a transactional email-to-SMS forwarding service. 
               Users receive a unique email address (e.g., 5551234567@txt.emailtotextnotify.com) and any 
               emails sent to that address are forwarded as SMS messages to their phone. This page documents 
-              our comprehensive consent collection process.
+              our comprehensive consent collection process for toll-free number <strong>(866) 942-1024</strong>.
             </p>
           </div>
         </div>
@@ -52,9 +63,9 @@ export default function OptInProcessPage() {
           
           <Card className="overflow-hidden">
             <CardHeader className="bg-gray-50">
-              <CardTitle>Homepage Phone Entry Form</CardTitle>
+              <CardTitle>Homepage Phone Entry Form - Email to Text Notifier</CardTitle>
               <CardDescription>
-                Users visit https://emailtotextnotify.com and enter their phone number
+                Users visit https://emailtotextnotify.com (operated by Celestial Platform, LLC) and enter their phone number
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
@@ -154,9 +165,9 @@ export default function OptInProcessPage() {
           
           <Card>
             <CardHeader className="bg-gray-50">
-              <CardTitle>Verification SMS Message</CardTitle>
+              <CardTitle>Verification SMS Message from Celestial Platform, LLC</CardTitle>
               <CardDescription>
-                User receives this exact SMS message with verification code and consent reminder
+                User receives this exact SMS message with verification code and consent reminder from our toll-free number
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
@@ -304,7 +315,7 @@ Email to Text Notifier: Your verification code is 123456. By requesting this cod
               <div className="border-l-4 border-orange-500 pl-4">
                 <h3 className="font-semibold mb-1">Method 2: Account Dashboard</h3>
                 <p className="text-gray-600">
-                  Log into your account at emailtotextnotify.com/dashboard and disable SMS delivery
+                  Log into your account at https://emailtotextnotify.com/dashboard and disable SMS delivery
                 </p>
               </div>
               

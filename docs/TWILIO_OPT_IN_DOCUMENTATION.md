@@ -88,13 +88,13 @@ STOP to opt-out. Msg&data rates may apply.
 ### 2. Forwarded Email Notifications
 ```
 New email from noreply@github.com: Your CI build #1234 passed. 
-View at emailtotextnotify.com/e/abc123
+View at https://emailtotextnotify.com/e/abc123
 ```
 
 ### 3. Account Notifications
 ```
 Email to Text Notifier: You've used 80% of your monthly SMS quota. 
-Upgrade at emailtotextnotify.com/dashboard. Reply STOP to opt-out.
+Upgrade at https://emailtotextnotify.com/dashboard. Reply STOP to opt-out.
 ```
 
 ## Opt-Out Process

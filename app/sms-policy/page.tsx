@@ -177,7 +177,7 @@ export default function SMSPolicyPage() {
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-600">
                     <strong>Example Forwarded Email:</strong><br />
-                    "New email from noreply@github.com: Your CI build #1234 passed. View at emailtotextnotify.com/e/abc123"
+                    "New email from noreply@github.com: Your CI build #1234 passed. View at https://emailtotextnotify.com/e/abc123"
                   </p>
                 </div>
               </div>

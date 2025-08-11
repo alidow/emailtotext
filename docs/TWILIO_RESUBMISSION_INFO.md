@@ -43,16 +43,16 @@ All messages require explicit opt-in with clear disclosure of message types, fre
 
 ### 9. Production Message Sample
 ```
-New email from noreply@github.com: Your CI build #1234 passed. View at emailtotextnotify.com/e/abc123
+New email from noreply@github.com: Your CI build #1234 passed. View at https://emailtotextnotify.com/e/abc123
 ```
 
 **Additional samples:**
 ```
-Email from alerts@newrelic.com: Server CPU usage exceeded 90%. View full alert at emailtotextnotify.com/e/xyz789
+Email from alerts@newrelic.com: Server CPU usage exceeded 90%. View full alert at https://emailtotextnotify.com/e/xyz789
 ```
 
 ```
-Email to Text: You've used 80% of your monthly SMS quota. Manage at emailtotextnotify.com/dashboard. Reply STOP to opt-out.
+Email to Text: You've used 80% of your monthly SMS quota. Manage at https://emailtotextnotify.com/dashboard. Reply STOP to opt-out.
 ```
 
 ### 10. Opt-In Type
