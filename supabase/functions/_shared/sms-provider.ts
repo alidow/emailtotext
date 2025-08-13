@@ -156,8 +156,8 @@ function createSafeMessageTemplate(originalBody: string): string {
   // Always use static messages URL (no shortener)
   const messagesUrl = 'https://emailtotextnotify.com/messages'
   
-  // Ultra-safe template
-  return `New email received. View at: ${messagesUrl}`
+  // Ultra-safe template with service identifier and proper line breaks
+  return `Email to Text Notification: New email received.\n\nView at:\n\n${messagesUrl}`
 }
 
 // Trigger Sentry alert

@@ -593,19 +593,20 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
   const cleanEmail = senderEmail.replace(/[<>]/g, '').trim()
   
   // Handle blank or missing subject
-  const subjectText = subject && subject.trim() ? subject.trim() : 'No subject'
+  const subjectText = subject && subject.trim() ? subject.trim() : 'no subject'
   
-  // Format matching approved Twilio application
-  const prefix = 'New email from '
-  const middle = ': '
-  const suffix = '. View full message at: '
+  // Build message with service identifier and proper formatting
+  const serviceId = 'Email to Text Notification: '
+  const prefix = 'New email from "'
+  const middle = '", subject "'
+  const suffix = '".\n\nView full message at:\n\n'
   
   // Calculate available space (160 char SMS limit)
-  const fixedLength = prefix.length + middle.length + suffix.length + messagesUrl.length
+  const fixedLength = serviceId.length + prefix.length + middle.length + suffix.length + messagesUrl.length
   const availableForContent = 160 - fixedLength
   
-  // Allocate space between email and subject
-  const maxEmailLength = Math.min(cleanEmail.length, Math.floor(availableForContent * 0.5))
+  // Allocate space between email and subject (prioritize email)
+  const maxEmailLength = Math.min(cleanEmail.length, Math.floor(availableForContent * 0.6))
   const truncatedEmail = cleanEmail.length > maxEmailLength 
     ? cleanEmail.substring(0, maxEmailLength - 3) + '...'
     : cleanEmail
@@ -616,8 +617,8 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
     ? subjectText.substring(0, remainingSpace - 3) + '...'
     : subjectText
   
-  // Build message in approved format
-  const message = `${prefix}${truncatedEmail}${middle}${truncatedSubject}${suffix}${messagesUrl}`
+  // Build message with proper line breaks around URL
+  const message = `${serviceId}${prefix}${truncatedEmail}${middle}${truncatedSubject}${suffix}${messagesUrl}`
   
   // Ensure we don't exceed 160 characters
   return message.substring(0, 160)
