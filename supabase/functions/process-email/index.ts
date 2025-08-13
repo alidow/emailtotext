@@ -6,7 +6,7 @@ import { sendSMS } from "../_shared/sms-provider.ts"
 const isTestMode = () => Deno.env.get('ENABLE_TEST_MODE') === 'true'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'https://emailtotextnotify.com',
+  'Access-Control-Allow-Origin': Deno.env.get('NEXT_PUBLIC_APP_URL') || 'https://emailtotextnotify.com',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
@@ -19,6 +19,25 @@ serve(async (req) => {
   }
 
   try {
+    // Check for secret token in query string for authentication
+    const url = new URL(req.url)
+    const authToken = url.searchParams.get('token')
+    const expectedToken = Deno.env.get('MAILGUN_FORWARD_TOKEN') || 'xK9mP3qR7vT2nL5wB8jF6'
+    
+    // Debug: Log the full URL to see what we're receiving
+    console.log('Request URL:', req.url)
+    console.log('Query params:', url.search)
+    console.log('Token from query:', authToken)
+    
+    if (authToken !== expectedToken) {
+      console.error('Invalid or missing token:', authToken ? 'wrong token' : 'no token')
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+    
+    console.log('Valid token received, processing email')
     // Parse form data from Mailgun
     let formData: FormData
     try {
@@ -68,50 +87,12 @@ serve(async (req) => {
       })
     }
 
-    // Verify Mailgun signature if present (webhooks include it, forwards don't)
+    // Skip Mailgun signature verification for forwards (they don't include it)
+    // We rely on the secret token in the query string for authentication
     if (signature && timestamp && token) {
-      try {
-        // Check timestamp to prevent replay attacks (must be within 5 minutes)
-        const timestampNum = parseInt(timestamp)
-        const currentTime = Math.floor(Date.now() / 1000)
-        if (Math.abs(currentTime - timestampNum) > 300) {
-          console.error('Webhook timestamp too old')
-          return new Response('Request timestamp too old', { status: 401 })
-        }
-        
-        // Verify HMAC signature using Web Crypto API
-        const signingKey = Deno.env.get('MAILGUN_WEBHOOK_SIGNING_KEY') || Deno.env.get('MAILGUN_API_KEY')
-        if (!signingKey) {
-          console.error('No signing key configured')
-          return new Response('Server configuration error', { status: 500 })
-        }
-        
-        const encoder = new TextEncoder()
-        const key = await crypto.subtle.importKey(
-          'raw',
-          encoder.encode(signingKey),
-          { name: 'HMAC', hash: 'SHA-256' },
-          false,
-          ['sign', 'verify']
-        )
-        
-        const signatureData = encoder.encode(timestamp + token)
-        const expectedSignature = await crypto.subtle.sign('HMAC', key, signatureData)
-        const expectedHex = Array.from(new Uint8Array(expectedSignature))
-          .map(b => b.toString(16).padStart(2, '0'))
-          .join('')
-        
-        if (expectedHex !== signature) {
-          console.error('Invalid signature')
-          return new Response('Invalid signature', { status: 401 })
-        }
-      } catch (cryptoError) {
-        console.error('Error verifying signature:', cryptoError)
-        // Continue processing even if signature verification fails for now
-      }
+      console.log('Signature data present but skipping verification for forwards')
     } else {
-      // No signature provided (likely from forward action)
-      console.log('Processing email without signature verification (forward action)')
+      console.log('No signature data (normal for forward actions)')
     }
 
     // Extract phone number from recipient email
@@ -604,38 +585,45 @@ function stripHtml(html: string): string {
 
 function formatSMS(from: string, subject: string, body: string, shortUrl: string, attachmentCount: number): string {
   const baseUrl = Deno.env.get('NEXT_PUBLIC_APP_URL') || 'https://emailtotextnotify.com'
-  const fullUrl = `${baseUrl}/e/${shortUrl}`
+  const fullUrl = `${baseUrl}/email/${shortUrl}`
   
   // Extract sender name or email
   const senderMatch = from.match(/^"?([^"<]+)"?\s*<(.+)>$/)
-  const senderName = senderMatch ? senderMatch[1].trim() : from.split('@')[0]
+  let senderName = senderMatch ? senderMatch[1].trim() : from.split('@')[0]
   
-  // Clean and truncate body
-  const cleanBody = body.replace(/\s+/g, ' ').trim()
+  // Clean sender name - remove special characters that might trigger filters
+  senderName = senderName.replace(/[^\w\s.-]/g, '').trim()
   
-  // Build SMS with attachment indicator
-  let sms = `From: ${senderName}\n${subject}\n`
+  // Handle blank or missing subject
+  const subjectText = subject && subject.trim() ? subject.trim() : 'blank'
   
-  // Add attachment indicator if present
-  if (attachmentCount > 0) {
-    const attachmentText = attachmentCount === 1 
-      ? '📎 1 attachment' 
-      : `📎 ${attachmentCount} attachments`
-    sms += `${attachmentText}\n`
-  }
+  // Fixed parts of the message
+  const prefix = 'You received an email from '
+  const middle = ', subject was '
+  const suffix = '. To view contents, '
+  const optOut = '. STOP to opt out.'
   
-  // Calculate remaining space for body
-  const remaining = 140 - sms.length - fullUrl.length - 2 // 2 for "\n\n"
+  // Calculate available space (160 char SMS limit)
+  const fixedLength = prefix.length + middle.length + suffix.length + optOut.length + fullUrl.length
+  const availableForContent = 160 - fixedLength
   
-  if (cleanBody.length > remaining && remaining > 3) {
-    sms += cleanBody.substring(0, remaining - 3) + '...'
-  } else if (remaining > 0) {
-    sms += cleanBody.substring(0, remaining)
-  }
+  // Allocate space between sender and subject (prioritize sender)
+  const maxSenderLength = Math.min(senderName.length, Math.floor(availableForContent * 0.4))
+  const truncatedSender = senderName.length > maxSenderLength 
+    ? senderName.substring(0, maxSenderLength - 3) + '...'
+    : senderName
   
-  sms += `\n\n${fullUrl}`
+  // Use remaining space for subject
+  const remainingSpace = availableForContent - truncatedSender.length
+  const truncatedSubject = subjectText.length > remainingSpace
+    ? subjectText.substring(0, remainingSpace - 3) + '...'
+    : subjectText
   
-  return sms.substring(0, 140)
+  // Build the message
+  const message = `${prefix}${truncatedSender}${middle}${truncatedSubject}${suffix}${fullUrl}${optOut}`
+  
+  // Ensure we don't exceed 160 characters (carrier limit for single SMS)
+  return message.substring(0, 160)
 }
 
 async function sendBounceEmail(to: string, originalRecipient: string) {

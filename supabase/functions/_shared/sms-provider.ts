@@ -29,8 +29,33 @@ const isTestPhone = (phone: string): boolean => {
   })
 }
 
-// Send SMS via Twilio
-async function sendViaTwilio(to: string, body: string): Promise<SMSResult> {
+// Check Twilio message status
+async function checkTwilioMessageStatus(messageSid: string): Promise<{ status: string, errorCode?: number }> {
+  const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
+  const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
+  
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages/${messageSid}.json`
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`)
+    }
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to check message status: ${response.status}`)
+  }
+  
+  const message = await response.json()
+  return {
+    status: message.status,
+    errorCode: message.error_code
+  }
+}
+
+// Send SMS via Twilio with filtering detection
+async function sendViaTwilio(to: string, body: string, isRetry: boolean = false): Promise<SMSResult> {
   const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
   const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
   const fromNumber = Deno.env.get('TWILIO_PHONE_NUMBER')
@@ -58,15 +83,111 @@ async function sendViaTwilio(to: string, body: string): Promise<SMSResult> {
   
   if (!response.ok) {
     const errorText = await response.text()
+    
+    // Check for specific error codes
+    try {
+      const errorData = JSON.parse(errorText)
+      if (errorData.code === 30007 || errorData.code === 21610) {
+        // Message was filtered or blocked
+        console.error('Message filtered by carrier:', errorData)
+        
+        if (!isRetry) {
+          // Try with safe template
+          console.log('Attempting with safe template...')
+          const safeBody = createSafeMessageTemplate(body)
+          return await sendViaTwilio(to, safeBody, true)
+        } else {
+          // Safe template also failed - trigger alert
+          await triggerSentryAlert('Message filtering failed even with safe template', {
+            phone: to,
+            originalBody: body,
+            errorCode: errorData.code
+          })
+        }
+      }
+    } catch (e) {
+      // Not JSON error response
+    }
+    
     throw new Error(`Twilio API error: ${response.status} - ${errorText}`)
   }
   
   const message = await response.json()
+  const messageSid = message.sid || message.Sid
+  
+  // Wait a moment then check status
+  await new Promise(resolve => setTimeout(resolve, 2000))
+  
+  try {
+    const status = await checkTwilioMessageStatus(messageSid)
+    
+    if (status.errorCode === 30007 || status.status === 'undelivered') {
+      console.error('Message was filtered after sending:', status)
+      
+      if (!isRetry) {
+        // Try with safe template
+        console.log('Message filtered, attempting with safe template...')
+        const safeBody = createSafeMessageTemplate(body)
+        return await sendViaTwilio(to, safeBody, true)
+      } else {
+        // Safe template also failed
+        await triggerSentryAlert('Message filtering detected after send', {
+          phone: to,
+          messageSid,
+          status: status.status,
+          errorCode: status.errorCode
+        })
+      }
+    }
+  } catch (statusError) {
+    console.error('Failed to check message status:', statusError)
+    // Continue anyway - message might have been sent
+  }
   
   return {
     success: true,
-    messageId: message.sid || message.Sid,
+    messageId: messageSid,
     provider: 'twilio'
+  }
+}
+
+// Create a safe message template that should pass filters
+function createSafeMessageTemplate(originalBody: string): string {
+  // Extract the URL from the original message
+  const urlMatch = originalBody.match(/https:\/\/[^\s]+/)
+  const url = urlMatch ? urlMatch[0] : 'https://emailtotextnotify.com'
+  
+  // Ultra-safe template
+  return `EmailToText notification. View your message at ${url}. Reply STOP to unsubscribe.`
+}
+
+// Trigger Sentry alert
+async function triggerSentryAlert(message: string, extra: Record<string, any>) {
+  console.error('[SENTRY ALERT]', message, extra)
+  
+  // If Sentry is configured, send alert
+  const sentryDsn = Deno.env.get('SENTRY_DSN')
+  if (sentryDsn) {
+    try {
+      // Simple Sentry error reporting
+      await fetch(sentryDsn, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          level: 'error',
+          extra,
+          tags: {
+            service: 'sms-provider',
+            issue: 'message-filtering'
+          }
+        })
+      })
+    } catch (error) {
+      console.error('Failed to send Sentry alert:', error)
+    }
   }
 }
 
