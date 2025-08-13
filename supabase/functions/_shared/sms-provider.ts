@@ -153,12 +153,12 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
 
 // Create a safe message template that should pass filters
 function createSafeMessageTemplate(originalBody: string): string {
-  // Extract the URL from the original message
-  const urlMatch = originalBody.match(/https:\/\/[^\s]+/)
-  const url = urlMatch ? urlMatch[0] : 'https://emailtotextnotify.com'
+  // Extract the URL from the original message - be careful with trailing periods
+  const urlMatch = originalBody.match(/https:\/\/[^\s.]+[^\s]/)
+  const url = urlMatch ? urlMatch[0].replace(/\.$/, '') : 'https://emailtotextnotify.com'
   
-  // Ultra-safe template
-  return `EmailToText notification. View your message at ${url}. Reply STOP to unsubscribe.`
+  // Ultra-safe template with clear formatting
+  return `Email to Text Notifier: New message received. To view:\n\n${url}`
 }
 
 // Trigger Sentry alert

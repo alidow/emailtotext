@@ -595,16 +595,15 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
   senderName = senderName.replace(/[^\w\s.-]/g, '').trim()
   
   // Handle blank or missing subject
-  const subjectText = subject && subject.trim() ? subject.trim() : 'blank'
+  const subjectText = subject && subject.trim() ? subject.trim() : 'was blank'
   
-  // Fixed parts of the message
-  const prefix = 'You received an email from '
-  const middle = ', subject was '
-  const suffix = '. To view contents, '
-  const optOut = '. STOP to opt out.'
+  // Build message with new format
+  const header = 'Email to Text Notifier: You received an email from '
+  const subjectPrefix = ', subject '
+  const linkPrefix = '. To view message:\n\n'
   
   // Calculate available space (160 char SMS limit)
-  const fixedLength = prefix.length + middle.length + suffix.length + optOut.length + fullUrl.length
+  const fixedLength = header.length + subjectPrefix.length + linkPrefix.length + fullUrl.length
   const availableForContent = 160 - fixedLength
   
   // Allocate space between sender and subject (prioritize sender)
@@ -619,8 +618,8 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
     ? subjectText.substring(0, remainingSpace - 3) + '...'
     : subjectText
   
-  // Build the message
-  const message = `${prefix}${truncatedSender}${middle}${truncatedSubject}${suffix}${fullUrl}${optOut}`
+  // Build the message with line breaks for clarity
+  const message = `${header}${truncatedSender}${subjectPrefix}${truncatedSubject}${linkPrefix}${fullUrl}`
   
   // Ensure we don't exceed 160 characters (carrier limit for single SMS)
   return message.substring(0, 160)
