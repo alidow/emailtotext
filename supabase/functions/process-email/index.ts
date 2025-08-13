@@ -584,31 +584,27 @@ function stripHtml(html: string): string {
 }
 
 function formatSMS(from: string, subject: string, body: string, shortUrl: string, attachmentCount: number): string {
-  const baseUrl = Deno.env.get('NEXT_PUBLIC_APP_URL') || 'https://emailtotextnotify.com'
-  const fullUrl = `${baseUrl}/email/${shortUrl}`
+  // Static URL to messages page (no shortener)
+  const messagesUrl = 'https://emailtotextnotify.com/messages'
   
-  // Extract full email address (more legitimate)
+  // Extract email address
   const emailMatch = from.match(/<(.+@.+)>/)
   const senderEmail = emailMatch ? emailMatch[1] : from
-  
-  // Clean email - just basic validation
   const cleanEmail = senderEmail.replace(/[<>]/g, '').trim()
   
   // Handle blank or missing subject
-  const subjectText = subject && subject.trim() ? subject.trim() : '(no subject)'
+  const subjectText = subject && subject.trim() ? subject.trim() : 'No subject'
   
-  // Service identifier is important for legitimacy
-  const serviceId = 'Email to Text Notifier: '
-  const header = 'From '
-  const subjectPrefix = ' Re: '
-  const linkPrefix = '\n'
+  // Format matching approved Twilio application
+  const prefix = 'New email from '
+  const middle = ': '
+  const suffix = '. View full message at: '
   
   // Calculate available space (160 char SMS limit)
-  // Must fit: "Email to Text Notifier: From [email] Re: [subject]\n[url]"
-  const fixedLength = serviceId.length + header.length + subjectPrefix.length + linkPrefix.length + fullUrl.length
+  const fixedLength = prefix.length + middle.length + suffix.length + messagesUrl.length
   const availableForContent = 160 - fixedLength
   
-  // Allocate space - prioritize service name and URL
+  // Allocate space between email and subject
   const maxEmailLength = Math.min(cleanEmail.length, Math.floor(availableForContent * 0.5))
   const truncatedEmail = cleanEmail.length > maxEmailLength 
     ? cleanEmail.substring(0, maxEmailLength - 3) + '...'
@@ -620,8 +616,8 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
     ? subjectText.substring(0, remainingSpace - 3) + '...'
     : subjectText
   
-  // Build the message with service identifier
-  const message = `${serviceId}${header}${truncatedEmail}${subjectPrefix}${truncatedSubject}${linkPrefix}${fullUrl}`
+  // Build message in approved format
+  const message = `${prefix}${truncatedEmail}${middle}${truncatedSubject}${suffix}${messagesUrl}`
   
   // Ensure we don't exceed 160 characters
   return message.substring(0, 160)

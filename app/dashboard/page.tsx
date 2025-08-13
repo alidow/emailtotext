@@ -188,10 +188,21 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Emails</CardTitle>
-            <CardDescription>
-              Your last 20 emails that were converted to SMS
-            </CardDescription>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle>Recent Emails</CardTitle>
+                <CardDescription>
+                  Your last 20 emails that were converted to SMS
+                </CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push('/messages')}
+              >
+                View All Messages
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {emails.length === 0 ? (
@@ -225,7 +236,7 @@ export default function DashboardPage() {
                         <Button
                           variant="link"
                           size="sm"
-                          onClick={() => router.push(`/e/${email.short_url}`)}
+                          onClick={() => router.push('/messages')}
                         >
                           View
                         </Button>
