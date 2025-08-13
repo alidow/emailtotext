@@ -157,8 +157,8 @@ function createSafeMessageTemplate(originalBody: string): string {
   const urlMatch = originalBody.match(/https:\/\/[^\s]+/)
   const url = urlMatch ? urlMatch[0].replace(/[\s.,;!?]$/, '') : 'https://emailtotextnotify.com'
   
-  // Ultra-safe and SHORT template to ensure URL fits
-  return `New email notification\nView: ${url}`
+  // Ultra-safe template with service identifier
+  return `Email to Text Notifier: You have a new message\n${url}`
 }
 
 // Trigger Sentry alert

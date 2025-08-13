@@ -594,19 +594,21 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
   // Clean email - just basic validation
   const cleanEmail = senderEmail.replace(/[<>]/g, '').trim()
   
-  // Handle blank or missing subject - put in quotes for clarity
-  const subjectText = subject && subject.trim() ? `"${subject.trim()}"` : '"(no subject)"'
+  // Handle blank or missing subject
+  const subjectText = subject && subject.trim() ? subject.trim() : '(no subject)'
   
-  // Shorter, clearer format to ensure URL doesn't get cut off
-  const header = 'Email from '
-  const subjectPrefix = '\nSubject: '
-  const linkPrefix = '\nView: '
+  // Service identifier is important for legitimacy
+  const serviceId = 'Email to Text Notifier: '
+  const header = 'From '
+  const subjectPrefix = ' Re: '
+  const linkPrefix = '\n'
   
   // Calculate available space (160 char SMS limit)
-  const fixedLength = header.length + subjectPrefix.length + linkPrefix.length + fullUrl.length
+  // Must fit: "Email to Text Notifier: From [email] Re: [subject]\n[url]"
+  const fixedLength = serviceId.length + header.length + subjectPrefix.length + linkPrefix.length + fullUrl.length
   const availableForContent = 160 - fixedLength
   
-  // Allocate space between sender and subject (prioritize keeping full URL)
+  // Allocate space - prioritize service name and URL
   const maxEmailLength = Math.min(cleanEmail.length, Math.floor(availableForContent * 0.5))
   const truncatedEmail = cleanEmail.length > maxEmailLength 
     ? cleanEmail.substring(0, maxEmailLength - 3) + '...'
@@ -615,11 +617,11 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
   // Use remaining space for subject
   const remainingSpace = availableForContent - truncatedEmail.length
   const truncatedSubject = subjectText.length > remainingSpace
-    ? subjectText.substring(0, remainingSpace - 3) + '..."'
+    ? subjectText.substring(0, remainingSpace - 3) + '...'
     : subjectText
   
-  // Build the message - more concise to fit URL
-  const message = `${header}${truncatedEmail}${subjectPrefix}${truncatedSubject}${linkPrefix}${fullUrl}`
+  // Build the message with service identifier
+  const message = `${serviceId}${header}${truncatedEmail}${subjectPrefix}${truncatedSubject}${linkPrefix}${fullUrl}`
   
   // Ensure we don't exceed 160 characters
   return message.substring(0, 160)
