@@ -1,0 +1,166 @@
+{
+    "ResourceRecordSets": [
+        {
+            "Name": "emailtotextnotify.com.",
+            "Type": "A",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "216.198.79.1"
+                }
+            ]
+        },
+        {
+            "Name": "emailtotextnotify.com.",
+            "Type": "MX",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "1 SMTP.GOOGLE.COM"
+                }
+            ]
+        },
+        {
+            "Name": "emailtotextnotify.com.",
+            "Type": "NS",
+            "TTL": 172800,
+            "ResourceRecords": [
+                {
+                    "Value": "ns-116.awsdns-14.com."
+                },
+                {
+                    "Value": "ns-528.awsdns-02.net."
+                },
+                {
+                    "Value": "ns-1231.awsdns-25.org."
+                },
+                {
+                    "Value": "ns-1830.awsdns-36.co.uk."
+                }
+            ]
+        },
+        {
+            "Name": "emailtotextnotify.com.",
+            "Type": "SOA",
+            "TTL": 900,
+            "ResourceRecords": [
+                {
+                    "Value": "ns-116.awsdns-14.com. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400"
+                }
+            ]
+        },
+        {
+            "Name": "emailtotextnotify.com.",
+            "Type": "TXT",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "\"google-site-verification=1AoquZC5gFoG72r1SDtnP6S5S4t2OcRz-EYrrVw3GNo\""
+                }
+            ]
+        },
+        {
+            "Name": "clk._domainkey.emailtotextnotify.com.",
+            "Type": "CNAME",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "dkim1.yw73q6btte6o.clerk.services"
+                }
+            ]
+        },
+        {
+            "Name": "clk2._domainkey.emailtotextnotify.com.",
+            "Type": "CNAME",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "dkim2.yw73q6btte6o.clerk.services"
+                }
+            ]
+        },
+        {
+            "Name": "accounts.emailtotextnotify.com.",
+            "Type": "CNAME",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "accounts.clerk.services"
+                }
+            ]
+        },
+        {
+            "Name": "clerk.emailtotextnotify.com.",
+            "Type": "CNAME",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "frontend-api.clerk.services"
+                }
+            ]
+        },
+        {
+            "Name": "clkmail.emailtotextnotify.com.",
+            "Type": "CNAME",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "mail.yw73q6btte6o.clerk.services"
+                }
+            ]
+        },
+        {
+            "Name": "txt.emailtotextnotify.com.",
+            "Type": "MX",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "10 mxa.mailgun.org"
+                },
+                {
+                    "Value": "10 mxb.mailgun.org"
+                }
+            ]
+        },
+        {
+            "Name": "txt.emailtotextnotify.com.",
+            "Type": "TXT",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "\"v=spf1 include:mailgun.org ~all\""
+                }
+            ]
+        },
+        {
+            "Name": "krs._domainkey.txt.emailtotextnotify.com.",
+            "Type": "TXT",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "\"k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzfg2yKzMf2iTzBzPSknTjXfZbrdjdi9Gx/f9WLrtpNyzi9ml\" \"Fyc46rVFcFpiYnAaLBknv28M5nedc19VftVSmqpMnXAw2VC/sNdYd61JEuGuFkl14AcnbNxNTo/9j2OmSAvozvV6fxR2Hra79XM\" \"21pTMF0Gr6dsKCjBbMDlAbSwFwqcMoFsRm0h6XVdkeY5FEVa6Du+vJza4cOIJUb/bcDBGqCG986z4XkYEYrlnEpw2wxgVfGI3dmqTwQe47P4up8J5tKxAfNclnJGKjdaz5alZ+cYvaRJfLfsA2rJ8QGlX4hzbKKbR1o9mFpziRFCTrsQ83LKCODObjEpnZdCO+wIDAQAB\""
+                }
+            ]
+        },
+        {
+            "Name": "email.txt.emailtotextnotify.com.",
+            "Type": "CNAME",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "mailgun.org"
+                }
+            ]
+        },
+        {
+            "Name": "www.emailtotextnotify.com.",
+            "Type": "CNAME",
+            "TTL": 60,
+            "ResourceRecords": [
+                {
+                    "Value": "f84f93c44a34753b.vercel-dns-017.com"
+                }
+            ]
+        }
+    ]
+}

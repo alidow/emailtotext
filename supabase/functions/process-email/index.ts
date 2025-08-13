@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { sendSMS } from "../_shared/sms-provider.ts"
 
 // Test mode check
 const isTestMode = () => Deno.env.get('ENABLE_TEST_MODE') === 'true'
@@ -371,81 +372,28 @@ serve(async (req) => {
       return cleanPhone.endsWith(cleanTestNum) || cleanTestNum.endsWith(cleanPhone)
     })
     
-    // Send SMS via Twilio or log for test phones/mode
-    if (isTestMode() || isTestPhone) {
-      // Log the SMS instead of sending for test phones or test mode
-      const { error: smsLogError } = await supabase
-        .from('sms_logs')
-        .insert({
-          user_id: user.id,
-          phone: phone,
-          message: smsBody,
-          type: 'email_forward',
-          status: 'test_mode', // Use 'test_mode' for both test phones and test mode
-          metadata: {
-            email_id: email.id,
-            from_email: sender,
-            subject: subject,
-            attachment_count: attachmentCount,
-            short_url: shortUrl,
-            test_phone: isTestPhone
-          }
-        })
+    // Send SMS using the unified provider (handles test mode and provider failover)
+    try {
+      const smsResult = await sendSMS({
+        to: phone,
+        body: smsBody,
+        userId: user.id,
+        type: 'email_forward',
+        metadata: {
+          email_id: email.id,
+          from_email: sender,
+          subject: subject,
+          attachment_count: attachmentCount,
+          short_url: shortUrl,
+          is_test_phone: isTestPhone,
+          is_test_mode: isTestMode()
+        }
+      }, supabase)
       
-      if (smsLogError) {
-        console.error('Failed to log SMS:', smsLogError)
-        throw smsLogError
-      }
-      
-      console.log(`[${isTestPhone ? 'TEST PHONE' : 'TEST MODE'}] SMS logged for ${phone}:`, smsBody.substring(0, 50) + '...')
-    } else {
-      // In production, send real SMS using Twilio API directly
-      const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')!
-      const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')!
-      const fromNumber = Deno.env.get('TWILIO_PHONE_NUMBER')!
-      
-      const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
-      
-      const formData = new URLSearchParams({
-        To: phone,
-        From: fromNumber,
-        Body: smsBody
-      })
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData.toString()
-      })
-      
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Twilio API error: ${response.status} - ${errorText}`)
-      }
-      
-      const message = await response.json()
-      
-      // Log the sent SMS
-      await supabase
-        .from('sms_logs')
-        .insert({
-          user_id: user.id,
-          phone: phone,
-          message: smsBody,
-          type: 'email_forward',
-          status: 'sent',
-          twilio_sid: message.sid || message.Sid,
-          metadata: {
-            email_id: email.id,
-            from_email: sender,
-            subject: subject,
-            attachment_count: attachmentCount,
-            short_url: shortUrl
-          }
-        })
+      console.log(`SMS sent successfully via ${smsResult.provider}:`, smsBody.substring(0, 50) + '...')
+    } catch (smsError) {
+      console.error('Failed to send SMS:', smsError)
+      throw smsError
     }
 
     // Update usage count

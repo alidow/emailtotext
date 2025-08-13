@@ -20,7 +20,7 @@ A simple SMS gateway service that converts emails to text messages. Perfect repl
 - **Backend**: Supabase (Postgres + Edge Functions)
 - **Authentication**: Clerk
 - **Payments**: Stripe
-- **SMS**: Twilio
+- **SMS**: Twilio + Infobip (with automatic failover)
 - **Email**: Mailgun
 - **Hosting**: Vercel
 
@@ -30,7 +30,8 @@ A simple SMS gateway service that converts emails to text messages. Perfect repl
 
 - Node.js 18+
 - npm or yarn
-- Accounts with: Supabase, Clerk, Stripe, Twilio, Mailgun
+- Accounts with: Supabase, Clerk, Stripe, Mailgun
+- SMS Provider: Twilio and/or Infobip (supports both with automatic failover)
 
 ### Installation
 
@@ -85,6 +86,11 @@ emailtotext/
 ```
 
 ## Configuration
+
+### SMS Providers
+- **Twilio Setup**: Configure with your Twilio credentials (primary provider)
+- **Infobip Setup**: See [docs/INFOBIP_SETUP.md](docs/INFOBIP_SETUP.md) for adding Infobip as backup/alternative provider
+- **Automatic Failover**: Set `SMS_PROVIDER=auto` for automatic provider switching
 
 ### Mailgun Setup
 See [docs/MAILGUN_SETUP.md](docs/MAILGUN_SETUP.md) for detailed instructions.

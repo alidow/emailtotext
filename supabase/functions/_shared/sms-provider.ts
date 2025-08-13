@@ -1,0 +1,320 @@
+// Deno-compatible SMS provider for Supabase Edge Functions
+// Supports both Twilio and Infobip with automatic failover
+
+interface SendSMSParams {
+  to: string
+  body: string
+  userId?: string
+  type?: 'verification' | 'notification' | 'email_forward'
+  metadata?: Record<string, any>
+}
+
+interface SMSResult {
+  success: boolean
+  messageId?: string
+  provider?: string
+  error?: string
+}
+
+// Check if we're in test mode
+const isTestMode = () => Deno.env.get('ENABLE_TEST_MODE') === 'true'
+
+// Check if a phone number is a test phone
+const isTestPhone = (phone: string): boolean => {
+  const testNumbers = (Deno.env.get('TEST_PHONE_NUMBERS') || '').split(',')
+  return testNumbers.some(testNum => {
+    const cleanTestNum = testNum.trim().replace(/\D/g, '')
+    const cleanPhone = phone.replace(/\D/g, '')
+    return cleanPhone.endsWith(cleanTestNum) || cleanTestNum.endsWith(cleanPhone)
+  })
+}
+
+// Send SMS via Twilio
+async function sendViaTwilio(to: string, body: string): Promise<SMSResult> {
+  const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
+  const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
+  const fromNumber = Deno.env.get('TWILIO_PHONE_NUMBER')
+  
+  if (!accountSid || !authToken || !fromNumber) {
+    throw new Error('Twilio credentials not configured')
+  }
+  
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
+  
+  const formData = new URLSearchParams({
+    To: to,
+    From: fromNumber,
+    Body: body
+  })
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: formData.toString()
+  })
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Twilio API error: ${response.status} - ${errorText}`)
+  }
+  
+  const message = await response.json()
+  
+  return {
+    success: true,
+    messageId: message.sid || message.Sid,
+    provider: 'twilio'
+  }
+}
+
+// Send SMS via Infobip
+async function sendViaInfobip(to: string, body: string): Promise<SMSResult> {
+  const baseUrl = Deno.env.get('INFOBIP_BASE_URL')
+  const apiKey = Deno.env.get('INFOBIP_API_KEY')
+  const senderName = Deno.env.get('INFOBIP_SENDER_NAME') || 
+                     Deno.env.get('TWILIO_PHONE_NUMBER') || 
+                     'EmailToText'
+  
+  if (!baseUrl || !apiKey) {
+    throw new Error('Infobip credentials not configured')
+  }
+  
+  const url = `https://${baseUrl}.api.infobip.com/sms/2/text/advanced`
+  
+  const requestBody = {
+    messages: [{
+      destinations: [{
+        to: to.replace(/^\+/, '') // Infobip expects numbers without + prefix
+      }],
+      from: senderName,
+      text: body
+    }]
+  }
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `App ${apiKey}`
+    },
+    body: JSON.stringify(requestBody)
+  })
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    let errorMessage = `Infobip API error: ${response.status}`
+    try {
+      const errorJson = JSON.parse(errorText)
+      if (errorJson.requestError?.serviceException?.text) {
+        errorMessage = errorJson.requestError.serviceException.text
+      }
+    } catch {
+      errorMessage += ` - ${errorText}`
+    }
+    throw new Error(errorMessage)
+  }
+  
+  const result = await response.json()
+  const messageResponse = result.messages?.[0]
+  
+  if (!messageResponse) {
+    throw new Error('Invalid Infobip response')
+  }
+  
+  return {
+    success: true,
+    messageId: messageResponse.messageId,
+    provider: 'infobip'
+  }
+}
+
+// Check which providers are configured
+function hasProvider(provider: 'twilio' | 'infobip'): boolean {
+  if (provider === 'twilio') {
+    return !!(Deno.env.get('TWILIO_ACCOUNT_SID') && 
+              Deno.env.get('TWILIO_AUTH_TOKEN') && 
+              Deno.env.get('TWILIO_PHONE_NUMBER'))
+  } else if (provider === 'infobip') {
+    return !!(Deno.env.get('INFOBIP_BASE_URL') && 
+              Deno.env.get('INFOBIP_API_KEY'))
+  }
+  return false
+}
+
+// Main SMS sending function with provider fallback
+export async function sendSMS(params: SendSMSParams, supabase?: any): Promise<SMSResult> {
+  const { to, body, userId, type = 'notification', metadata = {} } = params
+  
+  // Check if this is a test phone or test mode
+  if (isTestMode() || isTestPhone(to)) {
+    // Log the SMS instead of sending
+    if (supabase && userId) {
+      await supabase
+        .from('sms_logs')
+        .insert({
+          user_id: userId,
+          phone: to,
+          message: body,
+          type,
+          status: 'test_mode',
+          metadata: {
+            ...metadata,
+            test_phone: isTestPhone(to),
+            test_mode: isTestMode()
+          }
+        })
+    }
+    
+    console.log(`[${isTestPhone(to) ? 'TEST PHONE' : 'TEST MODE'}] SMS logged for ${to}`)
+    
+    return {
+      success: true,
+      messageId: 'test-' + Date.now(),
+      provider: 'test'
+    }
+  }
+  
+  // Determine provider strategy
+  const smsProvider = Deno.env.get('SMS_PROVIDER')?.toLowerCase() || 'auto'
+  
+  // If a specific provider is configured, use it
+  if (smsProvider !== 'auto') {
+    if (!hasProvider(smsProvider as 'twilio' | 'infobip')) {
+      throw new Error(`SMS provider ${smsProvider} is not configured`)
+    }
+    
+    try {
+      let result: SMSResult
+      if (smsProvider === 'twilio') {
+        result = await sendViaTwilio(to, body)
+      } else if (smsProvider === 'infobip') {
+        result = await sendViaInfobip(to, body)
+      } else {
+        throw new Error(`Unknown provider: ${smsProvider}`)
+      }
+      
+      // Log successful SMS
+      if (supabase && userId) {
+        await supabase
+          .from('sms_logs')
+          .insert({
+            user_id: userId,
+            phone: to,
+            message: body,
+            type,
+            status: 'sent',
+            provider: result.provider,
+            provider_message_id: result.messageId,
+            metadata
+          })
+      }
+      
+      return result
+    } catch (error) {
+      // Log failed SMS
+      if (supabase && userId) {
+        await supabase
+          .from('sms_logs')
+          .insert({
+            user_id: userId,
+            phone: to,
+            message: body,
+            type,
+            status: 'failed',
+            provider: smsProvider,
+            error_message: error.message,
+            metadata
+          })
+      }
+      
+      throw error
+    }
+  }
+  
+  // Auto mode: Try providers in order
+  const providers: ('twilio' | 'infobip')[] = []
+  
+  // Try Twilio first if available (it's been our primary)
+  if (hasProvider('twilio')) {
+    providers.push('twilio')
+  }
+  
+  // Add Infobip as fallback
+  if (hasProvider('infobip')) {
+    providers.push('infobip')
+  }
+  
+  if (providers.length === 0) {
+    throw new Error('No SMS providers configured')
+  }
+  
+  let lastError: Error | null = null
+  
+  for (const provider of providers) {
+    try {
+      console.log(`Attempting to send SMS via ${provider}...`)
+      
+      let result: SMSResult
+      if (provider === 'twilio') {
+        result = await sendViaTwilio(to, body)
+      } else {
+        result = await sendViaInfobip(to, body)
+      }
+      
+      // Log successful SMS
+      if (supabase && userId) {
+        await supabase
+          .from('sms_logs')
+          .insert({
+            user_id: userId,
+            phone: to,
+            message: body,
+            type,
+            status: 'sent',
+            provider: result.provider,
+            provider_message_id: result.messageId,
+            metadata: {
+              ...metadata,
+              provider_attempt: providers.indexOf(provider) + 1,
+              provider_total: providers.length
+            }
+          })
+      }
+      
+      console.log(`Successfully sent SMS via ${provider}`)
+      return result
+    } catch (error) {
+      console.error(`Failed to send SMS via ${provider}:`, error.message)
+      lastError = error
+      
+      // If this was not the last provider, continue to the next
+      if (providers.indexOf(provider) < providers.length - 1) {
+        console.log(`Falling back to next provider...`)
+        continue
+      }
+    }
+  }
+  
+  // All providers failed - log the failure
+  if (supabase && userId) {
+    await supabase
+      .from('sms_logs')
+      .insert({
+        user_id: userId,
+        phone: to,
+        message: body,
+        type,
+        status: 'failed',
+        error_message: lastError?.message || 'All providers failed',
+        metadata: {
+          ...metadata,
+          providers_tried: providers
+        }
+      })
+  }
+  
+  throw new Error(`All SMS providers failed. Last error: ${lastError?.message || 'Unknown error'}`)
+}

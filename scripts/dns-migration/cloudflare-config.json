@@ -1,0 +1,148 @@
+{
+  "domain": "emailtotextnotify.com",
+  "settings": {
+    "ssl": {
+      "value": "full",
+      "description": "Full SSL/TLS encryption (requires SSL certificate on origin)"
+    },
+    "always_use_https": {
+      "value": "on",
+      "description": "Redirect all HTTP requests to HTTPS"
+    },
+    "automatic_https_rewrites": {
+      "value": "on",
+      "description": "Automatically rewrite HTTP URLs to HTTPS"
+    },
+    "min_tls_version": {
+      "value": "1.2",
+      "description": "Minimum TLS version for connections"
+    },
+    "brotli": {
+      "value": "on",
+      "description": "Enable Brotli compression"
+    },
+    "http3": {
+      "value": "on",
+      "description": "Enable HTTP/3 (QUIC) protocol"
+    },
+    "minify": {
+      "value": {
+        "css": true,
+        "html": true,
+        "js": true
+      },
+      "description": "Minify CSS, HTML, and JavaScript"
+    },
+    "rocket_loader": {
+      "value": "off",
+      "description": "Keep off for better compatibility with React/Next.js"
+    },
+    "browser_cache_ttl": {
+      "value": 14400,
+      "description": "Browser cache TTL (4 hours)"
+    },
+    "challenge_ttl": {
+      "value": 3600,
+      "description": "Challenge TTL for bot protection (1 hour)"
+    },
+    "development_mode": {
+      "value": "off",
+      "description": "Development mode (temporarily bypass cache)"
+    },
+    "email_obfuscation": {
+      "value": "on",
+      "description": "Hide email addresses from bots"
+    },
+    "hotlink_protection": {
+      "value": "off",
+      "description": "Prevent other sites from hotlinking images"
+    },
+    "ip_geolocation": {
+      "value": "on",
+      "description": "Add visitor location headers"
+    },
+    "opportunistic_encryption": {
+      "value": "on",
+      "description": "Opportunistic Encryption for HTTP connections"
+    },
+    "websockets": {
+      "value": "on",
+      "description": "Allow WebSocket connections"
+    },
+    "early_hints": {
+      "value": "on",
+      "description": "Enable Early Hints for faster page loads"
+    }
+  },
+  "page_rules": [
+    {
+      "target": "http://*emailtotextnotify.com/*",
+      "actions": {
+        "always_use_https": "on"
+      },
+      "priority": 1,
+      "description": "Force HTTPS for all HTTP traffic"
+    },
+    {
+      "target": "*emailtotextnotify.com/api/*",
+      "actions": {
+        "cache_level": "bypass",
+        "disable_performance": true
+      },
+      "priority": 2,
+      "description": "Bypass cache for API routes"
+    },
+    {
+      "target": "*emailtotextnotify.com/*.js",
+      "actions": {
+        "cache_level": "standard",
+        "edge_cache_ttl": 86400,
+        "browser_cache_ttl": 86400
+      },
+      "priority": 3,
+      "description": "Cache JavaScript files for 24 hours"
+    }
+  ],
+  "firewall_rules": [
+    {
+      "expression": "(http.request.uri.path contains \"/wp-admin\" or http.request.uri.path contains \"/wp-login\" or http.request.uri.path contains \".php\")",
+      "action": "block",
+      "description": "Block WordPress and PHP requests (not used by Next.js)"
+    },
+    {
+      "expression": "(cf.threat_score gt 30)",
+      "action": "challenge",
+      "description": "Challenge high threat score visitors"
+    }
+  ],
+  "rate_limiting": [
+    {
+      "threshold": 50,
+      "period": 60,
+      "path": "/api/*",
+      "action": "challenge",
+      "description": "Rate limit API to 50 requests per minute per IP"
+    }
+  ],
+  "dns_records_to_proxy": [
+    "emailtotextnotify.com",
+    "www.emailtotextnotify.com"
+  ],
+  "dns_records_not_to_proxy": [
+    "txt.emailtotextnotify.com",
+    "*.txt.emailtotextnotify.com",
+    "clk._domainkey.emailtotextnotify.com",
+    "clk2._domainkey.emailtotextnotify.com",
+    "accounts.emailtotextnotify.com",
+    "clerk.emailtotextnotify.com",
+    "clkmail.emailtotextnotify.com",
+    "email.txt.emailtotextnotify.com"
+  ],
+  "notes": {
+    "ssl_certificate": "Cloudflare will automatically provision a Universal SSL certificate",
+    "mailgun": "MX and TXT records for txt.emailtotextnotify.com must not be proxied",
+    "clerk": "Clerk authentication CNAMEs must not be proxied",
+    "vercel": "Main domain can be proxied through Cloudflare for CDN benefits",
+    "monitoring": "Enable Web Analytics in Cloudflare dashboard for free analytics"
+  }
+}

@@ -1,4 +1,3 @@
-import { Infobip, AuthType } from '@infobip-api/sdk'
 import axios from 'axios'
 import { isTestMode, isTestPhoneNumber, isTestPhoneUser, logSMS, createMockTwilioMessage } from "./test-mode"
 import { supabaseAdmin } from "./supabase"
@@ -27,27 +26,7 @@ interface InfobipMessage {
 }
 
 class InfobipClient {
-  private sdkClient: Infobip | null = null
-  private useSDK: boolean = false // Toggle between SDK and direct API calls
-  
-  private getSDKClient(): Infobip | null {
-    // Lazy initialize Infobip SDK client
-    if (!this.sdkClient && process.env.INFOBIP_BASE_URL && process.env.INFOBIP_API_KEY) {
-      try {
-        this.sdkClient = new Infobip({
-          baseUrl: process.env.INFOBIP_BASE_URL,
-          apiKey: process.env.INFOBIP_API_KEY,
-          authType: AuthType.ApiKey,
-        })
-        this.useSDK = true
-      } catch (error) {
-        console.error('Failed to initialize Infobip SDK client:', error)
-        this.useSDK = false
-        return null
-      }
-    }
-    return this.sdkClient
-  }
+  private useSDK: boolean = false // Always use direct API calls since SDK is not available
   
   // Direct API implementation (fallback or primary method)
   private async sendViaAPI(to: string, body: string): Promise<InfobipMessage> {
@@ -102,44 +81,6 @@ class InfobipClient {
     }
   }
   
-  // SDK implementation
-  private async sendViaSDK(to: string, body: string): Promise<InfobipMessage> {
-    const client = this.getSDKClient()
-    if (!client) {
-      // Fall back to direct API if SDK fails to initialize
-      return this.sendViaAPI(to, body)
-    }
-    
-    try {
-      const response = await client.channels.sms.send({
-        type: 'text',
-        messages: [{
-          destinations: [{
-            to: to.replace(/^\+/, '') // Remove + prefix for Infobip
-          }],
-          from: process.env.INFOBIP_SENDER_NAME || process.env.TWILIO_PHONE_NUMBER || 'EmailToText',
-          text: body,
-          applicationId: process.env.INFOBIP_APPLICATION_ID || 'emailtotextnotify',
-          entityId: process.env.INFOBIP_ENTITY_ID || undefined
-        }]
-      })
-      
-      const messageResponse = response.data.messages[0]
-      
-      return {
-        messageId: messageResponse.messageId,
-        to: messageResponse.to,
-        from: messageResponse.from || '',
-        text: body,
-        status: messageResponse.status
-      }
-    } catch (error: any) {
-      console.error('Infobip SDK error, falling back to API:', error)
-      // Fall back to direct API
-      return this.sendViaAPI(to, body)
-    }
-  }
-  
   async sendSMS({ to, body, userId, type = 'notification', metadata = {} }: SendSMSParams) {
     // Check if this is a test phone number or test user
     const isTestPhone = isTestPhoneNumber(to)
@@ -173,10 +114,8 @@ class InfobipClient {
     
     // In production, send real SMS
     try {
-      // Use SDK if enabled, otherwise use direct API
-      const message = this.useSDK ? 
-        await this.sendViaSDK(to, body) : 
-        await this.sendViaAPI(to, body)
+      // Always use direct API since SDK is not available
+      const message = await this.sendViaAPI(to, body)
       
       // Log successful SMS to database for tracking
       if (userId) {

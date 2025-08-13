@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Mail, Settings, Copy, CheckCircle2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
@@ -187,83 +186,57 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="recent" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="recent">Recent Emails</TabsTrigger>
-            <TabsTrigger value="stats">Statistics</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="recent">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Emails</CardTitle>
-                <CardDescription>
-                  Your last 20 emails that were converted to SMS
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {emails.length === 0 ? (
-                  <Alert>
-                    <Mail className="h-4 w-4" />
-                    <AlertDescription>
-                      No emails received yet. Try sending an email to {emailAddress}
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>From</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Received</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {emails.map((email) => (
-                        <TableRow key={email.id}>
-                          <TableCell className="font-medium">
-                            {email.from_email.split('@')[0]}
-                          </TableCell>
-                          <TableCell>{email.subject}</TableCell>
-                          <TableCell>
-                            {formatDistanceToNow(new Date(email.created_at), { addSuffix: true })}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="link"
-                              size="sm"
-                              onClick={() => router.push(`/e/${email.short_url}`)}
-                            >
-                              View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="stats">
-            <Card>
-              <CardHeader>
-                <CardTitle>Usage Statistics</CardTitle>
-                <CardDescription>
-                  Your email-to-SMS usage patterns
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Usage statistics coming soon!</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Emails</CardTitle>
+            <CardDescription>
+              Your last 20 emails that were converted to SMS
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {emails.length === 0 ? (
+              <Alert>
+                <Mail className="h-4 w-4" />
+                <AlertDescription>
+                  No emails received yet. Try sending an email to {emailAddress}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>From</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Received</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {emails.map((email) => (
+                    <TableRow key={email.id}>
+                      <TableCell className="font-medium">
+                        {email.from_email.split('@')[0]}
+                      </TableCell>
+                      <TableCell>{email.subject}</TableCell>
+                      <TableCell>
+                        {formatDistanceToNow(new Date(email.created_at), { addSuffix: true })}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => router.push(`/e/${email.short_url}`)}
+                        >
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
