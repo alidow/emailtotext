@@ -39,8 +39,36 @@ serve(async (req) => {
     const timestamp = formData.get('timestamp') as string
     const token = formData.get('token') as string
     const signature = formData.get('signature') as string
+    
+    // Debug log to see what Mailgun is sending
+    console.log('Received form data fields:', {
+      hasRecipient: !!recipient,
+      hasSender: !!sender,
+      hasSubject: !!subject,
+      hasBodyPlain: !!bodyPlain,
+      hasTimestamp: !!timestamp,
+      hasToken: !!token,
+      hasSignature: !!signature,
+      recipient: recipient || 'null',
+      sender: sender || 'null'
+    })
+    
+    // Check required fields
+    if (!recipient || !sender) {
+      console.error('Missing required fields: recipient or sender')
+      return new Response(JSON.stringify({ 
+        error: 'Missing required fields',
+        received: {
+          recipient: recipient || 'missing',
+          sender: sender || 'missing'
+        }
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
 
-    // Verify Mailgun signature (for Routes, signature is in form data, not headers)
+    // Verify Mailgun signature if present (webhooks include it, forwards don't)
     if (signature && timestamp && token) {
       try {
         // Check timestamp to prevent replay attacks (must be within 5 minutes)
@@ -81,6 +109,9 @@ serve(async (req) => {
         console.error('Error verifying signature:', cryptoError)
         // Continue processing even if signature verification fails for now
       }
+    } else {
+      // No signature provided (likely from forward action)
+      console.log('Processing email without signature verification (forward action)')
     }
 
     // Extract phone number from recipient email
