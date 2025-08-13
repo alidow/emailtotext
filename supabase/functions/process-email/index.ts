@@ -587,41 +587,41 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
   const baseUrl = Deno.env.get('NEXT_PUBLIC_APP_URL') || 'https://emailtotextnotify.com'
   const fullUrl = `${baseUrl}/email/${shortUrl}`
   
-  // Extract sender name or email
-  const senderMatch = from.match(/^"?([^"<]+)"?\s*<(.+)>$/)
-  let senderName = senderMatch ? senderMatch[1].trim() : from.split('@')[0]
+  // Extract full email address (more legitimate)
+  const emailMatch = from.match(/<(.+@.+)>/)
+  const senderEmail = emailMatch ? emailMatch[1] : from
   
-  // Clean sender name - remove special characters that might trigger filters
-  senderName = senderName.replace(/[^\w\s.-]/g, '').trim()
+  // Clean email - just basic validation
+  const cleanEmail = senderEmail.replace(/[<>]/g, '').trim()
   
-  // Handle blank or missing subject
-  const subjectText = subject && subject.trim() ? subject.trim() : 'was blank'
+  // Handle blank or missing subject - put in quotes for clarity
+  const subjectText = subject && subject.trim() ? `"${subject.trim()}"` : '"(no subject)"'
   
-  // Build message with new format
-  const header = 'Email to Text Notifier: You received an email from '
-  const subjectPrefix = ', subject '
-  const linkPrefix = '. To view message:\n\n'
+  // Shorter, clearer format to ensure URL doesn't get cut off
+  const header = 'Email from '
+  const subjectPrefix = '\nSubject: '
+  const linkPrefix = '\nView: '
   
   // Calculate available space (160 char SMS limit)
   const fixedLength = header.length + subjectPrefix.length + linkPrefix.length + fullUrl.length
   const availableForContent = 160 - fixedLength
   
-  // Allocate space between sender and subject (prioritize sender)
-  const maxSenderLength = Math.min(senderName.length, Math.floor(availableForContent * 0.4))
-  const truncatedSender = senderName.length > maxSenderLength 
-    ? senderName.substring(0, maxSenderLength - 3) + '...'
-    : senderName
+  // Allocate space between sender and subject (prioritize keeping full URL)
+  const maxEmailLength = Math.min(cleanEmail.length, Math.floor(availableForContent * 0.5))
+  const truncatedEmail = cleanEmail.length > maxEmailLength 
+    ? cleanEmail.substring(0, maxEmailLength - 3) + '...'
+    : cleanEmail
   
   // Use remaining space for subject
-  const remainingSpace = availableForContent - truncatedSender.length
+  const remainingSpace = availableForContent - truncatedEmail.length
   const truncatedSubject = subjectText.length > remainingSpace
-    ? subjectText.substring(0, remainingSpace - 3) + '...'
+    ? subjectText.substring(0, remainingSpace - 3) + '..."'
     : subjectText
   
-  // Build the message with line breaks for clarity
-  const message = `${header}${truncatedSender}${subjectPrefix}${truncatedSubject}${linkPrefix}${fullUrl}`
+  // Build the message - more concise to fit URL
+  const message = `${header}${truncatedEmail}${subjectPrefix}${truncatedSubject}${linkPrefix}${fullUrl}`
   
-  // Ensure we don't exceed 160 characters (carrier limit for single SMS)
+  // Ensure we don't exceed 160 characters
   return message.substring(0, 160)
 }
 
