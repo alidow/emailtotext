@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { isMockMode } from "@/lib/mock-mode"
-import { twilioClient } from "@/lib/twilio-client"
+import { smsProvider } from "@/lib/sms-provider"
 import { isTestMode, isTestPhoneNumber } from "@/lib/test-mode"
 import { 
   rateLimiters, 
@@ -103,16 +103,7 @@ export async function POST(req: NextRequest) {
     }
     
     // 8. Check per-phone-number rate limit (skip for test phones and test mode)
-    if (!isTestMode() && !isTestPhone) {
-      const phoneLimit = await rateLimiters.perPhoneNumber.limit(e164Phone)
-      if (!phoneLimit.success) {
-        await logSuspiciousActivity(clientIp, e164Phone, "Too many attempts for single phone number")
-        return NextResponse.json(
-          { error: "This phone number has received too many verification codes. Please try again tomorrow." },
-          { status: 429 }
-        )
-      }
-    }
+    // Moved after database operations to not count failed attempts
     
     // 9. Check for rapid repeated attempts to same number from different IPs (skip for test phones and test mode)
     if (!isTestMode() && !isTestPhone) {
@@ -195,12 +186,32 @@ export async function POST(req: NextRequest) {
           consent_24hr_texts: false, // Default to standard hours only
           ip_address: clientIp,
           user_agent: req.headers.get("user-agent"),
-          created_at: new Date().toISOString(),
+          consented_at: new Date().toISOString(),
         })
       
       if (consentError) {
         console.error("Error logging consent:", consentError)
         throw consentError
+      }
+      
+      // Apply per-phone-number rate limit AFTER successful DB operations
+      // This ensures failed attempts don't count against the limit
+      if (!isTestMode() && !isTestPhone) {
+        const phoneLimit = await rateLimiters.perPhoneNumber.limit(e164Phone)
+        if (!phoneLimit.success) {
+          // Delete the verification we just created since we're rate limited
+          await supabaseAdmin
+            .from("phone_verifications")
+            .delete()
+            .eq("phone", e164Phone)
+            .eq("code", code)
+          
+          await logSuspiciousActivity(clientIp, e164Phone, "Too many attempts for single phone number")
+          return NextResponse.json(
+            { error: "This phone number has received too many verification codes. Please try again tomorrow." },
+            { status: 429 }
+          )
+        }
       }
     } catch (dbError: any) {
       console.error("Database operation error:", dbError)
@@ -212,16 +223,18 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // Send SMS using the wrapper (handles test mode automatically)
+    // Send SMS using the unified provider (handles test mode and failover automatically)
     try {
-      await twilioClient.sendSMS({
+      await smsProvider.sendSMS({
         to: e164Phone,
         body: `Email to Text Notifier: Your verification code is ${code}. By requesting this code, you consent to receive SMS from us at (866) 942-1024. Reply STOP to opt-out. Msg&data rates may apply. Expires in 10 min.`,
         type: 'verification',
         metadata: {
           code,
           ip_address: clientIp,
-          user_agent: req.headers.get("user-agent")
+          user_agent: req.headers.get("user-agent"),
+          configured_providers: smsProvider.getConfiguredProviders(),
+          sms_strategy: smsProvider.getCurrentStrategy()
         }
       })
       
