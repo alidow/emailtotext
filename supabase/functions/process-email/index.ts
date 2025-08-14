@@ -385,8 +385,10 @@ serve(async (req) => {
     })
     
     // Send SMS using the unified provider (handles test mode and provider failover)
+    let smsResult
+    let newUsageCount = user.usage_count // Initialize here for scope
     try {
-      const smsResult = await sendSMS({
+      smsResult = await sendSMS({
         to: phone,
         body: smsBody,
         userId: user.id,
@@ -403,18 +405,51 @@ serve(async (req) => {
       }, supabase)
       
       console.log(`SMS sent successfully via ${smsResult.provider}:`, smsBody.substring(0, 50) + '...')
+      
+      // Only update usage count if SMS was successfully sent
+      newUsageCount = user.usage_count + 1
+      await supabase
+        .from('users')
+        .update({ usage_count: newUsageCount })
+        .eq('id', user.id)
+        
+      // Move usage alert logic here (only if SMS succeeded)
     } catch (smsError) {
       console.error('Failed to send SMS:', smsError)
-      throw smsError
+      
+      // Log the failed attempt but don't count against quota
+      await supabase
+        .from('sms_logs')
+        .insert({
+          user_id: user.id,
+          phone: phone,
+          message: smsBody,
+          type: 'email_forward',
+          status: 'failed',
+          error_message: smsError.message,
+          metadata: {
+            email_id: email.id,
+            from_email: sender,
+            subject: subject,
+            error_details: smsError.toString()
+          }
+        })
+      
+      // Don't increment usage count for failed messages
+      console.log('SMS failed, not counting against quota')
+      
+      // Still return success for email processing (email was received, just SMS failed)
+      return new Response(JSON.stringify({ 
+        success: true, 
+        email_id: email.id,
+        sms_sent: false,
+        error: 'SMS delivery failed but email stored'
+      }), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
 
-    // Update usage count
-    const newUsageCount = user.usage_count + 1
-    await supabase
-      .from('users')
-      .update({ usage_count: newUsageCount })
-      .eq('id', user.id)
-      
     // Check if we should send usage alert (at 80% of limit)
     const usagePercentage = (newUsageCount / baseLimit) * 100
     if (usagePercentage >= 80 && usagePercentage < 90) {

@@ -103,6 +103,8 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
             originalBody: body,
             errorCode: errorData.code
           })
+          // Throw error so it doesn't count against quota
+          throw new Error(`Message filtered by carrier (error ${errorData.code}): ${errorData.message}`)
         }
       }
     } catch (e) {
@@ -137,6 +139,8 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
           status: status.status,
           errorCode: status.errorCode
         })
+        // Throw error so it doesn't count against quota
+        throw new Error(`Message filtered after sending (${status.errorCode}): Message was not delivered`)
       }
     }
   } catch (statusError) {
