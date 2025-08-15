@@ -87,9 +87,11 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
     // Check for specific error codes
     try {
       const errorData = JSON.parse(errorText)
-      if (errorData.code === 30007 || errorData.code === 21610) {
-        // Message was filtered or blocked
-        console.error('Message filtered by carrier:', errorData)
+      // Check for filtering, blocking, and undelivered error codes
+      // 30007: Message filtered, 30008: Unknown error (undelivered), 21610: Blocked
+      if (errorData.code === 30007 || errorData.code === 30008 || errorData.code === 21610) {
+        // Message was filtered, blocked, or undelivered
+        console.error('Message delivery failed:', errorData)
         
         if (!isRetry) {
           // Try with safe template
@@ -98,17 +100,21 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
           return await sendViaTwilio(to, safeBody, true)
         } else {
           // Safe template also failed - trigger alert
-          await triggerSentryAlert('Message filtering failed even with safe template', {
+          await triggerSentryAlert('Message delivery failed even with safe template', {
             phone: to,
             originalBody: body,
-            errorCode: errorData.code
+            errorCode: errorData.code,
+            errorMessage: errorData.message
           })
           // Throw error so it doesn't count against quota
-          throw new Error(`Message filtered by carrier (error ${errorData.code}): ${errorData.message}`)
+          throw new Error(`Message delivery failed (error ${errorData.code}): ${errorData.message}`)
         }
       }
     } catch (e) {
-      // Not JSON error response
+      // Not JSON error response or not a delivery failure
+      if (e.message && e.message.includes('Message delivery failed')) {
+        throw e // Re-throw our own errors
+      }
     }
     
     throw new Error(`Twilio API error: ${response.status} - ${errorText}`)
@@ -117,33 +123,40 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
   const message = await response.json()
   const messageSid = message.sid || message.Sid
   
-  // Wait a moment then check status
-  await new Promise(resolve => setTimeout(resolve, 2000))
+  // Wait a bit longer to give Twilio time to process the message
+  await new Promise(resolve => setTimeout(resolve, 3000))
   
   try {
     const status = await checkTwilioMessageStatus(messageSid)
     
-    if (status.errorCode === 30007 || status.status === 'undelivered') {
-      console.error('Message was filtered after sending:', status)
+    // Check for all failure statuses
+    if (status.errorCode === 30007 || status.errorCode === 30008 || 
+        status.status === 'undelivered' || status.status === 'failed') {
+      console.error('Message delivery failed:', status)
       
       if (!isRetry) {
         // Try with safe template
-        console.log('Message filtered, attempting with safe template...')
+        console.log('Message failed, attempting with safe template...')
         const safeBody = createSafeMessageTemplate(body)
         return await sendViaTwilio(to, safeBody, true)
       } else {
         // Safe template also failed
-        await triggerSentryAlert('Message filtering detected after send', {
+        await triggerSentryAlert('Message delivery failed even with safe template', {
           phone: to,
           messageSid,
           status: status.status,
           errorCode: status.errorCode
         })
         // Throw error so it doesn't count against quota
-        throw new Error(`Message filtered after sending (${status.errorCode}): Message was not delivered`)
+        throw new Error(`Message delivery failed (status: ${status.status}, error: ${status.errorCode}): Message was not delivered`)
       }
     }
   } catch (statusError) {
+    // If this is an error we threw (message failed), re-throw it
+    if (statusError.message && statusError.message.includes('Message delivery failed')) {
+      throw statusError
+    }
+    // For actual status check failures, log but continue
     console.error('Failed to check message status:', statusError)
     // Continue anyway - message might have been sent
   }
