@@ -226,7 +226,7 @@ export default function DashboardPage() {
                   {emails.map((email) => (
                     <TableRow key={email.id}>
                       <TableCell className="font-medium">
-                        {email.from_email.split('@')[0]}
+                        {email.from_email}
                       </TableCell>
                       <TableCell>{email.subject}</TableCell>
                       <TableCell>

@@ -17,12 +17,12 @@ interface Email {
   attachment_count: number
 }
 
-async function getEmails(userId: string) {
+async function getEmails(userId: string): Promise<Email[]> {
   const { data: userData } = await supabaseAdmin
     .from("users")
     .select("id")
     .eq("clerk_id", userId)
-    .single()
+    .single() as { data: { id: string } | null; error: any }
   
   if (!userData) {
     return []
@@ -33,7 +33,7 @@ async function getEmails(userId: string) {
     .select("*")
     .eq("user_id", userData.id)
     .order("created_at", { ascending: false })
-    .limit(20)
+    .limit(20) as { data: Email[] | null; error: any }
   
   return emails || []
 }
