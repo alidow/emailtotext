@@ -619,8 +619,8 @@ function stripHtml(html: string): string {
 }
 
 function formatSMS(from: string, subject: string, body: string, shortUrl: string, attachmentCount: number): string {
-  // Static URL to messages page (no shortener)
-  const messagesUrl = 'https://emailtotextnotify.com/messages'
+  // Use shortened URL for direct email access
+  const emailUrl = `https://emailtotextnotify.com/e/${shortUrl}`
   
   // Extract email address
   const emailMatch = from.match(/<(.+@.+)>/)
@@ -637,7 +637,7 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
   const suffix = '".\n\nView full message at:\n\n'
   
   // Calculate available space (160 char SMS limit)
-  const fixedLength = serviceId.length + prefix.length + middle.length + suffix.length + messagesUrl.length
+  const fixedLength = serviceId.length + prefix.length + middle.length + suffix.length + emailUrl.length
   const availableForContent = 160 - fixedLength
   
   // Allocate space between email and subject (prioritize email)
@@ -653,7 +653,7 @@ function formatSMS(from: string, subject: string, body: string, shortUrl: string
     : subjectText
   
   // Build message with proper line breaks around URL
-  const message = `${serviceId}${prefix}${truncatedEmail}${middle}${truncatedSubject}${suffix}${messagesUrl}`
+  const message = `${serviceId}${prefix}${truncatedEmail}${middle}${truncatedSubject}${suffix}${emailUrl}`
   
   // Ensure we don't exceed 160 characters
   return message.substring(0, 160)
