@@ -27,7 +27,10 @@ class SMSProviderManager {
   
   private hasProvider(provider: 'twilio' | 'infobip'): boolean {
     if (provider === 'twilio') {
-      return !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER)
+      const hasCredentials = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+      const hasPrimaryNumber = !!process.env.TWILIO_PHONE_NUMBER
+      const hasBackupNumbers = !!process.env.TWILIO_BACKUP_NUMBERS?.trim()
+      return hasCredentials && (hasPrimaryNumber || hasBackupNumbers)
     } else if (provider === 'infobip') {
       return !!(process.env.INFOBIP_BASE_URL && process.env.INFOBIP_API_KEY)
     }

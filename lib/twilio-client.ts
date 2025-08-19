@@ -13,6 +13,30 @@ interface SendSMSParams {
 
 class TwilioClient {
   private client: twilio.Twilio | null = null
+  private phoneNumbers: string[] = []
+  
+  constructor() {
+    // Initialize phone numbers list
+    this.initializePhoneNumbers()
+  }
+  
+  private initializePhoneNumbers() {
+    const primaryNumber = process.env.TWILIO_PHONE_NUMBER
+    const backupNumbers = process.env.TWILIO_BACKUP_NUMBERS
+    
+    if (primaryNumber) {
+      this.phoneNumbers.push(primaryNumber)
+    }
+    
+    if (backupNumbers) {
+      const backupList = backupNumbers.split(',').map(num => num.trim()).filter(Boolean)
+      this.phoneNumbers.push(...backupList)
+    }
+    
+    if (this.phoneNumbers.length > 0) {
+      console.log(`Configured with ${this.phoneNumbers.length} Twilio number(s)`)
+    }
+  }
   
   private getClient(): twilio.Twilio | null {
     // Lazy initialize Twilio client to avoid build-time errors
@@ -63,47 +87,101 @@ class TwilioClient {
       throw new Error('Twilio client not initialized')
     }
     
-    try {
-      const message = await client.messages.create({
-        body,
-        to,
-        from: process.env.TWILIO_PHONE_NUMBER!
-      })
-      
-      // Log successful SMS to database for tracking
-      if (userId) {
-        await supabaseAdmin
-          .from('sms_logs')
-          .insert({
-            user_id: userId,
-            phone: to,
-            message: body,
-            type,
-            status: 'sent',
-            twilio_sid: message.sid,
-            metadata
-          })
-      }
-      
-      return message
-    } catch (error: any) {
-      // Log failed SMS attempt
-      if (userId) {
-        await supabaseAdmin
-          .from('sms_logs')
-          .insert({
-            user_id: userId,
-            phone: to,
-            message: body,
-            type,
-            status: 'failed',
-            error_message: error.message,
-            metadata
-          })
-      }
-      
-      throw error
+    if (this.phoneNumbers.length === 0) {
+      throw new Error('No Twilio phone numbers configured')
     }
+    
+    // Try each phone number in order until one succeeds
+    let lastError: any = null
+    let successfulNumber: string | null = null
+    
+    for (let i = 0; i < this.phoneNumbers.length; i++) {
+      const fromNumber = this.phoneNumbers[i]
+      
+      try {
+        console.log(`Attempting to send SMS from ${fromNumber} (${i + 1}/${this.phoneNumbers.length})`)
+        
+        const message = await client.messages.create({
+          body,
+          to,
+          from: fromNumber
+        })
+        
+        // Wait a moment and check message status
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Fetch message status to verify delivery
+        const messageStatus = await client.messages(message.sid).fetch()
+        
+        // Check for delivery failures
+        if (messageStatus.status === 'failed' || messageStatus.status === 'undelivered' || 
+            messageStatus.errorCode === 30007 || messageStatus.errorCode === 30008) {
+          console.error(`Message failed with status ${messageStatus.status}, error code ${messageStatus.errorCode}`)
+          lastError = new Error(`Message delivery failed: ${messageStatus.errorMessage || messageStatus.status}`)
+          
+          // If this isn't the last number, try the next one
+          if (i < this.phoneNumbers.length - 1) {
+            console.log(`Trying backup number ${i + 2}...`)
+            continue
+          }
+        }
+        
+        // Success!
+        successfulNumber = fromNumber
+        console.log(`SMS sent successfully from ${fromNumber}`)
+        
+        // Log successful SMS to database for tracking
+        if (userId) {
+          await supabaseAdmin
+            .from('sms_logs')
+            .insert({
+              user_id: userId,
+              phone: to,
+              message: body,
+              type,
+              status: 'sent',
+              twilio_sid: message.sid,
+              metadata: {
+                ...metadata,
+                from_number: fromNumber,
+                attempt_number: i + 1,
+                total_numbers: this.phoneNumbers.length
+              }
+            })
+        }
+        
+        return message
+      } catch (error: any) {
+        console.error(`Failed to send from ${fromNumber}: ${error.message}`)
+        lastError = error
+        
+        // Continue to next number if available
+        if (i < this.phoneNumbers.length - 1) {
+          continue
+        }
+      }
+    }
+    
+    // All numbers failed - log the failure
+    if (userId) {
+      await supabaseAdmin
+        .from('sms_logs')
+        .insert({
+          user_id: userId,
+          phone: to,
+          message: body,
+          type,
+          status: 'failed',
+          error_message: lastError?.message || 'All Twilio numbers failed',
+          metadata: {
+            ...metadata,
+            numbers_tried: this.phoneNumbers,
+            all_failed: true
+          }
+        })
+    }
+    
+    throw new Error(`Failed to send SMS from all ${this.phoneNumbers.length} configured numbers. Last error: ${lastError?.message}`)
   }
   
   // Check if phone number can receive SMS

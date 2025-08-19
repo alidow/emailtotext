@@ -54,74 +54,139 @@ async function checkTwilioMessageStatus(messageSid: string): Promise<{ status: s
   }
 }
 
-// Send SMS via Twilio with filtering detection
+// Get all configured Twilio phone numbers
+function getTwilioNumbers(): string[] {
+  const numbers: string[] = []
+  const primaryNumber = Deno.env.get('TWILIO_PHONE_NUMBER')
+  const backupNumbers = Deno.env.get('TWILIO_BACKUP_NUMBERS')
+  
+  if (primaryNumber) {
+    numbers.push(primaryNumber)
+  }
+  
+  if (backupNumbers) {
+    const backupList = backupNumbers.split(',').map(num => num.trim()).filter(Boolean)
+    numbers.push(...backupList)
+  }
+  
+  return numbers
+}
+
+// Send SMS via Twilio with filtering detection and multiple number support
 async function sendViaTwilio(to: string, body: string, isRetry: boolean = false): Promise<SMSResult> {
   const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
   const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
-  const fromNumber = Deno.env.get('TWILIO_PHONE_NUMBER')
+  const phoneNumbers = getTwilioNumbers()
   
-  if (!accountSid || !authToken || !fromNumber) {
-    throw new Error('Twilio credentials not configured')
+  if (!accountSid || !authToken || phoneNumbers.length === 0) {
+    throw new Error('Twilio credentials or phone numbers not configured')
   }
   
   const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
   
-  const formData = new URLSearchParams({
-    To: to,
-    From: fromNumber,
-    Body: body
-  })
+  // Try each phone number until one succeeds
+  let lastError: any = null
+  let successfulNumber: string | null = null
+  let messageSid: string | null = null
   
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: formData.toString()
-  })
-  
-  if (!response.ok) {
-    const errorText = await response.text()
+  for (let i = 0; i < phoneNumbers.length; i++) {
+    const fromNumber = phoneNumbers[i]
+    console.log(`Attempting to send SMS from ${fromNumber} (${i + 1}/${phoneNumbers.length})`)
     
-    // Check for specific error codes
+    const formData = new URLSearchParams({
+      To: to,
+      From: fromNumber,
+      Body: body
+    })
+    
     try {
-      const errorData = JSON.parse(errorText)
-      // Check for filtering, blocking, and undelivered error codes
-      // 30007: Message filtered, 30008: Unknown error (undelivered), 21610: Blocked
-      if (errorData.code === 30007 || errorData.code === 30008 || errorData.code === 21610) {
-        // Message was filtered, blocked, or undelivered
-        console.error('Message delivery failed:', errorData)
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString()
+      })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
         
-        if (!isRetry) {
-          // Try with safe template
-          console.log('Attempting with safe template...')
-          const safeBody = createSafeMessageTemplate(body)
-          return await sendViaTwilio(to, safeBody, true)
-        } else {
-          // Safe template also failed - trigger alert
-          await triggerSentryAlert('Message delivery failed even with safe template', {
-            phone: to,
-            originalBody: body,
-            errorCode: errorData.code,
-            errorMessage: errorData.message
-          })
-          // Throw error so it doesn't count against quota
-          throw new Error(`Message delivery failed (error ${errorData.code}): ${errorData.message}`)
+        // Check for specific error codes
+        try {
+          const errorData = JSON.parse(errorText)
+          // Check for filtering, blocking, and undelivered error codes
+          // 30007: Message filtered, 30008: Unknown error (undelivered), 21610: Blocked
+          if (errorData.code === 30007 || errorData.code === 30008 || errorData.code === 21610) {
+            // Message was filtered, blocked, or undelivered
+            console.error(`Message delivery failed from ${fromNumber}:`, errorData)
+            
+            // If this is already a retry with safe template, don't retry again
+            if (isRetry) {
+              lastError = new Error(`Message delivery failed (error ${errorData.code}): ${errorData.message}`)
+              // Try next number if available
+              if (i < phoneNumbers.length - 1) {
+                continue
+              }
+              // All numbers failed with safe template
+              await triggerSentryAlert('Message delivery failed even with safe template on all numbers', {
+                phone: to,
+                originalBody: body,
+                errorCode: errorData.code,
+                errorMessage: errorData.message,
+                numbers_tried: phoneNumbers
+              })
+              throw lastError
+            }
+            
+            // First attempt failed, try with safe template using ALL numbers
+            if (!isRetry && i === phoneNumbers.length - 1) {
+              // All numbers failed with original message, try safe template
+              console.log('All numbers failed with original message, attempting with safe template...')
+              const safeBody = createSafeMessageTemplate(body)
+              return await sendViaTwilio(to, safeBody, true)
+            }
+            
+            // Continue to next number
+            lastError = new Error(`Message delivery failed from ${fromNumber} (error ${errorData.code}): ${errorData.message}`)
+            if (i < phoneNumbers.length - 1) {
+              continue
+            }
+          } else {
+            // Other error, try next number
+            lastError = new Error(`Twilio API error from ${fromNumber}: ${errorData.code} - ${errorData.message}`)
+            if (i < phoneNumbers.length - 1) {
+              continue
+            }
+          }
+        } catch (e) {
+          // Not JSON error response
+          lastError = new Error(`Twilio API error from ${fromNumber}: ${response.status} - ${errorText}`)
+          if (i < phoneNumbers.length - 1) {
+            continue
+          }
         }
+      } else {
+        // Success!
+        const message = await response.json()
+        messageSid = message.sid || message.Sid
+        successfulNumber = fromNumber
+        console.log(`SMS sent successfully from ${fromNumber}`)
+        break
       }
-    } catch (e) {
-      // Not JSON error response or not a delivery failure
-      if (e.message && e.message.includes('Message delivery failed')) {
-        throw e // Re-throw our own errors
+    } catch (error) {
+      console.error(`Failed to send from ${fromNumber}:`, error)
+      lastError = error
+      if (i < phoneNumbers.length - 1) {
+        continue
       }
     }
-    
-    throw new Error(`Twilio API error: ${response.status} - ${errorText}`)
   }
   
-  const message = await response.json()
-  const messageSid = message.sid || message.Sid
+  // Check if we succeeded
+  if (!messageSid || !successfulNumber) {
+    throw lastError || new Error(`Failed to send SMS from all ${phoneNumbers.length} configured numbers`)
+  }
   
   // Wait a bit longer to give Twilio time to process the message
   await new Promise(resolve => setTimeout(resolve, 3000))
@@ -132,11 +197,11 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
     // Check for all failure statuses
     if (status.errorCode === 30007 || status.errorCode === 30008 || 
         status.status === 'undelivered' || status.status === 'failed') {
-      console.error('Message delivery failed:', status)
+      console.error(`Message delivery failed from ${successfulNumber}:`, status)
       
       if (!isRetry) {
         // Try with safe template
-        console.log('Message failed, attempting with safe template...')
+        console.log('Message failed after sending, attempting with safe template...')
         const safeBody = createSafeMessageTemplate(body)
         return await sendViaTwilio(to, safeBody, true)
       } else {
@@ -145,10 +210,11 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
           phone: to,
           messageSid,
           status: status.status,
-          errorCode: status.errorCode
+          errorCode: status.errorCode,
+          from_number: successfulNumber
         })
         // Throw error so it doesn't count against quota
-        throw new Error(`Message delivery failed (status: ${status.status}, error: ${status.errorCode}): Message was not delivered`)
+        throw new Error(`Message delivery failed from ${successfulNumber} (status: ${status.status}, error: ${status.errorCode}): Message was not delivered`)
       }
     }
   } catch (statusError) {
@@ -164,8 +230,12 @@ async function sendViaTwilio(to: string, body: string, isRetry: boolean = false)
   return {
     success: true,
     messageId: messageSid,
-    provider: 'twilio'
-  }
+    provider: 'twilio',
+    metadata: {
+      from_number: successfulNumber,
+      numbers_available: phoneNumbers.length
+    }
+  } as SMSResult
 }
 
 // Create a safe message template that should pass filters
@@ -271,9 +341,10 @@ async function sendViaInfobip(to: string, body: string): Promise<SMSResult> {
 // Check which providers are configured
 function hasProvider(provider: 'twilio' | 'infobip'): boolean {
   if (provider === 'twilio') {
-    return !!(Deno.env.get('TWILIO_ACCOUNT_SID') && 
-              Deno.env.get('TWILIO_AUTH_TOKEN') && 
-              Deno.env.get('TWILIO_PHONE_NUMBER'))
+    const hasCredentials = !!(Deno.env.get('TWILIO_ACCOUNT_SID') && 
+                              Deno.env.get('TWILIO_AUTH_TOKEN'))
+    const hasNumbers = getTwilioNumbers().length > 0
+    return hasCredentials && hasNumbers
   } else if (provider === 'infobip') {
     return !!(Deno.env.get('INFOBIP_BASE_URL') && 
               Deno.env.get('INFOBIP_API_KEY'))
