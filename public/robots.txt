@@ -1,34 +1,64 @@
-# Allow search engines to crawl the site
+# Welcome all search engines to crawl and index our site
+# EmailToTextNotify.com - Email to SMS forwarding service
+
+# Allow all legitimate crawlers by default
 User-agent: *
 Allow: /
-Disallow: /dashboard
-Disallow: /settings
-Disallow: /onboarding
-Disallow: /api/
-Allow: /api/use-cases
-Disallow: /e/
+Crawl-delay: 1
 
-# Specifically allow major search engines
+# Allow public API documentation
+Allow: /api/use-cases
+
+# Major search engines - full access
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 0
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 0
 
 User-agent: Slurp
 Allow: /
+Crawl-delay: 0
 
 User-agent: DuckDuckBot
 Allow: /
+Crawl-delay: 0
 
-# Block bad bots
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 1
+
+User-agent: YandexBot
+Allow: /
+Crawl-delay: 1
+
+# SEO analysis bots - allow with crawl delay
 User-agent: SemrushBot
-Disallow: /
+Allow: /
+Crawl-delay: 10
 
 User-agent: AhrefsBot
+Allow: /
+Crawl-delay: 10
+
+User-agent: Moz
+Allow: /
+Crawl-delay: 10
+
+User-agent: ScreamingFrogSEO
+Allow: /
+Crawl-delay: 5
+
+# Block truly bad bots
+User-agent: MJ12bot
 Disallow: /
 
-User-agent: MJ12bot
+User-agent: DotBot
+Disallow: /
+
+User-agent: PetalBot
 Disallow: /
 
 # AI crawlers
@@ -56,6 +86,9 @@ User-agent: PerplexityBot
 Allow: /
 Allow: /api/use-cases
 
-# Point to sitemap
+# Sitemaps for better indexing
 Sitemap: https://emailtotextnotify.com/sitemap.xml
 Sitemap: https://emailtotextnotify.com/api/use-cases
+
+# Host directive (for Yandex)
+Host: https://emailtotextnotify.com
