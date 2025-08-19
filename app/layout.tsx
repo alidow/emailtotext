@@ -56,7 +56,9 @@ export default function RootLayout({
           {children}
         </ClerkProvider>
         <CookieConsent />
-        <GoogleAnalytics gaId="G-CB0Q6E7ND3" />
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
         <Analytics />
       </body>
     </html>
