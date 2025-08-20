@@ -124,15 +124,31 @@ export default function StartPage() {
               important emails, monitoring systems, and notifications.
             </p>
             
+            {/* CTA Button - Mobile First (Above Visual on Mobile) */}
+            <div className="md:hidden mb-8">
+              <Button 
+                size="lg"
+                onClick={handleGetStarted}
+                className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transform hover:scale-105 transition-all duration-200 w-full sm:w-auto"
+              >
+                Create Free Account
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              
+              <p className="mt-4 text-sm text-gray-600">
+                No credit card required • 10 free texts per month
+              </p>
+            </div>
+            
             {/* Visual Flow Illustration - Clean & Simple */}
-            <div className="max-w-3xl mx-auto mb-12">
-              <div className="bg-white rounded-2xl shadow-xl p-8">
-                <h3 className="text-center text-lg font-semibold mb-8 text-gray-700">How It Works</h3>
+            <div className="max-w-3xl mx-auto mb-8 md:mb-12">
+              <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+                <h3 className="text-center text-lg font-semibold mb-6 md:mb-8 text-gray-700">How It Works</h3>
                 <div className="grid md:grid-cols-3 gap-6 items-center">
                   {/* Step 1: Your Email */}
                   <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                      <Mail className="h-10 w-10 text-white" />
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                      <Mail className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                     </div>
                     <h4 className="font-semibold text-gray-900 mb-1">Any Email</h4>
                     <p className="text-sm text-gray-600">Alerts, notifications, or important messages</p>
@@ -148,20 +164,20 @@ export default function StartPage() {
                     </div>
                   </div>
                   <div className="md:hidden flex justify-center">
-                    <ArrowRight className="h-8 w-8 text-blue-500 rotate-90" />
+                    <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 rotate-90" />
                   </div>
                   
                   {/* Step 2: Your Phone */}
                   <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-                      <Smartphone className="h-10 w-10 text-white" />
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                      <Smartphone className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                     </div>
                     <h4 className="font-semibold text-gray-900 mb-1">Your Phone</h4>
                     <p className="text-sm text-gray-600">Instant SMS notification delivered in seconds</p>
                   </div>
                 </div>
                 
-                <div className="mt-8 bg-gray-50 rounded-xl p-4">
+                <div className="mt-6 md:mt-8 bg-gray-50 rounded-xl p-3 md:p-4">
                   <p className="text-center text-sm text-gray-700">
                     <span className="font-semibold">It's that simple!</span> Forward to your unique email address and get instant texts.
                   </p>
@@ -169,18 +185,21 @@ export default function StartPage() {
               </div>
             </div>
 
-            <Button 
-              size="lg"
-              onClick={handleGetStarted}
-              className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              Create Free Account
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            
-            <p className="mt-4 text-sm text-gray-600">
-              No credit card required to browse • 10 free texts per month
-            </p>
+            {/* CTA Button - Desktop (Below Visual) */}
+            <div className="hidden md:block">
+              <Button 
+                size="lg"
+                onClick={handleGetStarted}
+                className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                Create Free Account
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              
+              <p className="mt-4 text-sm text-gray-600">
+                No credit card required to browse • 10 free texts per month
+              </p>
+            </div>
           </div>
 
           {/* Features Grid */}
