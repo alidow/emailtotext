@@ -210,6 +210,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
     }
     
+    if (!newUser) {
+      console.error("Failed to create or reactivate user")
+      return NextResponse.json({ error: "Failed to create user account" }, { status: 500 })
+    }
+    
     // Clear verification cookie
     cookieStore.delete("verified_phone")
     
@@ -222,7 +227,7 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    return NextResponse.json({ success: true, userId: newUser?.id || existingUser?.id })
+    return NextResponse.json({ success: true, userId: newUser.id })
   } catch (error: any) {
     Sentry.captureException(error)
     console.error("Create user error:", error)
