@@ -15,7 +15,7 @@ export default function SSOCallbackPage() {
       try {
         // The OAuth flow should have been handled by Clerk
         // Check if we have a completed sign-up
-        if (signUp?.status === "complete") {
+        if (signUp?.status === "complete" && setActive) {
           await setActive({ session: signUp.createdSessionId })
           
           // Track conversion
