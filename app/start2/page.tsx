@@ -220,7 +220,7 @@ export default function Start2Page() {
               Ready to Never Miss an Important Email Again?
             </h2>
             <p className="text-lg text-gray-600 mb-8">
-              Start free. No credit card required. Cancel anytime.
+              Start free. Get started in 2 minutes. Cancel anytime.
             </p>
             <Button 
               size="lg"

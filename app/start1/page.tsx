@@ -220,7 +220,7 @@ export default function Start1Page() {
                 Start Receiving SMS Alerts in 2 Minutes
               </h2>
               <p className="text-lg mb-6 opacity-90">
-                No credit card required • 10 free texts per month • Cancel anytime
+                Get started in 2 minutes • 10 free texts per month • Cancel anytime
               </p>
               <Button 
                 size="lg"

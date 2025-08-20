@@ -306,7 +306,7 @@ export default function Start4Page() {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <p className="mt-4 text-sm opacity-80">
-              No credit card required • 10 free texts • Cancel anytime
+              Setup in 2 minutes • 10 free texts • Cancel anytime
             </p>
           </div>
         </div>

@@ -129,14 +129,14 @@ export default function StartPage() {
               <Button 
                 size="lg"
                 onClick={handleGetStarted}
-                className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transform hover:scale-105 transition-all duration-200 w-full sm:w-auto"
+                className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 w-full sm:w-auto"
               >
                 Create Free Account
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               
               <p className="mt-4 text-sm text-gray-600">
-                No credit card required • 10 free texts per month
+                Get started in 2 minutes • 10 free texts per month
               </p>
             </div>
             
@@ -190,14 +190,14 @@ export default function StartPage() {
               <Button 
                 size="lg"
                 onClick={handleGetStarted}
-                className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transform hover:scale-105 transition-all duration-200"
+                className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200"
               >
                 Create Free Account
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               
               <p className="mt-4 text-sm text-gray-600">
-                No credit card required to browse • 10 free texts per month
+                Get started in 2 minutes • 10 free texts per month
               </p>
             </div>
           </div>

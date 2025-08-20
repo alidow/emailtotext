@@ -158,7 +158,7 @@ export default function Start3Page() {
             </Button>
             
             <p className="mt-4 text-sm text-gray-500">
-              No credit card • 10 free texts • Setup in 2 minutes
+              Setup in 2 minutes • 10 free texts • Cancel anytime
             </p>
           </div>
         </div>
