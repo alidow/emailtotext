@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    return NextResponse.json({ success: true, userId: newUser.id })
+    return NextResponse.json({ success: true, userId: newUser?.id || existingUser?.id })
   } catch (error: any) {
     Sentry.captureException(error)
     console.error("Create user error:", error)
