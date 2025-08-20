@@ -154,6 +154,21 @@ export async function POST(req: NextRequest) {
       console.log(`[TEST PHONE] Storing in database with phone format: ${e164Phone}`)
     }
     
+    // Check if phone number is already in use by an existing user
+    const { data: existingUserWithPhone } = await supabaseAdmin
+      .from("users")
+      .select("id")
+      .eq("phone", e164Phone)
+      .single()
+    
+    if (existingUserWithPhone) {
+      console.log(`Phone ${e164Phone} already registered to user ${existingUserWithPhone.id}`)
+      return NextResponse.json(
+        { error: "This phone number is already registered to another account" },
+        { status: 400 }
+      )
+    }
+    
     // Always store verification code in database (even for test phones)
     try {
       // Store verification code in database
