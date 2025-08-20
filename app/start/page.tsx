@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { GoogleAdsConversion } from "@/components/GoogleAdsConversion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Check, Shield, Mail, MessageSquare, Phone, CreditCard, Star, Lock } from "lucide-react"
+import { ArrowRight, Check, Shield, Mail, MessageSquare, Phone, CreditCard, Star, Lock, Send, Smartphone } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -124,10 +124,52 @@ export default function StartPage() {
               important emails, monitoring systems, and notifications.
             </p>
             
-            {/* Sample email preview */}
-            <div className="bg-gray-50 rounded-lg p-4 max-w-md mx-auto mb-8 border border-gray-200">
-              <p className="text-sm text-gray-500 mb-2">Your unique forwarding address:</p>
-              <p className="font-mono text-lg text-blue-600">you@txt.emailtotextnotify.com</p>
+            {/* Visual Flow Illustration */}
+            <div className="max-w-4xl mx-auto mb-8">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+                <div className="grid md:grid-cols-3 gap-4 items-center">
+                  {/* Step 1: Email */}
+                  <div className="text-center">
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-3">
+                      <Mail className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                      <p className="text-xs text-gray-600 mb-1">Forward any email to:</p>
+                      <p className="font-mono text-xs font-bold text-gray-900">5551234567@txt.</p>
+                      <p className="font-mono text-xs font-bold text-gray-900">emailtotextnotify.com</p>
+                    </div>
+                    <p className="text-sm font-medium">Send Email</p>
+                  </div>
+                  
+                  {/* Arrow */}
+                  <div className="hidden md:flex justify-center">
+                    <div className="relative">
+                      <Send className="h-8 w-8 text-blue-600 animate-pulse" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-0.5 w-20 bg-gradient-to-r from-blue-300 via-blue-500 to-blue-300"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="md:hidden flex justify-center my-2">
+                    <ArrowRight className="h-6 w-6 text-blue-600 rotate-90" />
+                  </div>
+                  
+                  {/* Step 2: SMS */}
+                  <div className="text-center">
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-3">
+                      <Smartphone className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                      <div className="bg-gray-100 rounded p-2 text-left">
+                        <p className="text-xs text-gray-500 mb-1">From: (866) 942-1024</p>
+                        <p className="text-xs font-medium text-gray-900">Subject: Server Alert</p>
+                        <p className="text-xs text-gray-700">Your server is down...</p>
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium">Receive SMS</p>
+                  </div>
+                </div>
+                
+                <p className="text-center mt-4 text-sm text-gray-600">
+                  Works with any email sender • Instant delivery • No app required
+                </p>
+              </div>
             </div>
 
             <Button 
