@@ -5,6 +5,9 @@ import { supabaseAdmin } from "@/lib/supabase"
 import { sendTransactionalEmail } from "@/lib/send-transactional-email"
 import * as Sentry from "@sentry/nextjs"
 
+// Force dynamic rendering since we use headers()
+export const dynamic = 'force-dynamic'
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-07-30.basil"
 })

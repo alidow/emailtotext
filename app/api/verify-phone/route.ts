@@ -5,6 +5,9 @@ import { isMockMode } from "@/lib/mock-mode"
 import { isTestMode, isTestPhoneNumber } from "@/lib/test-mode"
 import * as Sentry from "@sentry/nextjs"
 
+// Force dynamic rendering since we use cookies()
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   let phone: string | undefined
   

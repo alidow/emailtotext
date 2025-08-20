@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@clerk/nextjs/server"
 
+// Force dynamic rendering since we use auth() which accesses headers
+export const dynamic = 'force-dynamic'
+
 // Admin emails allowed to access admin features
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").filter(Boolean)
 

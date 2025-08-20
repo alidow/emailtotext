@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { auth } from "@clerk/nextjs/server"
 import { sendEmail } from "@/lib/mailgun"
 
+// Force dynamic rendering since we use auth()
+export const dynamic = 'force-dynamic'
+
 // Admin emails allowed to use test endpoint
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").filter(Boolean)
 
