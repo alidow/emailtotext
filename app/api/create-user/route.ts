@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
       error = createError;
       
       // Log account creation event
-      if (!error) {
+      if (!error && newUser) {
         await admin
           .from("account_lifecycle_events")
           .insert({
