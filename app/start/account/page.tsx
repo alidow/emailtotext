@@ -44,9 +44,6 @@ export default function StartAccountPage() {
         password: password,
       })
 
-      // Send email verification
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
-      
       // Track conversion
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'start_account_created', {
@@ -58,8 +55,8 @@ export default function StartAccountPage() {
       // Store email for next step
       sessionStorage.setItem('pendingEmail', email)
       
-      // Go to email verification
-      router.push('/start/account/verify-email')
+      // Skip email verification, go directly to phone verification
+      router.push('/start/verify')
     } catch (err: any) {
       setError(err.errors?.[0]?.message || "Failed to create account")
       setLoading(false)
@@ -138,14 +135,6 @@ export default function StartAccountPage() {
               </div>
             </div>
 
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="pt-6">
-                <p className="text-sm text-gray-700">
-                  <strong>Coming next:</strong> We'll verify your phone number to set up SMS delivery. 
-                  This is a one-time verification required by carriers to prevent spam.
-                </p>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right: Sign Up Form */}

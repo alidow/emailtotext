@@ -244,12 +244,13 @@ export default function VerifyPhonePage() {
               </Card>
             )}
             
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-green-50 border-green-200">
               <CardContent className="pt-6">
                 <p className="text-sm text-gray-700">
-                  <strong>TCPA Compliance:</strong> By verifying your phone number, you consent to receive SMS messages 
-                  containing your forwarded emails. Standard messaging rates may apply. 
-                  You can stop at any time by replying STOP.
+                  <strong>Your Privacy Matters:</strong> By verifying your phone number, you consent to receive SMS messages 
+                  containing your forwarded emails. We will <strong>never</strong> use your phone number for marketing, 
+                  share it with third parties, or send you anything other than your requested email forwards. 
+                  Your communications are private and encrypted. Reply STOP anytime to opt out. Standard messaging rates may apply.
                 </p>
               </CardContent>
             </Card>

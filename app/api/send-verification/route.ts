@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
     if (existingActiveUser) {
       console.log(`Phone ${e164Phone} already registered to active user ${existingActiveUser.id}`)
       return NextResponse.json(
-        { error: "This phone number is already registered to another account" },
+        { error: "This phone number is already associated with an active account. Each phone number can only be used with one account at a time." },
         { status: 400 }
       )
     }

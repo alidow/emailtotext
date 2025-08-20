@@ -370,7 +370,7 @@ export default function StartPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-wrap justify-between items-center">
             <p className="text-sm text-gray-600">
-              © 2024 Email to Text Notifier. All rights reserved.
+              © {new Date().getFullYear()} Email to Text Notifier. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900">
