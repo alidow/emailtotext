@@ -153,31 +153,26 @@ export default function StartPage() {
                     <p className="text-xs sm:text-sm text-gray-600">Server alerts, orders, notifications</p>
                   </div>
                   
-                  {/* Animated Arrow */}
+                  {/* Animated Gradient Flow */}
                   <div className="hidden md:block">
-                    <div className="relative h-20 flex items-center">
-                      {/* Background Track */}
-                      <div className="absolute inset-x-0 h-2 bg-gradient-to-r from-blue-100 via-purple-100 to-green-100 rounded-full"></div>
-                      
-                      {/* Animated Dots */}
-                      <div className="absolute inset-x-0 flex items-center">
-                        <div className="animate-flow flex items-center">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full shadow-lg"></div>
-                          <div className="w-3 h-3 bg-purple-500 rounded-full shadow-lg ml-4"></div>
-                          <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg ml-4"></div>
+                    <div className="relative h-16 flex items-center">
+                      {/* Base gradient track */}
+                      <div className="absolute inset-x-0 h-3 bg-gray-100 rounded-full overflow-hidden">
+                        {/* Animated gradient flow */}
+                        <div className="absolute inset-0 opacity-60">
+                          <div className="h-full w-[200%] bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-gradient-flow"></div>
+                        </div>
+                        <div className="absolute inset-0 opacity-60 animation-delay-1">
+                          <div className="h-full w-[200%] bg-gradient-to-r from-transparent via-purple-400 to-transparent animate-gradient-flow"></div>
+                        </div>
+                        <div className="absolute inset-0 opacity-60 animation-delay-2">
+                          <div className="h-full w-[200%] bg-gradient-to-r from-transparent via-green-400 to-transparent animate-gradient-flow"></div>
                         </div>
                       </div>
                       
-                      {/* Arrow Head */}
-                      <div className="absolute right-0 w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                        <ArrowRight className="h-5 w-5 text-white" />
-                      </div>
-                      
-                      {/* Speed Lines */}
-                      <div className="absolute inset-x-0 flex items-center justify-center">
-                        <div className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
-                          &lt; 3 seconds
-                        </div>
+                      {/* Directional arrow at the end */}
+                      <div className="absolute right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-green-500">
+                        <ArrowRight className="h-4 w-4 text-green-600" />
                       </div>
                     </div>
                   </div>
@@ -205,20 +200,12 @@ export default function StartPage() {
             </div>
             
             <style jsx>{`
-              @keyframes flow {
+              @keyframes gradient-flow {
                 0% {
-                  transform: translateX(-100px);
-                  opacity: 0;
-                }
-                10% {
-                  opacity: 1;
-                }
-                90% {
-                  opacity: 1;
+                  transform: translateX(-50%);
                 }
                 100% {
-                  transform: translateX(calc(100% + 100px));
-                  opacity: 0;
+                  transform: translateX(0%);
                 }
               }
               
@@ -234,8 +221,16 @@ export default function StartPage() {
                 }
               }
               
-              .animate-flow {
-                animation: flow 3s ease-in-out infinite;
+              .animate-gradient-flow {
+                animation: gradient-flow 2s linear infinite;
+              }
+              
+              .animation-delay-1 {
+                animation-delay: 0.66s;
+              }
+              
+              .animation-delay-2 {
+                animation-delay: 1.33s;
               }
               
               .animate-phone-buzz {
