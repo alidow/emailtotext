@@ -2,10 +2,18 @@
 -- This migration adds the necessary columns and tables to track account lifecycle
 
 -- Add status column to users table to track active/cancelled/deleted accounts
-ALTER TABLE public.users
-ADD COLUMN IF NOT EXISTS account_status text DEFAULT 'active' CHECK (account_status IN ('active', 'cancelled', 'deleted')),
-ADD COLUMN IF NOT EXISTS cancelled_at timestamp with time zone,
-ADD COLUMN IF NOT EXISTS deletion_scheduled_at timestamp with time zone;
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'account_status') THEN
+    ALTER TABLE public.users ADD COLUMN account_status text DEFAULT 'active' CHECK (account_status IN ('active', 'cancelled', 'deleted'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'cancelled_at') THEN
+    ALTER TABLE public.users ADD COLUMN cancelled_at timestamp with time zone;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'deletion_scheduled_at') THEN
+    ALTER TABLE public.users ADD COLUMN deletion_scheduled_at timestamp with time zone;
+  END IF;
+END $$;
 
 -- Create a table to track SMS usage per phone number across all accounts
 -- This ensures quota is tracked by phone number regardless of account cancellations
@@ -212,7 +220,7 @@ INSERT INTO public.phone_usage_tracking (phone, month_year, sms_sent, sms_quota)
 SELECT 
   phone,
   to_char(CURRENT_DATE, 'YYYY-MM'),
-  COALESCE(sms_sent, 0),
+  COALESCE(usage_count, 0),  -- Changed from sms_sent to usage_count
   CASE 
     WHEN plan_type = 'free' THEN 10
     WHEN plan_type = 'basic' THEN 100
