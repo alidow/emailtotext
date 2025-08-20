@@ -451,7 +451,9 @@ serve(async (req) => {
     }
 
     // Check if we should send usage alert (at 80% of limit)
-    const usagePercentage = (newUsageCount / baseLimit) * 100
+    // Use phone-level usage for alerts to account for previous usage
+    const newPhoneUsage = currentPhoneUsage + 1
+    const usagePercentage = (newPhoneUsage / baseLimit) * 100
     if (usagePercentage >= 80 && usagePercentage < 90) {
       // Check if we already sent an alert for this billing period
       const { data: existingAlert } = await supabase
@@ -481,7 +483,7 @@ serve(async (req) => {
             user_id: user.id,
             event_type: 'usage_alert_80',
             details: {
-              usage_count: newUsageCount,
+              usage_count: newPhoneUsage,
               limit: baseLimit,
               percentage: 80
             }

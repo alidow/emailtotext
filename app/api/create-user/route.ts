@@ -84,21 +84,97 @@ export async function POST(req: NextRequest) {
     // Check if this is a test phone number
     const isTestPhone = isTestPhoneNumber(verifiedPhone)
     
-    // Create new user
-    const { data: newUser, error } = await admin
-      .from("users")
-      .insert({
-        clerk_id: user.id,
-        phone: verifiedPhone,
-        phone_verified: true,
-        email: user.primaryEmailAddress?.emailAddress,
-        plan_type: planType,
-        accepts_24hr_texts: false, // Default to standard hours only
-        usage_reset_at: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-        is_test_phone: isTestPhone
+    // Get current month's usage for this phone number (persists across accounts)
+    const { data: phoneUsage } = await admin
+      .rpc('get_phone_monthly_usage', {
+        p_phone: verifiedPhone
       })
-      .select()
+      .single() as { data: { sms_sent: number; sms_quota: number; month_year: string } | null; error: any }
+    
+    // Check if user previously had an account with this phone (cancelled/deleted)
+    const { data: previousAccount } = await admin
+      .from("users")
+      .select("id, sms_sent, account_status")
+      .eq("phone", verifiedPhone)
+      .eq("clerk_id", user.id)
       .single() as { data: any | null; error: any }
+    
+    let newUser;
+    let error;
+    
+    if (previousAccount && previousAccount.account_status === 'cancelled') {
+      // Reactivate previous account instead of creating new one
+      const { data: reactivatedUser, error: reactivateError } = await admin
+        .from("users")
+        .update({
+          account_status: 'active',
+          plan_type: planType,
+          cancelled_at: null,
+          sms_sent: phoneUsage?.sms_sent || 0, // Use phone-level usage tracking
+          usage_reset_at: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+        })
+        .eq("id", previousAccount.id)
+        .select()
+        .single()
+      
+      newUser = reactivatedUser;
+      error = reactivateError;
+      
+      // Log reactivation event
+      if (!error) {
+        await admin
+          .from("account_lifecycle_events")
+          .insert({
+            user_id: previousAccount.id,
+            event_type: 'reactivated',
+            phone: verifiedPhone,
+            email: user.primaryEmailAddress?.emailAddress,
+            clerk_id: user.id,
+            metadata: {
+              plan_type: planType,
+              previous_sms_sent: phoneUsage?.sms_sent || 0
+            }
+          })
+      }
+    } else {
+      // Create new user
+      const { data: createdUser, error: createError } = await admin
+        .from("users")
+        .insert({
+          clerk_id: user.id,
+          phone: verifiedPhone,
+          phone_verified: true,
+          email: user.primaryEmailAddress?.emailAddress,
+          plan_type: planType,
+          accepts_24hr_texts: false, // Default to standard hours only
+          sms_sent: phoneUsage?.sms_sent || 0, // Inherit phone-level usage
+          usage_reset_at: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+          is_test_phone: isTestPhone,
+          account_status: 'active'
+        })
+        .select()
+        .single()
+      
+      newUser = createdUser;
+      error = createError;
+      
+      // Log account creation event
+      if (!error) {
+        await admin
+          .from("account_lifecycle_events")
+          .insert({
+            user_id: newUser.id,
+            event_type: 'created',
+            phone: verifiedPhone,
+            email: user.primaryEmailAddress?.emailAddress,
+            clerk_id: user.id,
+            metadata: {
+              plan_type: planType,
+              inherited_sms_count: phoneUsage?.sms_sent || 0
+            }
+          })
+      }
+    }
     
     if (error) {
       Sentry.captureException(error, {

@@ -375,15 +375,24 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
 
   if (!user) return
 
-  // Downgrade to free plan
+  // Update user to cancelled status but keep the account
   await supabaseAdmin
     .from("users")
     .update({
       plan_type: "free",
       stripe_subscription_id: null,
-      billing_cycle: null
+      billing_cycle: null,
+      account_status: "cancelled",
+      cancelled_at: new Date().toISOString()
     })
     .eq("id", user.id)
+  
+  // Update phone usage tracking to persist quota usage
+  await supabaseAdmin
+    .rpc('track_phone_usage', {
+      p_phone: user.phone,
+      p_sms_count: 0 // Just update the record without adding SMS
+    })
 
   // Send cancellation email
   if (user.email) {

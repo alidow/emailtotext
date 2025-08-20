@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Phone, Shield, CheckCircle, ChevronLeft, MessageSquare } from "lucide-react"
+import { ArrowRight, Phone, Shield, CheckCircle, ChevronLeft, MessageSquare, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { formatPhoneNumberInput } from "@/lib/utils"
 
@@ -22,6 +22,7 @@ export default function VerifyPhonePage() {
   const [error, setError] = useState("")
   const [codeSent, setCodeSent] = useState(false)
   const [resending, setResending] = useState(false)
+  const [phoneUsageInfo, setPhoneUsageInfo] = useState<{sms_sent: number; sms_quota: number} | null>(null)
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -51,6 +52,20 @@ export default function VerifyPhonePage() {
     setError("")
 
     try {
+      // First check if this phone has existing usage
+      const usageResponse = await fetch("/api/check-phone-usage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber: `+1${cleanPhone}` })
+      })
+      
+      if (usageResponse.ok) {
+        const usageData = await usageResponse.json()
+        if (usageData.hasUsage) {
+          setPhoneUsageInfo(usageData)
+        }
+      }
+      
       const response = await fetch("/api/send-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -203,6 +218,32 @@ export default function VerifyPhonePage() {
               </div>
             </div>
 
+            {phoneUsageInfo && phoneUsageInfo.sms_sent > 0 && (
+              <Card className="bg-amber-50 border-amber-200 mb-4">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 mb-1">
+                        Welcome back! This phone number has been used before.
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        You've already sent <strong>{phoneUsageInfo.sms_sent}</strong> text{phoneUsageInfo.sms_sent !== 1 ? 's' : ''} this month. 
+                        {phoneUsageInfo.sms_quota - phoneUsageInfo.sms_sent > 0 ? (
+                          <> You have <strong>{phoneUsageInfo.sms_quota - phoneUsageInfo.sms_sent}</strong> text{phoneUsageInfo.sms_quota - phoneUsageInfo.sms_sent !== 1 ? 's' : ''} remaining in your monthly quota.</>
+                        ) : (
+                          <> You've reached your monthly quota. Upgrade to a paid plan for more texts.</>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">
+                        Your previous usage counts toward your monthly limit to ensure fair use for all users.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="pt-6">
                 <p className="text-sm text-gray-700">

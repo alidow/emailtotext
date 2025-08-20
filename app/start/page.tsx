@@ -102,13 +102,18 @@ export default function StartPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <Badge variant="secondary" className="mb-4">
-              Trusted by developers and businesses
+              Trusted by 1000+ businesses and developers
             </Badge>
             <h1 className="text-4xl md:text-6xl font-display font-bold mb-6">
-              Never Miss an Important Email Again
+              <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 bg-clip-text text-transparent">
+                Forward any email
+              </span>
+              <br />
+              <span className="text-gray-900">to your phone as SMS</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Forward any email to SMS instantly. Perfect for alerts, monitoring, and staying connected on the go.
+              The most reliable email to text forwarding service. Get instant SMS alerts from 
+              important emails, monitoring systems, and notifications.
             </p>
             
             {/* Sample email preview */}

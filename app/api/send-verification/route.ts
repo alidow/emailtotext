@@ -154,18 +154,35 @@ export async function POST(req: NextRequest) {
       console.log(`[TEST PHONE] Storing in database with phone format: ${e164Phone}`)
     }
     
-    // Check if phone number is already in use by an existing user
-    const { data: existingUserWithPhone } = await supabaseAdmin
+    // Check if phone number is already in use by an ACTIVE account
+    const { data: existingActiveUser } = await supabaseAdmin
       .from("users")
-      .select("id")
+      .select("id, account_status")
       .eq("phone", e164Phone)
+      .eq("account_status", "active")
       .single()
     
-    if (existingUserWithPhone) {
-      console.log(`Phone ${e164Phone} already registered to user ${existingUserWithPhone.id}`)
+    if (existingActiveUser) {
+      console.log(`Phone ${e164Phone} already registered to active user ${existingActiveUser.id}`)
       return NextResponse.json(
         { error: "This phone number is already registered to another account" },
         { status: 400 }
+      )
+    }
+    
+    // Check if phone can sign up (not blocked for abuse)
+    const { data: canSignup } = await supabaseAdmin
+      .rpc('can_phone_signup', {
+        p_phone: e164Phone,
+        p_email: '' // Email will be checked during account creation
+      })
+    
+    if (canSignup === false) {
+      console.log(`Phone ${e164Phone} blocked from signup due to abuse detection`)
+      await logSuspiciousActivity(clientIp, e164Phone, "Blocked signup attempt - abuse detected")
+      return NextResponse.json(
+        { error: "This phone number is temporarily restricted. Please contact support if you believe this is an error." },
+        { status: 403 }
       )
     }
     
