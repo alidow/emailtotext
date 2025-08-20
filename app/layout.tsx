@@ -51,6 +51,7 @@ export default function RootLayout({
 }>) {
   const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-M7GMCQX9'
   const BING_UET_ID = process.env.NEXT_PUBLIC_BING_UET_ID || '343206284'
+  const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || 'AW-11473435972' // Replace with your actual Google Ads ID
   
   return (
     <html lang="en">
@@ -84,6 +85,25 @@ export default function RootLayout({
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
         )}
         <Analytics />
+        
+        {/* Google Ads Global Site Tag (gtag.js) */}
+        <Script
+          id="google-ads-gtag"
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+        />
+        <Script
+          id="google-ads-config"
+          strategy="afterInteractive"
+        >
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GOOGLE_ADS_ID}');
+            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID || 'G-CB0Q6E7ND3'}');
+          `}
+        </Script>
         
         {/* Bing UET Tag */}
         <Script 

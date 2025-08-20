@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,6 +22,19 @@ export default function Home() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [error, setError] = useState("")
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Check if mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [])
 
   // Helper function to handle smooth scrolling
   const scrollToGetStarted = () => {
@@ -47,6 +60,31 @@ export default function Home() {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedPhoneNumber = formatPhoneNumber(e.target.value)
     setPhone(formattedPhoneNumber)
+    
+    // Fire Google Ads conversion event on first input
+    if (e.target.value.length > 0 && !sessionStorage.getItem('phone_input_tracked')) {
+      // Track conversion via gtag (Google Ads)
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'conversion', {
+          'send_to': 'AW-11473435972/PHONE_INPUT_CONVERSION', // Replace with your actual conversion ID/label
+          'value': 1.0,
+          'currency': 'USD'
+        });
+        console.log('Google Ads conversion tracked: phone_input_started');
+      }
+      
+      // Also send to dataLayer for GTM
+      if (typeof window !== 'undefined' && (window as any).dataLayer) {
+        (window as any).dataLayer.push({
+          'event': 'phone_input_started',
+          'event_category': 'engagement',
+          'event_label': 'homepage_phone_field'
+        });
+      }
+      
+      // Mark as tracked for this session
+      sessionStorage.setItem('phone_input_tracked', 'true');
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -148,20 +186,19 @@ export default function Home() {
                 </div>
 
                 <div className="relative group">
-                  <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-8 w-8 text-blue-600 z-10" />
+                  <Phone className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 h-6 md:h-8 w-6 md:w-8 text-blue-600 z-10" />
                   <input
                     id="phone"
                     type="tel"
-                    placeholder="(555) 123-4567"
+                    placeholder="555-123-4567"
                     value={phone}
                     onChange={handlePhoneChange}
                     maxLength={14}
                     required
-                    className="w-full pl-20 pr-8 h-24 text-3xl md:text-3xl text-left font-bold tracking-wider border-4 border-gray-200 bg-white rounded-2xl shadow-lg placeholder:text-gray-400 placeholder:text-3xl placeholder:font-normal focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:shadow-xl focus:-translate-y-1 transition-all duration-300 hover:shadow-xl hover:border-gray-300 focus:outline-none"
+                    className="w-full pl-14 md:pl-20 pr-4 md:pr-8 h-20 md:h-24 text-2xl md:text-3xl text-left font-bold tracking-wide md:tracking-wider border-4 border-gray-200 bg-white rounded-2xl shadow-lg placeholder:text-gray-400 placeholder:text-2xl md:placeholder:text-3xl placeholder:font-normal focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:shadow-xl focus:-translate-y-1 transition-all duration-300 hover:shadow-xl hover:border-gray-300 focus:outline-none"
                     style={{
-                      letterSpacing: '0.15em',
-                      fontFamily: 'system-ui, -apple-system, "SF Pro Display", sans-serif',
-                      fontSize: '1.875rem' // Force 3xl size (30px)
+                      letterSpacing: isMobile ? '0.05em' : '0.15em',
+                      fontFamily: 'system-ui, -apple-system, "SF Pro Display", sans-serif'
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity duration-500 -z-10 scale-110" />
