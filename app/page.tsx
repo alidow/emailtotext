@@ -607,7 +607,19 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = `/get-started?plan=free&billing=${billingCycle}`}
+                  onClick={() => {
+                    // Track free plan click
+                    if (typeof window !== 'undefined' && (window as any).gtag) {
+                      (window as any).gtag('event', 'click_start_free', {
+                        'plan_type': 'free',
+                        'billing_cycle': billingCycle,
+                        'page_location': 'pricing_section',
+                        'value': 2.0
+                      });
+                      console.log('GA4 event tracked: click_start_free');
+                    }
+                    window.location.href = `/get-started?plan=free&billing=${billingCycle}`
+                  }}
                 >
                   Start Free
                 </Button>
@@ -713,7 +725,20 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = `/get-started?plan=standard&billing=${billingCycle}`}
+                  onClick={() => {
+                    // Track paid plan click
+                    if (typeof window !== 'undefined' && (window as any).gtag) {
+                      (window as any).gtag('event', 'click_paid_get_started', {
+                        'plan_type': 'standard',
+                        'billing_cycle': billingCycle,
+                        'price': billingCycle === 'monthly' ? 25 : 240,
+                        'page_location': 'pricing_section',
+                        'value': 25.0
+                      });
+                      console.log('GA4 event tracked: click_paid_get_started (standard)');
+                    }
+                    window.location.href = `/get-started?plan=standard&billing=${billingCycle}`
+                  }}
                 >
                   Get Started
                 </Button>
@@ -765,7 +790,20 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   className="w-full h-12"
-                  onClick={() => window.location.href = `/get-started?plan=premium&billing=${billingCycle}`}
+                  onClick={() => {
+                    // Track paid plan click
+                    if (typeof window !== 'undefined' && (window as any).gtag) {
+                      (window as any).gtag('event', 'click_paid_get_started', {
+                        'plan_type': 'premium',
+                        'billing_cycle': billingCycle,
+                        'price': billingCycle === 'monthly' ? 50 : 480,
+                        'page_location': 'pricing_section',
+                        'value': 50.0
+                      });
+                      console.log('GA4 event tracked: click_paid_get_started (premium)');
+                    }
+                    window.location.href = `/get-started?plan=premium&billing=${billingCycle}`
+                  }}
                 >
                   Get Started
                 </Button>
