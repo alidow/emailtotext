@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { GoogleAdsConversion } from "@/components/GoogleAdsConversion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Shield, Mail, MessageSquare, Phone, CreditCard, Star, Lock } from "lucide-react"
@@ -40,7 +41,13 @@ export default function StartPage() {
         value: 3.0
       })
     }
-    router.push('/start/account')
+    
+    // Report Google Ads conversion
+    if (typeof window !== 'undefined' && (window as any).gtag_report_conversion) {
+      (window as any).gtag_report_conversion('/start/account')
+    } else {
+      router.push('/start/account')
+    }
   }
 
   const features = [
@@ -70,6 +77,7 @@ export default function StartPage() {
 
   return (
     <>
+      <GoogleAdsConversion conversionEvent="BEGIN_CHECKOUT_1" />
       {/* Trust Bar */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 text-center text-sm">
         <div className="container mx-auto px-4 flex flex-wrap justify-center items-center gap-4 md:gap-8">

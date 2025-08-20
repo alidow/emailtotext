@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 // import { useUser } from "@clerk/nextjs"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { GoogleAdsConversion } from "@/components/GoogleAdsConversion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -37,14 +38,30 @@ const isMockMode = typeof window !== 'undefined' &&
 export default function DashboardPage() {
   // const { user, isLoaded } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const isLoaded = true // Mock mode
   const user = { id: "mock-user" } // Mock user
   const [userData, setUserData] = useState<UserData | null>(null)
   const [emails, setEmails] = useState<Email[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [hasPurchased, setHasPurchased] = useState(false)
 
   useEffect(() => {
+    // Check if user just completed a purchase (coming from Stripe)
+    const isWelcome = searchParams.get('welcome') === 'true'
+    const fromPayment = searchParams.get('success') === 'true' || isWelcome
+    
+    if (fromPayment && !sessionStorage.getItem('purchase_tracked')) {
+      setHasPurchased(true)
+      // Fire Google Ads purchase conversion
+      if (typeof window !== 'undefined' && (window as any).gtag_report_conversion) {
+        (window as any).gtag_report_conversion()
+      }
+      // Mark as tracked for this session
+      sessionStorage.setItem('purchase_tracked', 'true')
+    }
+    
     // In mock mode, always fetch data
     if (isMockMode) {
       fetchUserData()
@@ -106,6 +123,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      {hasPurchased && <GoogleAdsConversion conversionEvent="PURCHASE_1" />}
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Dashboard</h1>

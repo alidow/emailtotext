@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       .rpc('get_phone_monthly_usage', {
         p_phone: e164Phone
       })
-      .single()
+      .single() as { data: { sms_sent: number; sms_quota: number; month_year: string } | null; error: any }
     
     if (error) {
       console.error("Error checking phone usage:", error)
