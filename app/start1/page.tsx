@@ -231,9 +231,6 @@ export default function Start1Page() {
                 Create Free Account
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <p className="mt-4 text-sm opacity-80">
-                Join 1,000+ developers and businesses already using our service
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -244,7 +241,7 @@ export default function Start1Page() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-wrap justify-between items-center">
             <p className="text-sm text-gray-600">
-              © 2024 Email to Text Notifier. All rights reserved.
+              © {new Date().getFullYear()} Celestial Platform, LLC. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900">

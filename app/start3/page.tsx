@@ -115,10 +115,6 @@ export default function Start3Page() {
               💬 Email to Text
             </Link>
             <div className="flex items-center gap-4">
-              <Badge variant="outline" className="hidden md:flex">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                1,000+ Happy Users
-              </Badge>
               <Button onClick={handleGetStarted}>
                 Get Started Free
               </Button>
@@ -219,7 +215,7 @@ export default function Start3Page() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Join 1,000+ Happy Users</h2>
+            <h2 className="text-3xl font-bold mb-4">What Our Users Say</h2>
             <p className="text-lg text-gray-600">Real stories from real people</p>
           </div>
           

@@ -109,9 +109,6 @@ export default function StartPage() {
       <section className="container mx-auto px-4 py-12 md:py-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">
-              Trusted by 1000+ businesses and developers
-            </Badge>
             <h1 className="text-4xl md:text-6xl font-display font-bold mb-6">
               <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 bg-clip-text text-transparent">
                 Forward any email
@@ -365,7 +362,7 @@ export default function StartPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-wrap justify-between items-center">
             <p className="text-sm text-gray-600">
-              © {new Date().getFullYear()} Email to Text Notifier. All rights reserved.
+              © {new Date().getFullYear()} Celestial Platform, LLC. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900">

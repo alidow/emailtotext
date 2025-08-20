@@ -293,7 +293,7 @@ export default function Start4Page() {
               Ready to Never Miss an Email Again?
             </h2>
             <p className="text-lg mb-6 opacity-90 max-w-2xl mx-auto">
-              Join 1,000+ users who get instant SMS alerts for their important emails.
+              Get instant SMS alerts for your important emails.
               Start free, upgrade anytime.
             </p>
             <Button 
