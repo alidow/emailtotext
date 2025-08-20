@@ -140,50 +140,109 @@ export default function StartPage() {
               </p>
             </div>
             
-            {/* Visual Flow Illustration - Clean & Simple */}
+            {/* Visual Flow Illustration - Animated & Polished */}
             <div className="max-w-3xl mx-auto mb-8 md:mb-12">
-              <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
-                <h3 className="text-center text-lg font-semibold mb-6 md:mb-8 text-gray-700">How It Works</h3>
+              <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-100">
                 <div className="grid md:grid-cols-3 gap-6 items-center">
                   {/* Step 1: Your Email */}
-                  <div className="text-center">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                  <div className="text-center group">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
                       <Mail className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                     </div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Any Email</h4>
-                    <p className="text-sm text-gray-600">Alerts, notifications, or important messages</p>
+                    <h4 className="font-semibold text-gray-900 mb-1">Email Received</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">Server alerts, orders, notifications</p>
                   </div>
                   
-                  {/* Arrow */}
+                  {/* Animated Arrow */}
                   <div className="hidden md:block">
-                    <div className="flex items-center justify-center">
-                      <div className="w-full relative">
-                        <div className="h-1 bg-gradient-to-r from-blue-300 via-blue-500 to-green-400 rounded-full"></div>
-                        <ArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 text-green-500" />
+                    <div className="relative h-20 flex items-center">
+                      {/* Background Track */}
+                      <div className="absolute inset-x-0 h-2 bg-gradient-to-r from-blue-100 via-purple-100 to-green-100 rounded-full"></div>
+                      
+                      {/* Animated Dots */}
+                      <div className="absolute inset-x-0 flex items-center">
+                        <div className="animate-flow flex items-center">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full shadow-lg"></div>
+                          <div className="w-3 h-3 bg-purple-500 rounded-full shadow-lg ml-4"></div>
+                          <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg ml-4"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Arrow Head */}
+                      <div className="absolute right-0 w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                        <ArrowRight className="h-5 w-5 text-white" />
+                      </div>
+                      
+                      {/* Speed Lines */}
+                      <div className="absolute inset-x-0 flex items-center justify-center">
+                        <div className="text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
+                          &lt; 3 seconds
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="md:hidden flex justify-center">
-                    <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 rotate-90" />
+                  
+                  {/* Mobile Arrow */}
+                  <div className="md:hidden flex justify-center py-2">
+                    <div className="relative">
+                      <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 rotate-90 animate-bounce" />
+                      <div className="absolute -bottom-4 text-xs font-semibold text-blue-600">
+                        Instant
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Step 2: Your Phone */}
-                  <div className="text-center">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                  <div className="text-center group">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110 animate-phone-buzz">
                       <Smartphone className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                     </div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Your Phone</h4>
-                    <p className="text-sm text-gray-600">Instant SMS notification delivered in seconds</p>
+                    <h4 className="font-semibold text-gray-900 mb-1">SMS Delivered</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">Instant text on your phone</p>
                   </div>
-                </div>
-                
-                <div className="mt-6 md:mt-8 bg-gray-50 rounded-xl p-3 md:p-4">
-                  <p className="text-center text-sm text-gray-700">
-                    <span className="font-semibold">It's that simple!</span> Forward to your unique email address and get instant texts.
-                  </p>
                 </div>
               </div>
             </div>
+            
+            <style jsx>{`
+              @keyframes flow {
+                0% {
+                  transform: translateX(-100px);
+                  opacity: 0;
+                }
+                10% {
+                  opacity: 1;
+                }
+                90% {
+                  opacity: 1;
+                }
+                100% {
+                  transform: translateX(calc(100% + 100px));
+                  opacity: 0;
+                }
+              }
+              
+              @keyframes phone-buzz {
+                0%, 100% {
+                  transform: rotate(0deg);
+                }
+                10%, 30%, 50%, 70% {
+                  transform: rotate(-2deg);
+                }
+                20%, 40%, 60%, 80% {
+                  transform: rotate(2deg);
+                }
+              }
+              
+              .animate-flow {
+                animation: flow 3s ease-in-out infinite;
+              }
+              
+              .animate-phone-buzz {
+                animation: phone-buzz 4s ease-in-out infinite;
+                animation-delay: 2s;
+              }
+            `}</style>
 
             {/* CTA Button - Desktop (Below Visual) */}
             <div className="hidden md:block">
