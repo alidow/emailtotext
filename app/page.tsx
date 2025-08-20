@@ -61,19 +61,20 @@ export default function Home() {
     const formattedPhoneNumber = formatPhoneNumber(e.target.value)
     setPhone(formattedPhoneNumber)
     
-    // Fire Google Ads conversion event on first input
+    // Fire GA4 event on first input (will be used for Google Ads conversion)
     if (e.target.value.length > 0 && !sessionStorage.getItem('phone_input_tracked')) {
-      // Track conversion via gtag (Google Ads)
+      // Send event to Google Analytics 4
       if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'conversion', {
-          'send_to': 'AW-11473435972/PHONE_INPUT_CONVERSION', // Replace with your actual conversion ID/label
-          'value': 1.0,
-          'currency': 'USD'
+        (window as any).gtag('event', 'phone_input_started', {
+          'engagement_type': 'form_interaction',
+          'form_field': 'phone_number',
+          'page_location': 'homepage',
+          'value': 1.0
         });
-        console.log('Google Ads conversion tracked: phone_input_started');
+        console.log('GA4 event tracked: phone_input_started');
       }
       
-      // Also send to dataLayer for GTM
+      // Also send to dataLayer for GTM (backup)
       if (typeof window !== 'undefined' && (window as any).dataLayer) {
         (window as any).dataLayer.push({
           'event': 'phone_input_started',
