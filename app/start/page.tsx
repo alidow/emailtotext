@@ -124,51 +124,48 @@ export default function StartPage() {
               important emails, monitoring systems, and notifications.
             </p>
             
-            {/* Visual Flow Illustration */}
-            <div className="max-w-4xl mx-auto mb-8">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
-                <div className="grid md:grid-cols-3 gap-4 items-center">
-                  {/* Step 1: Email */}
+            {/* Visual Flow Illustration - Clean & Simple */}
+            <div className="max-w-3xl mx-auto mb-12">
+              <div className="bg-white rounded-2xl shadow-xl p-8">
+                <h3 className="text-center text-lg font-semibold mb-8 text-gray-700">How It Works</h3>
+                <div className="grid md:grid-cols-3 gap-6 items-center">
+                  {/* Step 1: Your Email */}
                   <div className="text-center">
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-3">
-                      <Mail className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                      <p className="text-xs text-gray-600 mb-1">Forward any email to:</p>
-                      <p className="font-mono text-xs font-bold text-gray-900">5551234567@txt.</p>
-                      <p className="font-mono text-xs font-bold text-gray-900">emailtotextnotify.com</p>
+                    <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                      <Mail className="h-10 w-10 text-white" />
                     </div>
-                    <p className="text-sm font-medium">Send Email</p>
+                    <h4 className="font-semibold text-gray-900 mb-1">Any Email</h4>
+                    <p className="text-sm text-gray-600">Alerts, notifications, or important messages</p>
                   </div>
                   
                   {/* Arrow */}
-                  <div className="hidden md:flex justify-center">
-                    <div className="relative">
-                      <Send className="h-8 w-8 text-blue-600 animate-pulse" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-0.5 w-20 bg-gradient-to-r from-blue-300 via-blue-500 to-blue-300"></div>
+                  <div className="hidden md:block">
+                    <div className="flex items-center justify-center">
+                      <div className="w-full relative">
+                        <div className="h-1 bg-gradient-to-r from-blue-300 via-blue-500 to-green-400 rounded-full"></div>
+                        <ArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6 text-green-500" />
                       </div>
                     </div>
                   </div>
-                  <div className="md:hidden flex justify-center my-2">
-                    <ArrowRight className="h-6 w-6 text-blue-600 rotate-90" />
+                  <div className="md:hidden flex justify-center">
+                    <ArrowRight className="h-8 w-8 text-blue-500 rotate-90" />
                   </div>
                   
-                  {/* Step 2: SMS */}
+                  {/* Step 2: Your Phone */}
                   <div className="text-center">
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-3">
-                      <Smartphone className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <div className="bg-gray-100 rounded p-2 text-left">
-                        <p className="text-xs text-gray-500 mb-1">From: (866) 942-1024</p>
-                        <p className="text-xs font-medium text-gray-900">Subject: Server Alert</p>
-                        <p className="text-xs text-gray-700">Your server is down...</p>
-                      </div>
+                    <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                      <Smartphone className="h-10 w-10 text-white" />
                     </div>
-                    <p className="text-sm font-medium">Receive SMS</p>
+                    <h4 className="font-semibold text-gray-900 mb-1">Your Phone</h4>
+                    <p className="text-sm text-gray-600">Instant SMS notification delivered in seconds</p>
                   </div>
                 </div>
                 
-                <p className="text-center mt-4 text-sm text-gray-600">
-                  Works with any email sender • Instant delivery • No app required
-                </p>
+                <div className="mt-8 bg-gray-50 rounded-xl p-4">
+                  <p className="text-center text-sm text-gray-700">
+                    <span className="font-semibold">It's that simple!</span> Forward to your unique email address and get instant texts.
+                  </p>
+                </div>
               </div>
             </div>
 
