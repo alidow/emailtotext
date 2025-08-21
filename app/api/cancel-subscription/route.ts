@@ -45,14 +45,16 @@ export async function POST(req: NextRequest) {
     let effectiveDate = new Date()
 
     // Handle Stripe subscription cancellation if user has one
-    if (dbUser.stripe_subscription_id) {
+    if (dbUser.stripe_subscription_id && typeof dbUser.stripe_subscription_id === 'string') {
       try {
+        const subscriptionId = dbUser.stripe_subscription_id as string
+        
         if (immediate) {
           // For immediate cancellation, we simply update to cancel at period end
           // Then let Stripe handle it through their portal if needed
           // This avoids the complexity of the cancel method signature
           await stripe.subscriptions.update(
-            dbUser.stripe_subscription_id,
+            subscriptionId,
             { cancel_at_period_end: true }
           )
           // Note: For true immediate cancellation, users should use Stripe portal
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
         } else {
           // Cancel at end of billing period
           const subscription = await stripe.subscriptions.update(
-            dbUser.stripe_subscription_id,
+            subscriptionId,
             { cancel_at_period_end: true }
           )
           effectiveDate = new Date(subscription.current_period_end * 1000)
@@ -70,7 +72,7 @@ export async function POST(req: NextRequest) {
         Sentry.captureException(stripeError, {
           extra: {
             userId: dbUser.id,
-            subscriptionId: dbUser.stripe_subscription_id
+            subscriptionId: subscriptionId
           }
         })
         console.error("Stripe cancellation error:", stripeError)
