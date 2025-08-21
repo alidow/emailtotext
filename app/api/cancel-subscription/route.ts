@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
 
     // Handle Stripe subscription cancellation if user has one
     if (dbUser.stripe_subscription_id && typeof dbUser.stripe_subscription_id === 'string') {
+      const subscriptionId = dbUser.stripe_subscription_id as string
+      
       try {
-        const subscriptionId = dbUser.stripe_subscription_id as string
-        
         // Cancel the subscription (either immediately or at period end)
         const subscription = await stripe.subscriptions.update(
           subscriptionId,
