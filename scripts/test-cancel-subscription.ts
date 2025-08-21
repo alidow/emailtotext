@@ -52,9 +52,9 @@ async function testCancellationFlow() {
       .rpc('get_phone_monthly_usage', {
         p_phone: testPhone
       })
-      .single()
+      .single() as { data: any }
     
-    console.log(`✅ Phone usage tracked: ${usage1.sms_sent} messages sent`)
+    console.log(`✅ Phone usage tracked: ${usage1?.sms_sent || 0} messages sent`)
     
     // Test 3: Cancel the account
     console.log('\nTest 3: Cancelling account...')
@@ -94,7 +94,7 @@ async function testCancellationFlow() {
       .rpc('can_phone_signup', {
         p_phone: testPhone,
         p_email: 'new@example.com'
-      })
+      }) as { data: boolean }
     
     if (canSignup === false) {
       console.log('❌ Cannot sign up with same phone (phone may still be active)')
@@ -124,12 +124,12 @@ async function testCancellationFlow() {
           .rpc('get_phone_monthly_usage', {
             p_phone: testPhone
           })
-          .single()
+          .single() as { data: any }
         
-        console.log(`✅ Usage persisted: ${usage2.sms_sent} messages (was 50)`)
+        console.log(`✅ Usage persisted: ${usage2?.sms_sent || 0} messages (was 50)`)
         
         // Cleanup second user
-        await supabase.from('users').delete().eq('id', user2.id)
+        await supabase.from('users').delete().eq('id', user2!.id)
       }
     }
     
@@ -154,7 +154,7 @@ async function testCancellationFlow() {
       .rpc('can_phone_signup', {
         p_phone: abusePhone,
         p_email: 'abuse@example.com'
-      })
+      }) as { data: boolean }
     
     if (canSignupAbuse === false) {
       console.log('✅ Abuse detection working: Phone blocked after rapid cancellations')
