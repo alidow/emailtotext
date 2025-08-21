@@ -4,6 +4,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google"
 import { ClerkProvider } from "@clerk/nextjs"
 import { CookieConsent } from "@/components/cookie-consent"
 import { TestModeBanner } from "@/components/test-mode-banner"
+import { AnalyticsDebugger } from "@/components/analytics-debugger"
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { Analytics } from "@vercel/analytics/react"
 import Script from 'next/script'
@@ -83,6 +84,7 @@ export default function RootLayout({
         <ClerkProvider>
           <TestModeBanner />
           {children}
+          <AnalyticsDebugger />
         </ClerkProvider>
         <CookieConsent />
         {process.env.NEXT_PUBLIC_GA_ID && (

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Phone, Shield, CheckCircle, ChevronLeft, MessageSquare, AlertCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 import { formatPhoneNumberInput } from "@/lib/utils"
+import { analytics, ANALYTICS_EVENTS } from "@/lib/analytics"
 
 export default function VerifyPhonePage() {
   const router = useRouter()
@@ -30,11 +31,13 @@ export default function VerifyPhonePage() {
     }
 
     // Track page view
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'phone_verify_viewed', {
-        page_location: '/start/verify'
-      })
-    }
+    analytics.track({
+      name: ANALYTICS_EVENTS.START_VERIFY_VIEW,
+      parameters: {
+        page_location: '/start/verify',
+        page_path: '/start/verify'
+      }
+    })
   }, [isLoaded, user, router])
 
   const handleSendCode = async (e: React.FormEvent) => {
@@ -81,13 +84,25 @@ export default function VerifyPhonePage() {
       setCodeSent(true)
       
       // Track event
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'phone_code_sent', {
-          value: 4.0
-        })
-      }
+      analytics.track({
+        name: ANALYTICS_EVENTS.PHONE_CODE_SENT,
+        parameters: {
+          phone: `+1${cleanPhone}`,
+          page_location: '/start/verify'
+        },
+        value: 4.0
+      })
     } catch (err: any) {
       setError(err.message || "Failed to send verification code")
+      // Track error
+      analytics.track({
+        name: ANALYTICS_EVENTS.VERIFICATION_ERROR,
+        parameters: {
+          error: err.message,
+          step: 'send_code',
+          page_location: '/start/verify'
+        }
+      })
     } finally {
       setLoading(false)
     }
@@ -122,16 +137,28 @@ export default function VerifyPhonePage() {
       }
 
       // Track conversion
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'phone_verified', {
-          value: 5.0
-        })
-      }
+      analytics.track({
+        name: ANALYTICS_EVENTS.PHONE_VERIFIED,
+        parameters: {
+          phone: `+1${cleanPhone}`,
+          page_location: '/start/verify'
+        },
+        value: 5.0
+      })
 
       // Go to plan selection
       router.push('/start/plan')
     } catch (err: any) {
       setError(err.message || "Failed to verify phone number")
+      // Track error
+      analytics.track({
+        name: ANALYTICS_EVENTS.VERIFICATION_ERROR,
+        parameters: {
+          error: err.message,
+          step: 'verify_code',
+          page_location: '/start/verify'
+        }
+      })
     } finally {
       setLoading(false)
     }

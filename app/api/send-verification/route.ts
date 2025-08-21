@@ -366,6 +366,22 @@ export async function POST(req: NextRequest) {
         })
     }
     
+    // Log analytics event server-side
+    console.log('[ANALYTICS_EVENT] phone_code_sent', JSON.stringify({
+      type: 'ANALYTICS_EVENT',
+      timestamp: new Date().toISOString(),
+      event: 'phone_code_sent',
+      source: 'server',
+      parameters: {
+        phone: e164Phone,
+        test_mode: isTestMode() || isTestPhone
+      },
+      context: {
+        ip: clientIp,
+        user_agent: req.headers.get("user-agent")
+      }
+    }, null, 2))
+    
     return NextResponse.json({ 
       success: true,
       testMode: isTestMode()

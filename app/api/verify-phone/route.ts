@@ -117,6 +117,28 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 // 1 hour
     })
     
+    // Log analytics event server-side
+    console.log('[ANALYTICS_EVENT] phone_verified', JSON.stringify({
+      type: 'ANALYTICS_EVENT',
+      timestamp: new Date().toISOString(),
+      event: 'phone_verified',
+      source: 'server',
+      parameters: {
+        phone: phone,
+        test_phone: isTestPhone
+      },
+      context: {
+        ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown",
+        user_agent: req.headers.get("user-agent")
+      }
+    }, null, 2))
+    
+    console.log('[PHONE_VERIFICATION_SUCCESS]', JSON.stringify({
+      timestamp: new Date().toISOString(),
+      phone: phone,
+      ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown"
+    }))
+    
     return NextResponse.json({ success: true })
   } catch (error: any) {
     Sentry.captureException(error, {

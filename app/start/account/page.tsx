@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowRight, Mail, Lock, Shield, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { analytics, ANALYTICS_EVENTS } from "@/lib/analytics"
 
 export default function StartAccountPage() {
   const router = useRouter()
@@ -20,14 +21,22 @@ export default function StartAccountPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Track page view
+  // Track page view and initialize analytics
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'start_account_viewed', {
+    // Initialize analytics on mount
+    analytics.initialize().then((providers) => {
+      console.log('[START_ACCOUNT] Analytics initialized:', providers)
+    })
+    
+    // Track page view
+    analytics.track({
+      name: ANALYTICS_EVENTS.START_ACCOUNT_VIEW,
+      parameters: {
         page_location: '/start/account',
-        value: 1.0
-      })
-    }
+        page_path: '/start/account'
+      },
+      value: 1.0
+    })
   }, [])
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
@@ -44,13 +53,15 @@ export default function StartAccountPage() {
         password: password,
       })
 
-      // Track conversion
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'start_account_created', {
+      // Track account creation
+      analytics.track({
+        name: ANALYTICS_EVENTS.ACCOUNT_CREATED,
+        parameters: {
           method: 'email',
-          value: 2.0
-        })
-      }
+          page_location: '/start/account'
+        },
+        value: 2.0
+      })
 
       // Store email for next step
       sessionStorage.setItem('pendingEmail', email)
@@ -74,13 +85,15 @@ export default function StartAccountPage() {
         redirectUrlComplete: "/start/verify"
       })
       
-      // Track conversion
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'start_account_created', {
+      // Track account creation
+      analytics.track({
+        name: ANALYTICS_EVENTS.ACCOUNT_CREATED,
+        parameters: {
           method: 'google',
-          value: 2.0
-        })
-      }
+          page_location: '/start/account'
+        },
+        value: 2.0
+      })
     } catch (err: any) {
       setError(err.errors?.[0]?.message || "Failed to sign up with Google")
       setLoading(false)

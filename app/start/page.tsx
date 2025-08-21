@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Shield, Mail, MessageSquare, Phone, CreditCard, Star, Lock, Send, Smartphone } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { analytics, ANALYTICS_EVENTS } from "@/lib/analytics"
 
 export default function StartPage() {
   const router = useRouter()
@@ -22,32 +23,44 @@ export default function StartPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Track page view
+  // Track page view and initialize analytics
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'page_view', {
+    // Initialize analytics
+    analytics.initialize().then((providers) => {
+      console.log('[START_PAGE] Analytics initialized:', providers)
+    })
+    
+    // Track page view
+    analytics.track({
+      name: ANALYTICS_EVENTS.START_PAGE_VIEW,
+      parameters: {
         page_title: 'Start Landing Page',
         page_location: '/start',
         page_path: '/start'
-      })
-    }
+      }
+    })
   }, [])
 
   const handleGetStarted = () => {
     // Track conversion event
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'start_flow_initiated', {
+    analytics.track({
+      name: ANALYTICS_EVENTS.START_FLOW_INITIATED,
+      parameters: {
         page_location: 'hero_section',
-        value: 3.0
-      })
-    }
+        button: 'primary_cta'
+      },
+      value: 3.0
+    })
     
-    // Report Google Ads conversion
-    if (typeof window !== 'undefined' && (window as any).gtag_report_conversion) {
-      (window as any).gtag_report_conversion('/start/account')
-    } else {
-      router.push('/start/account')
-    }
+    // Also track as conversion
+    analytics.conversion({
+      name: ANALYTICS_EVENTS.BEGIN_CHECKOUT,
+      value: 3.0,
+      conversionId: 'AW-11473435972/BEGIN_CHECKOUT_1'
+    })
+    
+    // Navigate to account page
+    router.push('/start/account')
   }
 
   const features = [
