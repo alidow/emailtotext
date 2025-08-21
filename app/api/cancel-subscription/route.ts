@@ -170,7 +170,7 @@ export async function GET(req: NextRequest) {
       .from("users")
       .select("account_status, cancelled_at, plan_type, stripe_subscription_id")
       .eq("clerk_id", user.id)
-      .single()
+      .single() as { data: any | null; error: any }
 
     if (error || !dbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
@@ -182,10 +182,12 @@ export async function GET(req: NextRequest) {
 
     if (dbUser.stripe_subscription_id && dbUser.account_status === 'active') {
       try {
-        const subscription = await stripe.subscriptions.retrieve(dbUser.stripe_subscription_id)
-        if (subscription.cancel_at_period_end) {
+        const subscriptionId = dbUser.stripe_subscription_id as string
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        const subscriptionData = subscription as any
+        if (subscriptionData.cancel_at_period_end) {
           pendingCancellation = true
-          cancellationDate = new Date(subscription.current_period_end * 1000).toISOString()
+          cancellationDate = new Date(subscriptionData.current_period_end * 1000).toISOString()
         }
       } catch (err) {
         console.error("Error fetching subscription status:", err)
