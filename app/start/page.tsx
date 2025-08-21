@@ -177,12 +177,18 @@ export default function StartPage() {
                     </div>
                   </div>
                   
-                  {/* Mobile Arrow */}
-                  <div className="md:hidden flex justify-center py-2">
-                    <div className="relative">
-                      <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 rotate-90 animate-bounce" />
-                      <div className="absolute -bottom-4 text-xs font-semibold text-blue-600">
-                        Instant
+                  {/* Mobile Arrow - Vertical with Animation */}
+                  <div className="md:hidden flex justify-center py-4">
+                    <div className="relative h-16 w-16 flex items-center justify-center">
+                      {/* Animated gradient line */}
+                      <div className="absolute h-12 w-1 bg-gradient-to-b from-blue-200 via-purple-200 to-green-200 rounded-full overflow-hidden">
+                        <div className="absolute inset-0 opacity-60">
+                          <div className="h-[200%] w-full bg-gradient-to-b from-transparent via-blue-500 to-transparent animate-mobile-flow"></div>
+                        </div>
+                      </div>
+                      {/* Arrow at bottom */}
+                      <div className="absolute -bottom-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md border border-green-400">
+                        <ArrowRight className="h-3 w-3 text-green-600 rotate-90" />
                       </div>
                     </div>
                   </div>
@@ -253,6 +259,15 @@ export default function StartPage() {
                 }
               }
               
+              @keyframes mobile-flow {
+                0% {
+                  transform: translateY(-50%);
+                }
+                100% {
+                  transform: translateY(50%);
+                }
+              }
+              
               .animate-seamless-flow {
                 animation: seamless-flow 4s linear infinite;
               }
@@ -278,6 +293,10 @@ export default function StartPage() {
               
               .animate-arrow-bounce {
                 animation: arrow-bounce 1s ease-in-out infinite;
+              }
+              
+              .animate-mobile-flow {
+                animation: mobile-flow 3s linear infinite;
               }
             `}</style>
 

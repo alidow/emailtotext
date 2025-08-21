@@ -112,6 +112,20 @@ async function rateLimitMiddleware(request: NextRequest) {
 
 // Export Clerk middleware with custom rate limiting
 export default clerkMiddleware(async (auth, req) => {
+  const url = req.nextUrl.clone()
+  const hostname = req.headers.get('host') || ''
+  
+  // Redirect to www and HTTPS in production
+  const isProduction = process.env.NODE_ENV === 'production'
+  const isHttp = url.protocol === 'http:'
+  const isNonWww = hostname === 'emailtotextnotify.com'
+  
+  if (isProduction && (isHttp || isNonWww)) {
+    url.protocol = 'https:'
+    url.host = 'www.emailtotextnotify.com'
+    return NextResponse.redirect(url, { status: 301 })
+  }
+  
   // Apply rate limiting first
   const rateLimitResponse = await rateLimitMiddleware(req)
   if (rateLimitResponse.status === 429) {
