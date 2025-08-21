@@ -49,7 +49,9 @@ export async function POST(req: NextRequest) {
       try {
         if (immediate) {
           // Cancel immediately
-          await stripe.subscriptions.del(dbUser.stripe_subscription_id)
+          await stripe.subscriptions.cancel(dbUser.stripe_subscription_id, {
+            prorate: false // Don't create prorated charges
+          })
         } else {
           // Cancel at end of billing period
           const subscription = await stripe.subscriptions.update(
