@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       .from("users")
       .select("*")
       .eq("clerk_id", user.id)
-      .single()
+      .single() as { data: any | null; error: any }
 
     if (fetchError || !dbUser) {
       Sentry.captureException(fetchError || new Error("User not found"), {
