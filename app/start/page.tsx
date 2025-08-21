@@ -110,15 +110,15 @@ export default function StartPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-display font-bold mb-6">
-              <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 bg-clip-text text-transparent">
-                Forward any email
-              </span>
+              <span className="text-gray-900">Turn any email into a</span>
               <br />
-              <span className="text-gray-900">to your phone as SMS</span>
+              <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 bg-clip-text text-transparent">
+                text message
+              </span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              The most reliable email to text forwarding service. Get instant SMS alerts from 
-              important emails, monitoring systems, and notifications.
+              Get started for free in 2 minutes. Perfect for server alerts, order notifications, 
+              and any email you can't afford to miss.
             </p>
             
             {/* CTA Button - Mobile First (Above Visual on Mobile) */}
