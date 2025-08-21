@@ -29,6 +29,8 @@ interface UserData {
   stripe_subscription_id: string
   billing_cycle?: string
   usage_count: number
+  account_status?: string
+  cancelled_at?: string
 }
 
 export default function SettingsPage() {
