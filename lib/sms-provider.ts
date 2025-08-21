@@ -74,8 +74,9 @@ class SMSProviderManager {
         })
         this.lastSuccessfulProvider = this.primaryProvider
         return result
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to send SMS via ${this.primaryProvider}:`, error)
+        // Preserve the error with its code
         throw error
       }
     }
@@ -123,6 +124,7 @@ class SMSProviderManager {
         return result
       } catch (error: any) {
         console.error(`Failed to send SMS via ${provider}:`, error.message)
+        // Preserve the original error with its code for better error handling
         lastError = error
         
         // If this was not the last provider, continue to the next
@@ -133,8 +135,11 @@ class SMSProviderManager {
       }
     }
     
-    // All providers failed
-    throw new Error(`All SMS providers failed. Last error: ${lastError?.message || 'Unknown error'}`)
+    // All providers failed - throw the last error to preserve error codes
+    if (lastError) {
+      throw lastError
+    }
+    throw new Error(`All SMS providers failed. Last error: Unknown error`)
   }
   
   async validatePhoneNumber(phone: string): Promise<boolean> {
@@ -164,6 +169,21 @@ class SMSProviderManager {
     // If no providers available, do basic validation
     const phoneRegex = /^\+?[1-9]\d{1,14}$/
     return phoneRegex.test(phone.replace(/\D/g, ''))
+  }
+  
+  async isLandline(phone: string): Promise<boolean | null> {
+    // Check if number is a landline using Twilio's line type intelligence
+    if (this.hasProvider('twilio')) {
+      try {
+        return await twilioClient.isLandline(phone)
+      } catch (error) {
+        console.error('Error checking line type:', error)
+        return null
+      }
+    }
+    
+    // If Twilio is not available, we can't determine line type
+    return null
   }
   
   getConfiguredProviders(): string[] {

@@ -144,6 +144,19 @@ export async function POST(req: NextRequest) {
       }
     }
     
+    // Check if the phone number is a landline before attempting to send SMS
+    // Skip this check for test phones to avoid unnecessary API calls
+    if (!isTestPhone && !isTestMode()) {
+      const isLandline = await smsProvider.isLandline(e164Phone)
+      if (isLandline === true) {
+        console.log(`Phone ${e164Phone} detected as landline, rejecting verification`)
+        return NextResponse.json(
+          { error: "This appears to be a landline number. Please provide a mobile phone number that can receive text messages (US or Canada only)." },
+          { status: 400 }
+        )
+      }
+    }
+    
     // Generate 6-digit code
     const code = isMockMode 
       ? "123456" 
@@ -276,14 +289,65 @@ export async function POST(req: NextRequest) {
     } catch (twilioError: any) {
       console.error("SMS send error:", twilioError)
       
-      // Check if it's a blacklisted number error
+      // Log error to database for monitoring
+      try {
+        await supabaseAdmin
+          .from("sms_error_logs")
+          .insert({
+            phone: e164Phone,
+            error_code: twilioError.code || 'UNKNOWN',
+            error_message: twilioError.message || 'Unknown error',
+            provider: 'twilio',
+            ip_address: clientIp,
+            created_at: new Date().toISOString()
+          })
+      } catch (logError) {
+        console.error("Failed to log SMS error:", logError)
+      }
+      
+      // Handle specific Twilio error codes with user-friendly messages
+      if (twilioError.code === 30006) {
+        // Landline or unreachable carrier
+        await logSuspiciousActivity(clientIp, e164Phone, "Landline phone number attempt")
+        return NextResponse.json(
+          { error: "This appears to be a landline number. Please provide a mobile phone number that can receive text messages (US or Canada only)." },
+          { status: 400 }
+        )
+      }
+      
+      if (twilioError.code === 21211) {
+        // Invalid 'To' phone number format
+        return NextResponse.json(
+          { error: "Please enter a valid US or Canadian phone number in the format: (555) 123-4567" },
+          { status: 400 }
+        )
+      }
+      
+      if (twilioError.code === 30003) {
+        // Unreachable destination handset
+        return NextResponse.json(
+          { error: "We couldn't reach this phone number. Please verify it's a valid mobile number that can receive SMS messages." },
+          { status: 400 }
+        )
+      }
+      
+      if (twilioError.code === 30005) {
+        // Unknown destination handset
+        return NextResponse.json(
+          { error: "This phone number appears to be invalid. Please check the number and try again." },
+          { status: 400 }
+        )
+      }
+      
       if (twilioError.code === 21610) {
+        // Blacklisted number
         return NextResponse.json(
           { error: "This phone number cannot receive SMS messages" },
           { status: 400 }
         )
       }
       
+      // Generic error for other cases
       return NextResponse.json(
         { error: "Failed to send verification code. Please try again." },
         { status: 500 }

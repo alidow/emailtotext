@@ -218,6 +218,47 @@ class TwilioClient {
       return false
     }
   }
+  
+  // Check if phone number is a landline using Twilio Lookup API with line type intelligence
+  async isLandline(phone: string): Promise<boolean | null> {
+    // Test phones are never landlines
+    if (isTestPhoneNumber(phone)) {
+      return false
+    }
+    
+    if (isTestMode()) {
+      // In test mode, don't check for landlines
+      return false
+    }
+    
+    const client = this.getClient()
+    if (!client) {
+      // If Twilio is not configured, can't determine line type
+      return null
+    }
+    
+    try {
+      // Use Twilio Lookup API with line type intelligence addon
+      // Note: This requires the Line Type Intelligence addon to be enabled in your Twilio account
+      const phoneNumber = await client.lookups.v2
+        .phoneNumbers(phone)
+        .fetch({ fields: 'line_type_intelligence' })
+      
+      // Check if line type intelligence data is available
+      if (phoneNumber.lineTypeIntelligence) {
+        const lineType = phoneNumber.lineTypeIntelligence.type
+        // Landline types include: 'landline', 'fixedVoip' (some VoIP lines can't receive SMS)
+        return lineType === 'landline' || lineType === 'fixedVoip'
+      }
+      
+      // If line type intelligence is not available, return null (unknown)
+      return null
+    } catch (error: any) {
+      console.error('Error checking line type:', error.message)
+      // If lookup fails, return null (unknown)
+      return null
+    }
+  }
 }
 
 // Export singleton instance

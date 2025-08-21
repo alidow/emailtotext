@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Phone, Shield, CheckCircle, ChevronLeft, MessageSquare, AlertCircle } from "lucide-react"
+import { ArrowRight, Phone, Shield, CheckCircle, ChevronLeft, MessageSquare, AlertCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 import { formatPhoneNumberInput } from "@/lib/utils"
 
@@ -69,7 +69,7 @@ export default function VerifyPhonePage() {
       const response = await fetch("/api/send-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: `+1${cleanPhone}` })
+        body: JSON.stringify({ phone: `+1${cleanPhone}` })
       })
 
       const data = await response.json()
@@ -146,7 +146,7 @@ export default function VerifyPhonePage() {
       const response = await fetch("/api/send-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: `+1${cleanPhone}` })
+        body: JSON.stringify({ phone: `+1${cleanPhone}` })
       })
 
       if (!response.ok) {
@@ -295,13 +295,24 @@ export default function VerifyPhonePage() {
                         autoFocus
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        US phone numbers only
+                        US or Canadian mobile phone numbers only (landlines not supported)
                       </p>
                     </div>
 
                     {error && (
                       <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
+                        <AlertDescription className="flex items-start gap-2">
+                          <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <div>{error}</div>
+                            {error.includes("landline") && (
+                              <div className="text-xs mt-1">Please use a mobile phone number that can receive text messages.</div>
+                            )}
+                            {error.includes("format") && (
+                              <div className="text-xs mt-1">Example: (555) 123-4567</div>
+                            )}
+                          </div>
+                        </AlertDescription>
                       </Alert>
                     )}
 
@@ -339,7 +350,18 @@ export default function VerifyPhonePage() {
 
                     {error && (
                       <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
+                        <AlertDescription className="flex items-start gap-2">
+                          <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <div>{error}</div>
+                            {error.includes("landline") && (
+                              <div className="text-xs mt-1">Please use a mobile phone number that can receive text messages.</div>
+                            )}
+                            {error.includes("format") && (
+                              <div className="text-xs mt-1">Example: (555) 123-4567</div>
+                            )}
+                          </div>
+                        </AlertDescription>
                       </Alert>
                     )}
 
