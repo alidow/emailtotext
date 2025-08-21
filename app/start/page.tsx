@@ -71,8 +71,7 @@ export default function StartPage() {
   const trustSignals = [
     "🔒 SSL Encrypted",
     "✓ " + messageCount.toLocaleString() + "+ Messages Delivered",
-    "↻ Cancel Anytime",
-    "💰 30-Day Money Back"
+    "↻ Cancel Anytime"
   ]
 
   return (
@@ -123,14 +122,19 @@ export default function StartPage() {
             
             {/* CTA Button - Mobile First (Above Visual on Mobile) */}
             <div className="md:hidden mb-8">
-              <Button 
-                size="lg"
-                onClick={handleGetStarted}
-                className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 w-full sm:w-auto"
-              >
-                Create Free Account
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+              <div className="relative inline-block">
+                <Button 
+                  size="lg"
+                  onClick={handleGetStarted}
+                  className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 w-full sm:w-auto animate-subtle-pulse"
+                >
+                  <span className="relative z-10 flex items-center">
+                    Create Free Account
+                    <ArrowRight className="ml-2 h-5 w-5 animate-arrow-bounce" />
+                  </span>
+                  <div className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 blur-lg opacity-50 animate-pulse-glow"></div>
+                </Button>
+              </div>
               
               <p className="mt-4 text-sm text-gray-600">
                 Get started in 2 minutes • 10 free texts per month
@@ -218,6 +222,35 @@ export default function StartPage() {
                 }
               }
               
+              @keyframes subtle-pulse {
+                0%, 100% {
+                  transform: scale(1);
+                }
+                50% {
+                  transform: scale(1.02);
+                }
+              }
+              
+              @keyframes pulse-glow {
+                0%, 100% {
+                  opacity: 0.3;
+                  transform: scale(1);
+                }
+                50% {
+                  opacity: 0.6;
+                  transform: scale(1.05);
+                }
+              }
+              
+              @keyframes arrow-bounce {
+                0%, 100% {
+                  transform: translateX(0);
+                }
+                50% {
+                  transform: translateX(3px);
+                }
+              }
+              
               .animate-gradient-flow {
                 animation: gradient-flow 2s linear infinite;
               }
@@ -234,18 +267,35 @@ export default function StartPage() {
                 animation: phone-buzz 4s ease-in-out infinite;
                 animation-delay: 2s;
               }
+              
+              .animate-subtle-pulse {
+                animation: subtle-pulse 2s ease-in-out infinite;
+              }
+              
+              .animate-pulse-glow {
+                animation: pulse-glow 2s ease-in-out infinite;
+              }
+              
+              .animate-arrow-bounce {
+                animation: arrow-bounce 1s ease-in-out infinite;
+              }
             `}</style>
 
             {/* CTA Button - Desktop (Below Visual) */}
             <div className="hidden md:block">
-              <Button 
-                size="lg"
-                onClick={handleGetStarted}
-                className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200"
-              >
-                Create Free Account
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+              <div className="relative inline-block">
+                <Button 
+                  size="lg"
+                  onClick={handleGetStarted}
+                  className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 animate-subtle-pulse"
+                >
+                  <span className="relative z-10 flex items-center">
+                    Create Free Account
+                    <ArrowRight className="ml-2 h-5 w-5 animate-arrow-bounce" />
+                  </span>
+                  <div className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 blur-lg opacity-50 animate-pulse-glow"></div>
+                </Button>
+              </div>
               
               <p className="mt-4 text-sm text-gray-600">
                 Get started in 2 minutes • 10 free texts per month
@@ -340,14 +390,19 @@ export default function StartPage() {
             <p className="text-lg text-gray-600 mb-6">
               Join hundreds of users who never miss important emails
             </p>
-            <Button 
-              size="lg"
-              onClick={handleGetStarted}
-              className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              Create Your Free Account
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            <div className="relative inline-block">
+              <Button 
+                size="lg"
+                onClick={handleGetStarted}
+                className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 animate-subtle-pulse"
+              >
+                <span className="relative z-10 flex items-center">
+                  Create Your Free Account
+                  <ArrowRight className="ml-2 h-5 w-5 animate-arrow-bounce" />
+                </span>
+                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 blur-lg opacity-50 animate-pulse-glow"></div>
+              </Button>
+            </div>
             <p className="mt-4 text-xs text-gray-500">
               By continuing, you agree to our{" "}
               <Link href="/terms" className="underline">Terms of Service</Link> and{" "}
