@@ -126,7 +126,7 @@ export default function StartPage() {
                 <Button 
                   size="lg"
                   onClick={handleGetStarted}
-                  className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 w-full sm:w-auto animate-subtle-pulse"
+                  className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 w-full sm:w-auto"
                 >
                   <span className="relative z-10 flex items-center">
                     Create Free Account
@@ -158,21 +158,20 @@ export default function StartPage() {
                   <div className="hidden md:block">
                     <div className="relative h-16 flex items-center">
                       {/* Base gradient track */}
-                      <div className="absolute inset-x-0 h-3 bg-gray-100 rounded-full overflow-hidden">
-                        {/* Animated gradient flow */}
-                        <div className="absolute inset-0 opacity-60">
-                          <div className="h-full w-[200%] bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-gradient-flow"></div>
-                        </div>
-                        <div className="absolute inset-0 opacity-60 animation-delay-1">
-                          <div className="h-full w-[200%] bg-gradient-to-r from-transparent via-purple-400 to-transparent animate-gradient-flow"></div>
-                        </div>
-                        <div className="absolute inset-0 opacity-60 animation-delay-2">
-                          <div className="h-full w-[200%] bg-gradient-to-r from-transparent via-green-400 to-transparent animate-gradient-flow"></div>
+                      <div className="absolute inset-x-0 h-2 bg-gradient-to-r from-blue-100 via-purple-100 to-green-100 rounded-full overflow-hidden">
+                        {/* Seamless animated waves */}
+                        <div className="absolute inset-0">
+                          <div className="absolute inset-y-0 -left-full w-[200%] opacity-40">
+                            <div className="h-full w-full bg-gradient-to-r from-transparent via-blue-500 via-purple-500 to-transparent animate-seamless-flow"></div>
+                          </div>
+                          <div className="absolute inset-y-0 -left-full w-[200%] opacity-40">
+                            <div className="h-full w-full bg-gradient-to-r from-transparent via-purple-500 via-green-500 to-transparent animate-seamless-flow-delayed"></div>
+                          </div>
                         </div>
                       </div>
                       
                       {/* Directional arrow at the end */}
-                      <div className="absolute right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-green-500">
+                      <div className="absolute right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-green-500 animate-pulse-subtle">
                         <ArrowRight className="h-4 w-4 text-green-600" />
                       </div>
                     </div>
@@ -201,12 +200,23 @@ export default function StartPage() {
             </div>
             
             <style jsx>{`
-              @keyframes gradient-flow {
+              @keyframes seamless-flow {
                 0% {
-                  transform: translateX(-50%);
+                  transform: translateX(0);
                 }
                 100% {
-                  transform: translateX(0%);
+                  transform: translateX(50%);
+                }
+              }
+              
+              @keyframes pulse-subtle {
+                0%, 100% {
+                  opacity: 1;
+                  transform: scale(1);
+                }
+                50% {
+                  opacity: 0.8;
+                  transform: scale(0.95);
                 }
               }
               
@@ -222,14 +232,6 @@ export default function StartPage() {
                 }
               }
               
-              @keyframes subtle-pulse {
-                0%, 100% {
-                  transform: scale(1);
-                }
-                50% {
-                  transform: scale(1.02);
-                }
-              }
               
               @keyframes pulse-glow {
                 0%, 100% {
@@ -251,16 +253,17 @@ export default function StartPage() {
                 }
               }
               
-              .animate-gradient-flow {
-                animation: gradient-flow 2s linear infinite;
+              .animate-seamless-flow {
+                animation: seamless-flow 4s linear infinite;
               }
               
-              .animation-delay-1 {
-                animation-delay: 0.66s;
+              .animate-seamless-flow-delayed {
+                animation: seamless-flow 4s linear infinite;
+                animation-delay: 2s;
               }
               
-              .animation-delay-2 {
-                animation-delay: 1.33s;
+              .animate-pulse-subtle {
+                animation: pulse-subtle 3s ease-in-out infinite;
               }
               
               .animate-phone-buzz {
@@ -268,9 +271,6 @@ export default function StartPage() {
                 animation-delay: 2s;
               }
               
-              .animate-subtle-pulse {
-                animation: subtle-pulse 2s ease-in-out infinite;
-              }
               
               .animate-pulse-glow {
                 animation: pulse-glow 2s ease-in-out infinite;
@@ -287,7 +287,7 @@ export default function StartPage() {
                 <Button 
                   size="lg"
                   onClick={handleGetStarted}
-                  className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 animate-subtle-pulse"
+                  className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200"
                 >
                   <span className="relative z-10 flex items-center">
                     Create Free Account
@@ -394,7 +394,7 @@ export default function StartPage() {
               <Button 
                 size="lg"
                 onClick={handleGetStarted}
-                className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200 animate-subtle-pulse"
+                className="relative h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all duration-200"
               >
                 <span className="relative z-10 flex items-center">
                   Create Your Free Account
