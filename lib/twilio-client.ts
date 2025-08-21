@@ -245,8 +245,9 @@ class TwilioClient {
         .fetch({ fields: 'line_type_intelligence' })
       
       // Check if line type intelligence data is available
-      if (phoneNumber.lineTypeIntelligence) {
-        const lineType = phoneNumber.lineTypeIntelligence.type
+      if (phoneNumber.lineTypeIntelligence && phoneNumber.lineTypeIntelligence.type) {
+        const lineTypeData = phoneNumber.lineTypeIntelligence.type as any
+        const lineType = typeof lineTypeData === 'string' ? lineTypeData : lineTypeData?.type
         // Landline types include: 'landline', 'fixedVoip' (some VoIP lines can't receive SMS)
         return lineType === 'landline' || lineType === 'fixedVoip'
       }
