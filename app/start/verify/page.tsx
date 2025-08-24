@@ -135,10 +135,10 @@ export default function VerifyPhonePage() {
     setLoading(true)
     setError("")
     
+    const cleanPhone = phoneNumber.replace(/\D/g, '')
     let response: Response | undefined
 
     try {
-      const cleanPhone = phoneNumber.replace(/\D/g, '')
       response = await fetch("/api/verify-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
