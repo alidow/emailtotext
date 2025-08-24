@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowRight, CreditCard, Lock, Shield, ChevronLeft, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { loadStripe } from "@stripe/stripe-js"
+import * as Sentry from "@sentry/nextjs"
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -99,8 +100,32 @@ export default function PaymentPage() {
         body: JSON.stringify({ planType: plan.name.toLowerCase() })
       })
       
+      const userData = await userResponse.json()
+      
       if (!userResponse.ok) {
-        throw new Error("Failed to create user account")
+        // Capture detailed error to Sentry
+        Sentry.captureException(new Error("User creation failed in payment flow"), {
+          tags: {
+            step: "create_user",
+            planType: plan.name.toLowerCase(),
+            statusCode: userResponse.status.toString()
+          },
+          extra: {
+            error: userData.error,
+            details: userData.details,
+            requiresVerification: userData.requiresVerification,
+            user: user?.id,
+            email: user?.primaryEmailAddress?.emailAddress
+          }
+        })
+        
+        // If verification expired, redirect back to verification
+        if (userData.requiresVerification) {
+          router.push('/start/verify')
+          return
+        }
+        
+        throw new Error(userData.error || "Failed to create user account")
       }
 
       // Determine price ID
@@ -126,6 +151,21 @@ export default function PaymentPage() {
       const checkoutData = await checkoutResponse.json()
       
       if (!checkoutResponse.ok) {
+        // Capture checkout failure to Sentry
+        Sentry.captureException(new Error("Checkout session creation failed"), {
+          tags: {
+            step: "create_checkout",
+            planType: plan.name.toLowerCase(),
+            billingCycle,
+            statusCode: checkoutResponse.status.toString()
+          },
+          extra: {
+            error: checkoutData.error,
+            priceId,
+            user: user?.id,
+            email: user?.primaryEmailAddress?.emailAddress
+          }
+        })
         throw new Error(checkoutData.error || "Failed to create checkout session")
       }
 
@@ -153,6 +193,22 @@ export default function PaymentPage() {
       }
     } catch (err: any) {
       console.error("Payment error:", err)
+      
+      // Capture any payment flow error to Sentry
+      Sentry.captureException(err, {
+        tags: {
+          flow: "signup_payment",
+          planType: selectedPlan.toLowerCase(),
+          billingCycle
+        },
+        extra: {
+          errorMessage: err.message,
+          user: user?.id,
+          email: user?.primaryEmailAddress?.emailAddress,
+          stack: err.stack
+        }
+      })
+      
       setError(err.message || "Failed to process payment. Please try again.")
       setLoading(false)
     }

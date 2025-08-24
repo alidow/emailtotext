@@ -32,7 +32,26 @@ export async function POST(req: NextRequest) {
     const verifiedPhone = cookieStore.get("verified_phone")?.value
     
     if (!verifiedPhone) {
-      return NextResponse.json({ error: "Phone verification required" }, { status: 400 })
+      // Critical error - user completed verification but cookie is missing
+      Sentry.captureMessage("Phone verification cookie missing during user creation", {
+        level: "error",
+        tags: {
+          step: "create_user",
+          issue: "missing_cookie"
+        },
+        extra: {
+          userId: user.id,
+          email: user.primaryEmailAddress?.emailAddress,
+          planType,
+          userAgent: req.headers.get("user-agent"),
+          cookies: cookieStore.getAll().map(c => c.name) // Log cookie names only, not values
+        }
+      })
+      
+      return NextResponse.json({ 
+        error: "Phone verification session expired. Please verify your phone number again.",
+        requiresVerification: true 
+      }, { status: 400 })
     }
     
     // adminCheck.admin is guaranteed to exist after the error check

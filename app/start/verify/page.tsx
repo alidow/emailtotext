@@ -13,6 +13,7 @@ import { ArrowRight, Phone, Shield, CheckCircle, ChevronLeft, MessageSquare, Ale
 import Link from "next/link"
 import { formatPhoneNumberInput } from "@/lib/utils"
 import { analytics, ANALYTICS_EVENTS } from "@/lib/analytics"
+import * as Sentry from "@sentry/nextjs"
 
 export default function VerifyPhonePage() {
   const router = useRouter()
@@ -94,6 +95,21 @@ export default function VerifyPhonePage() {
       })
     } catch (err: any) {
       setError(err.message || "Failed to send verification code")
+      
+      // Capture to Sentry for monitoring
+      Sentry.captureException(err, {
+        tags: {
+          flow: "signup_verification",
+          step: "send_code"
+        },
+        extra: {
+          phone: `+1${cleanPhone}`,
+          errorMessage: err.message,
+          user: user?.id,
+          email: user?.primaryEmailAddress?.emailAddress
+        }
+      })
+      
       // Track error
       analytics.track({
         name: ANALYTICS_EVENTS.VERIFICATION_ERROR,
@@ -118,10 +134,12 @@ export default function VerifyPhonePage() {
 
     setLoading(true)
     setError("")
+    
+    let response: Response | undefined
 
     try {
       const cleanPhone = phoneNumber.replace(/\D/g, '')
-      const response = await fetch("/api/verify-phone", {
+      response = await fetch("/api/verify-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -150,6 +168,25 @@ export default function VerifyPhonePage() {
       router.push('/start/plan')
     } catch (err: any) {
       setError(err.message || "Failed to verify phone number")
+      
+      // CRITICAL: Capture verification failures to Sentry
+      Sentry.captureException(err, {
+        level: "error",
+        tags: {
+          flow: "signup_verification",
+          step: "verify_code",
+          critical: "true"
+        },
+        extra: {
+          phone: `+1${cleanPhone}`,
+          codeEntered: verificationCode,
+          errorMessage: err.message,
+          responseStatus: response?.status,
+          user: user?.id,
+          email: user?.primaryEmailAddress?.emailAddress
+        }
+      })
+      
       // Track error
       analytics.track({
         name: ANALYTICS_EVENTS.VERIFICATION_ERROR,
