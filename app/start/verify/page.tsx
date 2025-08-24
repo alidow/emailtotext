@@ -125,7 +125,7 @@ export default function VerifyPhonePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          phoneNumber: `+1${cleanPhone}`,
+          phone: `+1${cleanPhone}`,  // Fixed: Changed from phoneNumber to phone to match API
           code: verificationCode 
         })
       })
