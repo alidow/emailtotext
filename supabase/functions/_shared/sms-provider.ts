@@ -1,6 +1,8 @@
 // Deno-compatible SMS provider for Supabase Edge Functions
 // Supports both Twilio and Infobip with automatic failover
 
+import { captureSMSError } from "./sentry.ts"
+
 interface SendSMSParams {
   to: string
   body: string

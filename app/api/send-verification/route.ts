@@ -11,6 +11,7 @@ import {
   logSuspiciousActivity,
   blockIp 
 } from "@/lib/rate-limit"
+import * as Sentry from "@sentry/nextjs"
 
 // Track recent verification attempts in memory for additional protection
 const recentAttempts = new Map<string, number>()
@@ -27,10 +28,35 @@ setInterval(() => {
 }, 3600000)
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now()
+  let phone: string | undefined
+  let clientIp: string | undefined
+  
   try {
+    // Track request for debugging
+    Sentry.addBreadcrumb({
+      message: "Send verification request started",
+      level: "info",
+      category: "send-verification",
+      data: {
+        timestamp: new Date().toISOString(),
+        headers: {
+          userAgent: req.headers.get("user-agent"),
+          origin: req.headers.get("origin")
+        }
+      }
+    })
     // 1. Parse request body FIRST to check for test phone
     const body = await req.json()
-    const { phone, captchaToken } = body
+    phone = body.phone
+    const { captchaToken } = body
+    
+    Sentry.addBreadcrumb({
+      message: "Request body parsed",
+      level: "info",
+      category: "send-verification",
+      data: { phoneProvided: !!phone, captchaProvided: !!captchaToken }
+    })
     
     if (!phone || typeof phone !== 'string') {
       return NextResponse.json(
@@ -58,8 +84,15 @@ export async function POST(req: NextRequest) {
     }
     
     // 4. Get client IP for logging and rate limiting
-    const clientIp = getClientIp(req)
+    clientIp = getClientIp(req)
     console.log("Client IP detected:", clientIp)
+    
+    Sentry.addBreadcrumb({
+      message: "Client IP detected",
+      level: "info",
+      category: "send-verification",
+      data: { clientIp, isTestPhone }
+    })
     console.log("Headers:", {
       "cf-connecting-ip": req.headers.get("cf-connecting-ip"),
       "x-forwarded-for": req.headers.get("x-forwarded-for"),
@@ -69,6 +102,13 @@ export async function POST(req: NextRequest) {
     // 5. Check if IP is blocked (skip for test phones)
     if (!isTestPhone && await isVpnOrProxy(clientIp)) {
       await logSuspiciousActivity(clientIp, "unknown", "VPN/Proxy detected")
+      
+      Sentry.captureMessage("VPN/Proxy blocked in send-verification", {
+        level: "warning",
+        tags: { reason: "vpn_proxy", endpoint: "send-verification" },
+        extra: { clientIp, phone: e164Phone }
+      })
+      
       return NextResponse.json(
         { error: "Access denied. VPNs and proxies are not allowed." },
         { status: 403 }
@@ -85,6 +125,21 @@ export async function POST(req: NextRequest) {
       
       if (!ipLimit.success || !globalLimit.success || !burstLimit.success) {
         await logSuspiciousActivity(clientIp, "unknown", "Rate limit exceeded")
+        
+        Sentry.captureMessage("Rate limit exceeded in send-verification", {
+          level: "warning",
+          tags: { reason: "rate_limit", endpoint: "send-verification" },
+          extra: {
+            clientIp,
+            phone: e164Phone,
+            limits: {
+              ip: !ipLimit.success,
+              global: !globalLimit.success,
+              burst: !burstLimit.success
+            }
+          }
+        })
+        
         return NextResponse.json(
           { error: "Too many requests. Please try again later." },
           { status: 429 }
@@ -177,6 +232,13 @@ export async function POST(req: NextRequest) {
     
     if (existingActiveUser) {
       console.log(`Phone ${e164Phone} already registered to active user ${existingActiveUser.id}`)
+      
+      Sentry.captureMessage("Phone already registered attempt", {
+        level: "info",
+        tags: { reason: "duplicate_phone", endpoint: "send-verification" },
+        extra: { phone: e164Phone, existingUserId: existingActiveUser.id, clientIp }
+      })
+      
       return NextResponse.json(
         { error: "This phone number is already associated with an active account. Each phone number can only be used with one account at a time." },
         { status: 400 }
@@ -220,6 +282,12 @@ export async function POST(req: NextRequest) {
         
         if (dbError) {
           console.error("Error storing verification code:", dbError)
+          
+          Sentry.captureException(dbError, {
+            tags: { step: "store_verification", table: "phone_verifications" },
+            extra: { phone: e164Phone, clientIp, isTestPhone }
+          })
+          
           throw dbError
         }
         
@@ -236,6 +304,12 @@ export async function POST(req: NextRequest) {
       
       if (consentError) {
         console.error("Error logging consent:", consentError)
+        
+        Sentry.captureException(consentError, {
+          tags: { step: "log_consent", table: "consent_logs" },
+          extra: { phone: e164Phone, clientIp }
+        })
+        
         throw consentError
       }
       
@@ -288,6 +362,24 @@ export async function POST(req: NextRequest) {
       }
     } catch (twilioError: any) {
       console.error("SMS send error:", twilioError)
+      
+      // Capture SMS error in Sentry with detailed context
+      Sentry.captureException(twilioError, {
+        tags: {
+          step: "send_sms",
+          provider: "twilio",
+          errorCode: twilioError.code || "unknown"
+        },
+        extra: {
+          phone: e164Phone,
+          clientIp,
+          isTestPhone,
+          twilioErrorCode: twilioError.code,
+          twilioErrorMessage: twilioError.message,
+          configuredProviders: smsProvider.getConfiguredProviders(),
+          smsStrategy: smsProvider.getCurrentStrategy()
+        }
+      })
       
       // Log error to database for monitoring
       try {
@@ -382,13 +474,45 @@ export async function POST(req: NextRequest) {
       }
     }, null, 2))
     
+    // Log successful send
+    const totalTime = Date.now() - startTime
+    Sentry.captureMessage("Verification code sent successfully", {
+      level: "info",
+      tags: { 
+        endpoint: "send-verification",
+        isTestPhone: isTestPhone?.toString() || "false"
+      },
+      extra: {
+        phone: e164Phone,
+        clientIp,
+        totalTimeMs: totalTime,
+        testMode: isTestMode()
+      }
+    })
+    
     return NextResponse.json({ 
       success: true,
       testMode: isTestMode()
     })
     
   } catch (error: any) {
+    const totalTime = Date.now() - startTime
     console.error("Send verification error:", error)
+    
+    // Capture error with full context
+    Sentry.captureException(error, {
+      tags: {
+        endpoint: "send-verification",
+        errorType: error.name || "unknown"
+      },
+      extra: {
+        phone,
+        clientIp,
+        errorMessage: error.message,
+        errorStack: error.stack,
+        totalTimeMs: totalTime
+      }
+    })
     
     // In test mode, provide more details for debugging
     if (isTestMode()) {

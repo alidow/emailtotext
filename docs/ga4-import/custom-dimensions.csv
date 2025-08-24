@@ -1,0 +1,11 @@
+Display Name,Scope,Event Parameter,Description
+Signup Method,Event,method,How user created account (email or google)
+Phone Number,User,phone,User phone number (hashed for privacy)
+Subscription Plan,Event,plan,Selected subscription plan (free/pro/unlimited)
+Error Message,Event,error,Error details for debugging
+Error Step,Event,step,Where in flow error occurred
+Button Clicked,Event,button,Which CTA button was clicked
+Page Location,Event,page_location,URL or page identifier
+Page Path,Event,page_path,Page path for tracking
+Test Mode,Event,test_mode,Whether event was in test mode
+Conversion Value,Event,value,Monetary value of conversion

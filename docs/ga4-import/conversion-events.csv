@@ -1,0 +1,6 @@
+Event Name,Conversion Value,Description
+account_created,2.0,User successfully created an account
+phone_verified,5.0,User successfully verified phone number
+payment_completed,Variable,Payment successfully processed
+start_flow_initiated,3.0,User clicked Get Started button
+phone_code_sent,4.0,Verification code sent to phone

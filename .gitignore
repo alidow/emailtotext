@@ -42,3 +42,8 @@ next-env.d.ts
 
 # tools/scripts
 tools/
+
+# Google Cloud credentials (NEVER commit these!)
+ga4-credentials.json
+*-credentials.json
+*.serviceaccount.json

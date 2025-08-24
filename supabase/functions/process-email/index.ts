@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { sendSMS } from "../_shared/sms-provider.ts"
+import { captureEdgeFunctionError, initSentry } from "../_shared/sentry.ts"
 
 // Test mode check
 const isTestMode = () => Deno.env.get('ENABLE_TEST_MODE') === 'true'
@@ -12,6 +13,9 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 }
 
+// Initialize Sentry for this edge function
+const sentry = initSentry()
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -19,6 +23,18 @@ serve(async (req) => {
   }
 
   try {
+    // Log request start
+    if (sentry) {
+      await sentry.captureMessage('Email processing started', {
+        level: 'info',
+        tags: { function: 'process-email' },
+        extra: {
+          url: req.url,
+          method: req.method,
+          headers: Object.fromEntries(req.headers.entries())
+        }
+      })
+    }
     // Check for secret token in query string for authentication
     const url = new URL(req.url)
     const authToken = url.searchParams.get('token')
@@ -31,6 +47,15 @@ serve(async (req) => {
     
     if (authToken !== expectedToken) {
       console.error('Invalid or missing token:', authToken ? 'wrong token' : 'no token')
+      
+      if (sentry) {
+        await sentry.captureMessage('Unauthorized email processing attempt', {
+          level: 'warning',
+          tags: { function: 'process-email', reason: 'invalid_token' },
+          extra: { providedToken: authToken ? 'wrong' : 'missing', url: req.url }
+        })
+      }
+      
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
         status: 401,
         headers: { 'Content-Type': 'application/json' }
@@ -44,6 +69,12 @@ serve(async (req) => {
       formData = await req.formData()
     } catch (parseError) {
       console.error('Failed to parse form data:', parseError)
+      
+      await captureEdgeFunctionError(parseError as Error, req, {
+        step: 'parse_form_data',
+        function: 'process-email'
+      })
+      
       return new Response(JSON.stringify({ error: 'Invalid form data' }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -115,6 +146,19 @@ serve(async (req) => {
       .single()
 
     if (userError || !user) {
+      // Log user lookup failure
+      if (sentry) {
+        await sentry.captureMessage('No user found for email recipient', {
+          level: 'info',
+          tags: { function: 'process-email', reason: 'no_user' },
+          extra: {
+            recipient,
+            phoneNumber,
+            error: userError
+          }
+        })
+      }
+      
       // Send bounce email
       await sendBounceEmail(sender, recipient)
       return new Response('User not found', { status: 404 })
@@ -349,14 +393,25 @@ serve(async (req) => {
       .single()
 
     if (emailError) {
+      await captureEdgeFunctionError(emailError, req, {
+        step: 'store_email',
+        userId: user.id,
+        phone: user.phone
+      })
       throw emailError
     }
 
     // Process attachments if any
     if (attachmentInfos.length > 0) {
       // Process attachments asynchronously to not block SMS delivery
-      processAttachments(email.id, user.id, attachmentInfos, email.expires_at).catch(error => {
+      processAttachments(email.id, user.id, attachmentInfos, email.expires_at).catch(async error => {
         console.error('Failed to process attachments:', error)
+        await captureEdgeFunctionError(error, req, {
+          step: 'process_attachments',
+          emailId: email.id,
+          userId: user.id,
+          attachmentCount: attachmentInfos.length
+        })
       })
     }
 
@@ -494,6 +549,12 @@ serve(async (req) => {
     return new Response('Email processed successfully', { status: 200 })
   } catch (error) {
     console.error('Error processing email:', error)
+    
+    // Capture the error with full context
+    await captureEdgeFunctionError(error as Error, req, {
+      step: 'general_error'
+    })
+    
     return new Response('Internal server error', { status: 500 })
   }
 })
